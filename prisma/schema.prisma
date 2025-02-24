@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  first_name   String   @db.VarChar(100)
+  last_name    String   @db.VarChar(100)
+  middle_name  String   @db.VarChar(100)
+  email        String?  @unique @db.VarChar(100)
+  username     String   @unique @db.VarChar(100)
+  password     String   @db.VarChar(100)
+  accessToken  String?
+  refreshToken String?
+  role         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Requirements {
+  id          Int      @id @default(autoincrement())
+  title       String   @unique @db.VarChar(100)
+  status      Boolean? @default(true) @db.Boolean
+  description String
+}
+
+model Job {
+  id             Int            @id @default(autoincrement())
+  title          String         @unique @db.VarChar(250)
+  description    String
+  totalAvailable Int            @db.Integer
+  status         Boolean?       @default(true) @db.Boolean
+  imagePath      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  JobScreening   JobScreening[]
+}
+
+model Screening {
+  id           Int            @id @default(autoincrement())
+  title        String         @unique @db.VarChar(250) 
+  description  String
+  status       Boolean?       @default(true) @db.Boolean
+  JobScreening JobScreening[]
+}
+
+model JobScreening {
+  jobList       Job       @relation(fields: [job_id], references: [id])
+  job_id        Int
+  screeningList Screening @relation(fields: [screening_id], references: [id])
+  screening_id  Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([job_id, screening_id])
+}
+
+model Departments {
+  id     Int      @id @default(autoincrement())
+  title  String   @unique @db.VarChar(250)
+  status Boolean? @default(true) @db.Boolean
+}
