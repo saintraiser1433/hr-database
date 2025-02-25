@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { Response } from 'express';
-import { DepartmentModel, JobModel, RequirementModel, ScreeningModel } from '../types';
+import { DepartmentModel, JobModel, JobScreeningModel, RequirementModel, ScreeningModel } from '../types';
 import { appLogger } from './logger';
 
 export const requirementValidation = {
@@ -118,6 +118,7 @@ export const screeningValidation = {
                 "any.required": "The description field is required",
                 "string.empty": "The description field cannot be empty"
             }),
+            status: Joi.boolean().optional()
         });
         return schema.validate(data, { abortEarly: false });
     },
@@ -144,6 +145,23 @@ export const departmentValidation = {
                 "string.empty": "The title field cannot be empty"
             }),
             status: Joi.boolean().optional()
+        });
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+
+export const assignScreeningValidation = {
+    assign: (data: JobScreeningModel) => {
+        const schema = Joi.object({
+            job_id: Joi.number().required().empty().messages({
+                "any.required": "The Job field is required",
+                "number.empty": "The Job field is required",
+            }),
+            screening_id: Joi.number().required().empty().messages({
+                "any.required": "The Screening field is required",
+                "number.empty": "The Screening field is required",
+            }),
         });
         return schema.validate(data, { abortEarly: false });
     },
