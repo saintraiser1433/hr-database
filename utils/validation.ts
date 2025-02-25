@@ -50,8 +50,12 @@ export const jobValidation = {
                 "any.required": "The availability field is required",
                 "number.empty": "The availability field cannot be empty"
             }),
+            departmentsId: Joi.number().required().messages({
+                "any.required": "The department field is required",
+                "number.empty": "The department field cannot be empty"
+            }),
             status: Joi.boolean().optional(),
-            imagePath: Joi.string().optional(),
+            headerImage: Joi.string().optional(),
         });
         return schema.validate(data, { abortEarly: false });
     },
@@ -73,8 +77,12 @@ export const jobValidation = {
                 "any.required": "The availability field is required",
                 "number.empty": "The availability field cannot be empty"
             }),
+            departmentsId: Joi.number().required().messages({
+                "any.required": "The department field is required",
+                "number.empty": "The department field cannot be empty"
+            }),
             status: Joi.boolean().optional(),
-            imagePath: Joi.string().optional(),
+            headerImage: Joi.string().optional(),
         });
         return schema.validate(data, { abortEarly: false });
     },
@@ -92,7 +100,7 @@ export const screeningValidation = {
                 "any.required": "The description field is required",
                 "string.empty": "The description field cannot be empty"
             }),
-            
+
         });
         return schema.validate(data, { abortEarly: false });
     },
@@ -135,6 +143,7 @@ export const departmentValidation = {
                 "any.required": "The title field is required",
                 "string.empty": "The title field cannot be empty"
             }),
+            status: Joi.boolean().optional()
         });
         return schema.validate(data, { abortEarly: false });
     },

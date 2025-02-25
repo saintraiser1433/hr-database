@@ -6,7 +6,8 @@ export const getDepartmentService = async () => {
         const response = await prisma.departments.findMany({
             select: {
                 id: true,
-                title: true
+                title: true,
+                status: true
             }
         })
 
@@ -15,6 +16,8 @@ export const getDepartmentService = async () => {
         throw err
     }
 }
+
+
 
 
 export const createDepartmentService = async (data: DepartmentModel) => {
@@ -27,6 +30,10 @@ export const createDepartmentService = async (data: DepartmentModel) => {
         throw err
     }
 }
+
+
+
+
 
 
 export const updateDepartmentService = async (id: string, data: DepartmentModel) => {

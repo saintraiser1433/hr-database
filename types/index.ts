@@ -16,7 +16,9 @@ export interface JobModel extends Timestamped {
     description: string;
     totalAvailable: number;
     status?: boolean;
-    imagePath?: string;
+    departmentsId: number,
+    department?: DepartmentModel
+    headerImage?: string;
     JobScreening?: JobScreeningModel[];
 }
 

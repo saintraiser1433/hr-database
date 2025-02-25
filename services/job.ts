@@ -4,13 +4,8 @@ import prisma from '../prisma';
 export const getJobService = async () => {
     try {
         const response = await prisma.job.findMany({
-            select: {
-                id:true,
-                title: true,
-                description: true,
-                totalAvailable: true,
-                status: true,
-                imagePath: true
+            include: {
+                department: true
             }
         })
 
@@ -21,25 +16,72 @@ export const getJobService = async () => {
 }
 
 
-export const createJobService = async (body: Omit<JobModel, "id" | "JobScreening">) => {
+
+export const createJobService = async (body: Omit<JobModel, "id" | "JobScreening">, file: any) => {
     try {
         const response = await prisma.job.create({
-            data: body
+            data: {
+                title: body.title,
+                description: body.description,
+                totalAvailable: Number(body.totalAvailable),
+                headerImage: file?.filename || body.headerImage,
+                department: {
+                    connect: { id: Number(body.departmentsId), }, // 🔹 Connects this job to department with ID = 2
+                },
+            },
+            include: {
+                department: true, // ✅ Include department data in response
+            },
+
         })
-        return response;
+
+
+
+        const finalData = {
+            ...response,
+            departmentTitle: response.department.title
+        }
+
+        return finalData;
     } catch (err) {
         throw err
     }
 }
 
 
-export const updateJobService = async (id: string, body: Omit<JobModel, "JobScreening">) => {
-    return await prisma.job.update({
+export const updateJobService = async (id: string, body: Omit<JobModel, "JobScreening">, file: any) => {
+
+
+
+    const response = await prisma.job.update({
         where: {
             id: Number(id),
         },
-        data: body,
+        data: {
+            title: body.title,
+            description: body.description,
+            totalAvailable: Number(body.totalAvailable),
+            headerImage: file?.filename || body.headerImage,
+            status: String(body.status) === "true",
+            department: {
+                connect: { id: Number(body.departmentsId) },
+            },
+        },
+        include: {
+            department: true
+        }
+
+
+
+
     });
+
+    const finalData = {
+        ...response,
+        departmentTitle: response.department.title
+    }
+
+    return finalData
 };
 
 export const removeJobService = async (id: string) => {

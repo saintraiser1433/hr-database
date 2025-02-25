@@ -40,8 +40,10 @@ model Job {
   title          String         @unique @db.VarChar(250)
   description    String
   totalAvailable Int            @db.Integer
+  departmentsId  Int
+  department     Departments    @relation(fields: [departmentsId], references: [id])
   status         Boolean?       @default(true) @db.Boolean
-  imagePath      String?
+  headerImage    String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   JobScreening   JobScreening[]
@@ -49,7 +51,7 @@ model Job {
 
 model Screening {
   id           Int            @id @default(autoincrement())
-  title        String         @unique @db.VarChar(250) 
+  title        String         @unique @db.VarChar(250)
   description  String
   status       Boolean?       @default(true) @db.Boolean
   JobScreening JobScreening[]
@@ -70,4 +72,5 @@ model Departments {
   id     Int      @id @default(autoincrement())
   title  String   @unique @db.VarChar(250)
   status Boolean? @default(true) @db.Boolean
+  Job    Job[]
 }

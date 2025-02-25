@@ -14,6 +14,8 @@ export const getDepartment = async (req: Request, res: Response, next: NextFunct
 }
 
 
+
+
 export const insertDepartment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
