@@ -8,11 +8,11 @@ route.get('/', fetchScreenings);
 route.post('/', addScreening);
 route.put('/:id', modifyScreening);
 route.delete('/:id', removeScreening);
-route.get('/f/:jobId',filterScreeningTypeByJobId)
-route.get('/assign', fetchJobScreenings)
+route.get('/f/:jobId', filterScreeningTypeByJobId)
+route.get('/assign/:jobId', fetchJobScreenings)
 route.post('/assign', addJobToScreening)
 route.post('/assign/delete', unassignJobFromScreening)
-route.put('/sequence/:jobId/:screeningId', modifyJobScreeningSequence)
+route.put('/sequence/:id', modifyJobScreeningSequence)
 
 
 export default route;

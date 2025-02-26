@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation';
-import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreenings, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening';
+import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening';
 
 
 
@@ -71,8 +71,9 @@ export const filterScreeningTypeByJobId = async (req: Request, res: Response, ne
 
 //assigning
 export const fetchJobScreenings = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.jobId;
     try {
-        const response = await getJobScreenings();
+        const response = await getJobScreeningsByJobId(id);
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -86,6 +87,8 @@ export const addJobToScreening = async (req: Request, res: Response, next: NextF
         if (error) {
             return handleValidationError(error, res);
         }
+
+
         const response = await assignJobToScreening(body);
         return res.status(200).json({ message: "Screening Assign successfully inserted", data: response });
     } catch (err) {
@@ -105,11 +108,11 @@ export const unassignJobFromScreening = async (req: Request, res: Response, next
 }
 
 export const modifyJobScreeningSequence = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const jobId = req.params.jobId;
-    const screeningId = req.params.screeningId;
+    const id = req.params.id;
+    const { direction } = req.body;
     try {
-        await updateJobScreeningSequence(jobId, screeningId);
-        return res.status(200).json({ message: "Screening Assign successfully deleted" });
+        await updateJobScreeningSequence(id, direction);
+        return res.status(200).json({ message: "Ok ah" });
     } catch (err) {
         next(err)
     }

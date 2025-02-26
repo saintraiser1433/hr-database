@@ -155,6 +155,8 @@ export const assignScreeningValidation = {
     assign: (data: JobScreeningModel) => {
         const schema = Joi.array().items(
             Joi.object({
+                id: Joi.number().optional(),
+                screening_title: Joi.string().optional(),
                 job_id: Joi.number().required().messages({
                     "any.required": "The Job field is required",
                     "number.base": "The Job field must be a number",
