@@ -34,6 +34,7 @@ export interface JobScreeningModel extends Timestamped {
     job_id: number;
     screening_id: number;
     jobList?: JobModel;
+    sequence_number:number;
     screeningList?: ScreeningModel;
 }
 

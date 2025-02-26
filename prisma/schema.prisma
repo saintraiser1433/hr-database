@@ -58,10 +58,12 @@ model Screening {
 }
 
 model JobScreening {
+  id            Int       @id @default(autoincrement())
   jobList       Job       @relation(fields: [job_id], references: [id])
   job_id        Int
   screeningList Screening @relation(fields: [screening_id], references: [id])
   screening_id  Int
+  sequence_number Int 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

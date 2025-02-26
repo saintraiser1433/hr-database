@@ -153,16 +153,19 @@ export const departmentValidation = {
 
 export const assignScreeningValidation = {
     assign: (data: JobScreeningModel) => {
-        const schema = Joi.object({
-            job_id: Joi.number().required().empty().messages({
-                "any.required": "The Job field is required",
-                "number.empty": "The Job field is required",
-            }),
-            screening_id: Joi.number().required().empty().messages({
-                "any.required": "The Screening field is required",
-                "number.empty": "The Screening field is required",
-            }),
-        });
+        const schema = Joi.array().items(
+            Joi.object({
+                job_id: Joi.number().required().messages({
+                    "any.required": "The Job field is required",
+                    "number.base": "The Job field must be a number",
+                }),
+                screening_id: Joi.number().required().messages({
+                    "any.required": "The Screening field is required",
+                    "number.base": "The Screening field must be a number",
+                }),
+                sequence_number: Joi.number().optional()
+            })
+        );
         return schema.validate(data, { abortEarly: false });
     },
 };

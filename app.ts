@@ -14,7 +14,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 
 // Serve static files from the 'public/uploads' directory under the '/job' route
-app.use('/job', express.static('public/job-offer-uploads'));
+app.use('/job-images', express.static('public/job-offer-uploads'));
 
 // API routes
 app.use('/api/v1', router);

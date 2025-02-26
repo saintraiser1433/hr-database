@@ -1,15 +1,15 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation';
-import { assignJobScreeningService, createScreeningService, deleteAssignJobScreeningService, getAllJobScreeningService, getScreeningService, removeScreeningService, updateAssignJobScreeningService, updateScreeningService } from '../services/screening';
+import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreenings, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening';
 
 
 
 
 
-export const getScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const fetchScreenings = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-        const response = await getScreeningService();
+        const response = await getScreenings();
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -17,21 +17,21 @@ export const getScreening = async (req: Request, res: Response, next: NextFuncti
 }
 
 
-export const insertScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const addScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
         const { error } = screeningValidation.insert(body);
         if (error) {
             return handleValidationError(error, res);
         }
-        const response = await createScreeningService(body);
+        const response = await createScreening(body);
         return res.status(200).json({ message: "Screening Type created successfully", data: response });
     } catch (err) {
         next(err);
     }
 };
 
-export const updateScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const modifyScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     const id = req.params.id;
     try {
@@ -39,69 +39,76 @@ export const updateScreening = async (req: Request, res: Response, next: NextFun
         if (error) {
             return handleValidationError(error, res);
         }
-        const response = await updateScreeningService(id, body);
+        const response = await updateScreenings(id, body);
         return res.status(200).json({ message: "Screening Type updated successfully", data: response });
     } catch (err) {
         next(err);
     }
 }
 
-export const deleteScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const removeScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const id = req.params.id;
     try {
-        await removeScreeningService(id);
+        await deleteScreening(id);
         return res.status(200).json({ message: "Screening Type deleted successfully" });
     } catch (err) {
         next(err)
     }
 }
 
+export const filterScreeningTypeByJobId = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.jobId;
+    try {
+        const response = await selectScreeningByJobId(id);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
 
 //assigning
-export const getAllJobScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const fetchJobScreenings = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-        const response = await getAllJobScreeningService();
+        const response = await getJobScreenings();
         return res.status(200).json(response);
     } catch (err) {
         next(err);
     }
 }
 
-export const insertAssignJobScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const addJobToScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
         const { error } = assignScreeningValidation.assign(body);
         if (error) {
             return handleValidationError(error, res);
         }
-        const response = await assignJobScreeningService(body);
+        const response = await assignJobToScreening(body);
         return res.status(200).json({ message: "Screening Assign successfully inserted", data: response });
     } catch (err) {
         next(err);
     }
 };
 
-export const updateAssignJobScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+
+export const unassignJobFromScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
-    const jobId = req.params.jobId;
-    const screeningId = req.params.screeningId;
     try {
-        const { error } = assignScreeningValidation.assign(body);
-        if (error) {
-            return handleValidationError(error, res);
-        }
-        const response = await updateAssignJobScreeningService(jobId, screeningId, body);
-        return res.status(200).json({ message: "Screening Assign successfully updated", data: response });
+        await deleteJobScreening(body);
+        return res.status(200).json({ message: "Screening Assign successfully deleted" });
     } catch (err) {
-        next(err);
+        next(err)
     }
 }
 
-export const deleteAssignJobScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const modifyJobScreeningSequence = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const jobId = req.params.jobId;
     const screeningId = req.params.screeningId;
     try {
-        await deleteAssignJobScreeningService(jobId, screeningId);
+        await updateJobScreeningSequence(jobId, screeningId);
         return res.status(200).json({ message: "Screening Assign successfully deleted" });
     } catch (err) {
         next(err)

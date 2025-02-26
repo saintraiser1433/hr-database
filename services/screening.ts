@@ -1,7 +1,7 @@
 import { JobScreeningModel, ScreeningModel } from '../types';
 import prisma from '../prisma';
 
-export const getScreeningService = async () => {
+export const getScreenings = async () => {
     try {
         const response = await prisma.screening.findMany({
             select: {
@@ -19,7 +19,7 @@ export const getScreeningService = async () => {
 }
 
 
-export const createScreeningService = async (body: Omit<ScreeningModel, "id" | "JobScreening">) => {
+export const createScreening = async (body: Omit<ScreeningModel, "id" | "JobScreening">) => {
     try {
         const response = await prisma.screening.create({
             data: body
@@ -31,7 +31,7 @@ export const createScreeningService = async (body: Omit<ScreeningModel, "id" | "
 }
 
 
-export const updateScreeningService = async (id: string, body: Omit<ScreeningModel, "JobScreening">) => {
+export const updateScreenings = async (id: string, body: Omit<ScreeningModel, "JobScreening">) => {
     return await prisma.screening.update({
         where: {
             id: Number(id),
@@ -40,7 +40,7 @@ export const updateScreeningService = async (id: string, body: Omit<ScreeningMod
     });
 };
 
-export const removeScreeningService = async (id: string) => {
+export const deleteScreening = async (id: string) => {
     return await prisma.screening.delete({
         where: {
             id: Number(id)
@@ -51,76 +51,35 @@ export const removeScreeningService = async (id: string) => {
 
 
 //asigning
-
-export const assignJobScreeningService = async (body: Omit<JobScreeningModel, "id">) => {
+export const selectScreeningByJobId = async (jobId: string) => {
     try {
-        const response = await prisma.jobScreening.create({
-            data: {
-                jobList: {
-                    connect: { id: Number(body.job_id) }
-                },
-                screeningList: {
-                    connect: { id: Number(body.screening_id) }
+        const response = await prisma.screening.findMany({
+            select: {
+                id: true,
+                title: true
+            },
+            where: {
+                status: true,
+                NOT: {
+                    JobScreening: {
+                        some: {
+                            job_id: Number(jobId)
+                        }
+                    }
                 }
+            },
+            orderBy: {
+                title: 'asc'
             }
         })
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
-
-export const updateAssignJobScreeningService = async (oldJobId: string, oldScreeningId: string, body: Omit<JobScreeningModel, "id">) => {
-    try {
-        const response = await prisma.$transaction(async (tx) => {
-            await tx.jobScreening.delete({
-                where: {
-                    job_id_screening_id: {
-                        job_id: Number(oldJobId),
-                        screening_id: Number(oldScreeningId)
-                    }
-                }
-            });
-            return await tx.jobScreening.create({
-                data: {
-                    jobList: {
-                        connect: { id: Number(body.job_id) }
-                    },
-                    screeningList: {
-                        connect: { id: Number(body.screening_id) }
-                    }
-                }
-            });
-        });
-
-        return response;
-    } catch (err) {
-        throw err; // You can also handle specific errors here
-    }
-};
-
-export const deleteAssignJobScreeningService = async (oldJobId: string, oldScreeningId: string) => {
-    try {
-        const response = await prisma.jobScreening.delete({
-            where: {
-                job_id_screening_id: {
-                    job_id: Number(oldJobId),
-                    screening_id: Number(oldScreeningId)
-                }
-            }
-        });
 
         return response;
     } catch (err) {
         throw err;
     }
-
-
 }
 
-
-
-export const getAllJobScreeningService = async () => {
+export const getJobScreenings = async () => {
     try {
         const response = await prisma.jobScreening.findMany({
             select: {
@@ -137,7 +96,8 @@ export const getAllJobScreeningService = async () => {
                         title: true,
                         description: true
                     }
-                }
+                },
+                sequence_number: true,
             },
             where: {
                 AND: [{
@@ -151,13 +111,82 @@ export const getAllJobScreeningService = async () => {
                     }
                 }]
 
+            },
+            orderBy: {
+                sequence_number: 'asc'
             }
-        })
+        });
+
+
+        const data = response.map((item) => ({
+            job_id: Number(item.job_id),
+            job_title: item.jobList.title,
+            sequence_number: Number(item.sequence_number),
+            screening_id: Number(item.screening_id),
+            screening_title: item.screeningList.title
+        }))
+
+
+
+
+        return data;
+    } catch (err) {
+        throw err
+    }
+}
+
+
+export const assignJobToScreening = async (body: Omit<JobScreeningModel, "jobList" | "screeningList">) => {
+    try {
+
+        const response = await prisma.jobScreening.createMany({
+            data: body
+        });
         return response;
     } catch (err) {
         throw err
     }
 }
+
+
+
+
+export const updateJobScreeningSequence = async (oldJobId: string, oldScreeningId: string) => {
+    try {
+        const response = await prisma.jobScreening.delete({
+            where: {
+                job_id_screening_id: {
+                    job_id: Number(oldJobId),
+                    screening_id: Number(oldScreeningId)
+                }
+            }
+        });
+
+        return response;
+    } catch (err) {
+        throw err;
+    }
+}
+
+export const deleteJobScreening = async (id: string) => {
+    try {
+        const response = await prisma.jobScreening.deleteMany({
+            where: {
+                id: Number(id)
+            }
+        });
+
+        return response;
+    } catch (err) {
+        throw err;
+    }
+}
+
+
+
+
+
+
 
 
 
