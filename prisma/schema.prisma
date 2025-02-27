@@ -58,14 +58,14 @@ model Screening {
 }
 
 model JobScreening {
-  id            Int       @id @default(autoincrement())
-  jobList       Job       @relation(fields: [job_id], references: [id])
-  job_id        Int
-  screeningList Screening @relation(fields: [screening_id], references: [id])
-  screening_id  Int
-  sequence_number Int 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              Int       @id @default(autoincrement())
+  jobList         Job       @relation(fields: [job_id], references: [id])
+  job_id          Int
+  screeningList   Screening @relation(fields: [screening_id], references: [id])
+  screening_id    Int
+  sequence_number Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@unique([job_id, screening_id])
 }
@@ -75,4 +75,28 @@ model Departments {
   title  String   @unique @db.VarChar(250)
   status Boolean? @default(true) @db.Boolean
   Job    Job[]
+}
+
+model Evaluation {
+  id           Int        @id @default(autoincrement())
+  school_year  String     @db.VarChar(100)
+  semester     Int
+  status       String     @default("NOT SET")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  questionList Question[]
+
+  @@unique([school_year, semester])
+}
+
+model Question {
+  id           Int         @id @default(autoincrement())
+  question     String
+  Evaluation   Evaluation? @relation(fields: [evaluationId], references: [id])
+  evaluationId Int
+}
+
+model Comments {
+  id          Int    @id @default(autoincrement())
+  description String
 }

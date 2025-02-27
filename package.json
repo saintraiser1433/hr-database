@@ -14,7 +14,7 @@
     "generate": "npx prisma generate",
     "migrate-prod": "npx prisma migrate deploy",
     "migrate-reset": "npx prisma migrate reset",
-    "prisma-studio": "npx prisma studio"
+    "studio": "npx prisma studio"
   },
   "keywords": [],
   "author": "",
