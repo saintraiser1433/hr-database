@@ -1,4 +1,5 @@
-import { EvaluationModel, QuestionModel } from '../types';
+import { EvaluationModel, QuestionModel } from '../interfaces';
+import { Response } from 'express';
 import prisma from '../prisma';
 
 export const getEvaluation = async () => {
@@ -38,7 +39,18 @@ export const createEvaluation = async (body: Omit<EvaluationModel, "id" | "quest
     }
 }
 
-export const modifyEvaluation = async (id: string, data: Omit<EvaluationModel, "id" | "questionList">) => {
+export const modifyEvaluation = async (id: string, data: Omit<EvaluationModel, "id" | "questionList">, res: Response) => {
+
+
+    const checkDuplicateStatus = await prisma.evaluation.findFirst({
+        where: {
+            status: 'ONGOING'
+        }
+    });
+    if (checkDuplicateStatus) {
+        throw new Error("Please update the ongoing status to finished before update");
+    }
+
     return await prisma.evaluation.update({
         where: {
             id: Number(id),
@@ -62,6 +74,7 @@ export const getEvaluationQuestion = async (id: string) => {
             select: {
                 id: true,
                 question: true,
+                evaluationId: true
 
             },
             where: {
@@ -98,6 +111,9 @@ export const createEvaluationQuestion = async (body: Omit<QuestionModel, "id">) 
 
 export const modifyEvaluationQuestion = async (id: string, body: QuestionModel) => {
     try {
+
+
+
         const response = await prisma.question.update({
             data: {
                 question: body.question,

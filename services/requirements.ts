@@ -1,4 +1,4 @@
-import { RequirementModel } from '../types';
+import { RequirementModel } from '../interfaces';
 import prisma from '../prisma';
 
 export const getRequirementService = async () => {
@@ -18,7 +18,7 @@ export const getRequirementService = async () => {
 }
 
 
-export const createRequirementService = async (data: RequirementModel) => {
+export const createRequirementService = async (data: Omit<RequirementModel, "id" | "Job">) => {
     try {
         const response = await prisma.requirements.create({
             data
@@ -30,7 +30,7 @@ export const createRequirementService = async (data: RequirementModel) => {
 }
 
 
-export const updateRequirementService = async (id: string, data: RequirementModel) => {
+export const updateRequirementService = async (id: string, data: Omit<RequirementModel, "id" | "Job">) => {
     return await prisma.requirements.update({
         where: {
             id: Number(id),

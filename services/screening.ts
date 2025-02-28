@@ -1,4 +1,4 @@
-import { JobScreeningModel, ScreeningModel } from '../types';
+import { JobScreeningModel, ScreeningModel } from '../interfaces';
 import prisma from '../prisma';
 
 export const getScreenings = async () => {

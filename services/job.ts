@@ -1,4 +1,4 @@
-import { JobModel, RequirementModel } from '../types';
+import { JobModel, RequirementModel } from '../interfaces';
 import prisma from '../prisma';
 
 export const getJobService = async () => {

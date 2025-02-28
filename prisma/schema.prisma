@@ -13,6 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//ENUMS
+enum ApplicationStatus {
+  PENDING
+  ONGOING
+  APPROVED
+  REJECTED
+}
+
+enum EvaluationStatus {
+  NOT_SET
+  ONGOING
+  FINISHED
+}
+
+//END OF ENUMS
 model User {
   id           String   @id @default(cuid())
   first_name   String   @db.VarChar(100)
@@ -33,6 +48,8 @@ model Requirements {
   title       String   @unique @db.VarChar(100)
   status      Boolean? @default(true) @db.Boolean
   description String
+  Job         Job?     @relation(fields: [jobId], references: [id])
+  jobId       Int?
 }
 
 model Job {
@@ -47,6 +64,8 @@ model Job {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   JobScreening   JobScreening[]
+  Applicants     Applicant[]
+  Requirements   Requirements[]
 }
 
 model Screening {
@@ -78,12 +97,12 @@ model Departments {
 }
 
 model Evaluation {
-  id           Int        @id @default(autoincrement())
-  school_year  String     @db.VarChar(100)
+  id           Int              @id @default(autoincrement())
+  school_year  String           @db.VarChar(100)
   semester     Int
-  status       String     @default("NOT SET")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  status       EvaluationStatus @default(NOT_SET)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   questionList Question[]
 
   @@unique([school_year, semester])
@@ -92,11 +111,62 @@ model Evaluation {
 model Question {
   id           Int         @id @default(autoincrement())
   question     String
-  Evaluation   Evaluation? @relation(fields: [evaluationId], references: [id])
+  Evaluation   Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationId Int
 }
 
 model Comments {
   id          Int    @id @default(autoincrement())
   description String
+}
+
+model Applicant {
+  id                   Int                    @id @default(autoincrement())
+  jobApply             Job                    @relation(fields: [jobId], references: [id])
+  jobId                Int
+  status               ApplicationStatus      @default(PENDING)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  information ApplicantInformation[]
+}
+
+model ApplicantInformation {
+  id             Int    @id @default(autoincrement())
+  first_name     String @db.VarChar(100)
+  middle_name    String @db.VarChar(100)
+  last_name      String @db.VarChar(100)
+  email          String @db.VarChar(100)
+  contact_number Int
+  resume_path    String
+
+  gender               String? @db.VarChar(100)
+  age                  Int?
+  civil_status         String? @db.VarChar(100)
+  date_of_birth        String? @db.VarChar(100)
+  city_address         String?
+  provincial_address   String?
+  telephone_number     Int?
+  religion             String?
+  citizenship          String?
+  fathers_name         String?
+  fathers_occupation   String?
+  mothers_name         String?
+  mothers_occupation   String?
+  parents_address      String?
+  person_to_be_contact String?
+
+  //educational background
+  elementary String?
+
+  elementary_years_attended String?
+
+  highschool                String?
+  highschool_years_attended String?
+  college                   String?
+  college_years_attended    String?
+
+  //employment record
+  Applicant   Applicant @relation(fields: [applicantId], references: [id])
+  // Applicant Applicant[]
+  applicantId Int
 }

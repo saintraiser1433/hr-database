@@ -1,4 +1,4 @@
-import { DepartmentModel, RequirementModel } from '../types';
+import { DepartmentModel, RequirementModel } from '../interfaces';
 import prisma from '../prisma';
 
 export const getDepartmentService = async () => {

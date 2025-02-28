@@ -35,7 +35,7 @@ export const updateEvaluation = async (req: Request, res: Response, next: NextFu
         if (error) {
             return handleValidationError(error, res);
         }
-        const response = await modifyEvaluation(id, body);
+        const response = await modifyEvaluation(id, body,res);
         return res.status(200).json({ message: "Evaluation updated successfully", data: response });
     } catch (err) {
         next(err);
@@ -86,6 +86,7 @@ export const updateEvaluationQuestion = async (req: Request, res: Response, next
         if (error) {
             return handleValidationError(error, res);
         }
+        
         const response = await modifyEvaluationQuestion(id, body);
         return res.status(200).json({ message: "Question updated successfully", data: response });
     } catch (err) {

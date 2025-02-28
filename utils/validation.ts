@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { Response } from 'express';
-import { DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../types';
+import { DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces';
 import { appLogger } from './logger';
 
 export const requirementValidation = {
@@ -218,7 +218,7 @@ export const questionValidation = {
     insert: (data: QuestionModel) => {
         const schema = Joi.object({
             id: Joi.number().optional(),
-            description: Joi.string().required().messages({
+            question: Joi.string().required().messages({
                 "any.required": "The Questions field is required",
                 "string.empty": "The School Year field is required"
             }),
@@ -236,7 +236,7 @@ export const questionValidation = {
                 "any.required": "Opps id not found",
                 "number.empty": "Opps id not found"
             }),
-            description: Joi.string().required().messages({
+            question: Joi.string().required().messages({
                 "any.required": "The Questions field is required",
                 "string.empty": "The School Year field is required"
             }),
