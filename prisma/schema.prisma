@@ -137,7 +137,7 @@ model ApplicantInformation {
   middle_name    String @db.VarChar(100)
   last_name      String @db.VarChar(100)
   email          String @db.VarChar(100)
-  contact_number Int
+  contact_number String @db.VarChar(100)
   resume_path    String
 
   gender               String? @db.VarChar(100)

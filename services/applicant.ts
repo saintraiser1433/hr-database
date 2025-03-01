@@ -9,7 +9,7 @@ export const getApplicants = async () => {
                 information: true
             },
             where: {
-                AND: [
+                OR: [
                     {
                         status: 'ONGOING',
                     },
@@ -48,7 +48,8 @@ export const createApplicants = async (data: Omit<ApplicantModel, 'id'>) => {
                 }
             },
             include: {
-                jobApply: true
+                jobApply: true,
+                information:true
             }
         })
         return response;

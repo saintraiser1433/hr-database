@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { Response } from 'express';
-import { DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces';
+import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces';
 import { appLogger } from './logger';
 
 export const requirementValidation = {
@@ -54,7 +54,7 @@ export const jobValidation = {
                 "any.required": "The department field is required",
                 "number.empty": "The department field cannot be empty"
             }),
-            requirementsId: Joi.array().items(Joi.number()).optional().messages({
+            requirements: Joi.array().items(Joi.number()).optional().messages({
                 "array.base": "Requirements must be an array",
                 "array.includes": "Each requirement must be a number"
             }),
@@ -84,6 +84,10 @@ export const jobValidation = {
             departmentsId: Joi.number().required().messages({
                 "any.required": "The department field is required",
                 "number.empty": "The department field cannot be empty"
+            }),
+            requirements: Joi.array().items(Joi.number()).optional().messages({
+                "array.base": "Requirements must be an array",
+                "array.includes": "Each requirement must be a number"
             }),
             status: Joi.boolean().optional(),
             headerImage: Joi.string().optional(),
@@ -216,6 +220,115 @@ export const evaluationValidation = {
         return schema.validate(data, { abortEarly: false });
     },
 };
+
+
+export const applicantsValidation = {
+    insert: (data: ApplicantInformationModel) => {
+        const schema = Joi.object({
+            id: Joi.number().optional(),
+            jobId: Joi.number().required().messages({
+                "any.required": "The Job field is required",
+                "string.empty": "The Job field cannot be empty"
+            }),
+            first_name: Joi.string().required().messages({
+                "any.required": "The First Name field is required",
+                "string.empty": "The First Name field cannot be empty"
+            }),
+            middle_name: Joi.string().optional(),
+            last_name: Joi.string().required().messages({
+                "any.required": "The Last Name field is required",
+                "string.empty": "The Last Name field cannot be empty"
+            }),
+            email: Joi.string().email().required().messages({
+                "any.required": "The Email field is required",
+                "string.email": "Invalid email format"
+            }),
+            contact_number: Joi.string().required().messages({
+                "any.required": "The Contact Number field is required",
+                "number.base": "The Contact Number must be a number"
+            }),
+            resume_path: Joi.string().required().messages({
+                "any.required": "The Resume Path field is required"
+            }),
+            
+            gender: Joi.string().optional(),
+            age: Joi.number().optional(),
+            civil_status: Joi.string().optional(),
+            date_of_birth: Joi.string().optional(),
+            city_address: Joi.string().optional(),
+            provincial_address: Joi.string().optional(),
+            telephone_number: Joi.number().optional(),
+            religion: Joi.string().optional(),
+            citizenship: Joi.string().optional(),
+            fathers_name: Joi.string().optional(),
+            fathers_occupation: Joi.string().optional(),
+            mothers_name: Joi.string().optional(),
+            mothers_occupation: Joi.string().optional(),
+            parents_address: Joi.string().optional(),
+            person_to_be_contact: Joi.string().optional(),
+
+            // Educational Background
+            elementary: Joi.string().optional(),
+            elementary_years_attended: Joi.string().optional(),
+            highschool: Joi.string().optional(),
+            highschool_years_attended: Joi.string().optional(),
+            college: Joi.string().optional(),
+            college_years_attended: Joi.string().optional(),
+
+            // Relationships
+            // applicantId: Joi.number().required().messages({
+            //     "any.required": "The Applicant ID field is required",
+            //     "number.base": "The Applicant ID must be a number"
+            // })
+        });
+        return schema.validate(data, { abortEarly: false });
+    },
+
+    update: (data: ApplicantInformationModel) => {
+        const schema = Joi.object({
+            id: Joi.number().required().messages({
+                "any.required": "The ID field is required",
+                "number.base": "The ID field must be a number"
+            }),
+            first_name: Joi.string().required(),
+            last_name: Joi.string().required(),
+            email: Joi.string().email().required(),
+            contact_number: Joi.number().required(),
+            resume_path: Joi.string().required(),
+            
+            gender: Joi.string().optional(),
+            age: Joi.number().optional(),
+            civil_status: Joi.string().optional(),
+            date_of_birth: Joi.string().optional(),
+            city_address: Joi.string().optional(),
+            provincial_address: Joi.string().optional(),
+            telephone_number: Joi.number().optional(),
+            religion: Joi.string().optional(),
+            citizenship: Joi.string().optional(),
+            fathers_name: Joi.string().optional(),
+            fathers_occupation: Joi.string().optional(),
+            mothers_name: Joi.string().optional(),
+            mothers_occupation: Joi.string().optional(),
+            parents_address: Joi.string().optional(),
+            person_to_be_contact: Joi.string().optional(),
+
+            // Educational Background
+            elementary: Joi.string().optional(),
+            elementary_years_attended: Joi.string().optional(),
+            highschool: Joi.string().optional(),
+            highschool_years_attended: Joi.string().optional(),
+            college: Joi.string().optional(),
+            college_years_attended: Joi.string().optional(),
+
+            // Relationships
+            applicantId: Joi.number().required()
+        });
+        return schema.validate(data, { abortEarly: false });
+    }
+};
+
+
+
 
 
 export const questionValidation = {

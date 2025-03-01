@@ -30,7 +30,7 @@ export const createJobService = async (body: Omit<JobModel, "id" | "JobScreening
                     connect: { id: Number(body.departmentsId), },
                 },
                 requirements: {
-                    connect: body.requirementsId?.map(id => ({ id: Number(id) })) || [],
+                    connect: body.requirements?.map(id => ({ id: Number(id) })) || [],
                 },
 
 
@@ -71,9 +71,14 @@ export const updateJobService = async (id: string, body: Omit<JobModel, "JobScre
             department: {
                 connect: { id: Number(body.departmentsId) },
             },
+            requirements: {
+                set: [],
+                connect: body.requirements?.map(id => ({ id: Number(id) })) || [],
+            },
         },
         include: {
-            department: true
+            department: true,
+            requirements: true
         }
 
 

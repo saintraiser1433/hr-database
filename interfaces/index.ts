@@ -23,7 +23,6 @@ export interface JobModel extends Timestamped {
     departmentsId: number,
     department?: DepartmentModel
     headerImage?: string;
-    requirementsId: number[];
     JobScreening?: JobScreeningModel[];
     requirements?: RequirementModel[]
 }
@@ -79,7 +78,6 @@ export interface ApplicantModel extends ApplicantInformationModel {
     updatedAt: Date;
     // Relationships
     jobApply: JobModel;
-    ApplicantInformation: ApplicantInformationModel[];
 }
 
 
@@ -90,7 +88,7 @@ export interface ApplicantInformationModel {
     middle_name: string;
     last_name: string;
     email: string;
-    contact_number: number;
+    contact_number: string;
     resume_path: string;
 
     gender?: string;
@@ -109,7 +107,6 @@ export interface ApplicantInformationModel {
     parents_address?: string;
     person_to_be_contact?: string;
 
-    // Educational Background
     elementary?: string;
     elementary_years_attended?: string;
     highschool?: string;
@@ -117,7 +114,6 @@ export interface ApplicantInformationModel {
     college?: string;
     college_years_attended?: string;
 
-    // Relationships
-    Applicant: ApplicantModel
-    applicantId: number
+    Applicant?: ApplicantModel
+    applicantId?: number
 }

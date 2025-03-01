@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 async function main() {
   // Create 50 random examinees
-  const numberOfUsers = 500000000
+  const numberOfUsers = 30
 
   for (let i = 0; i < numberOfUsers; i++) {
     const firstName = faker.person.firstName()
@@ -31,7 +31,7 @@ async function main() {
   }
 
 
-  const numberOfDEPARTMENT = 500
+  const numberOfDEPARTMENT = 30
 
   for (let i = 0; i < numberOfDEPARTMENT; i++) {
     const name = faker.person.fullName() // Using firstName generator for middle name
@@ -51,7 +51,43 @@ async function main() {
     })
   }
 
+
+  const numberofApplicants = 30
+
+  for (let i = 0; i < numberofApplicants; i++) {
+    const fname = faker.person.firstName()
+    const lname = faker.person.lastName()
+    const mname = faker.person.middleName()
+    const email = faker.internet.email()
+    const contact_number = faker.phone.number()
+    const resume = faker.word.sample()
+    // Generate a simple password (in production, you'd want stronger passwords)
+    // const plainPassword = 'Password123!'
+    // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+
+    await prisma.applicant.create({
+      data: {
+        jobApply: { connect: { id: 9 } },
+        information: {
+          create: {
+            first_name: fname,
+            middle_name: mname,
+            last_name: lname,
+            email: email,
+            contact_number: contact_number,
+            resume_path: resume
+          }
+        }
+      }
+    })
+  }
 }
+
+
+
+
+
+
 
 main()
   .catch((e) => {
