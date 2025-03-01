@@ -5,7 +5,8 @@ export const getJobService = async () => {
     try {
         const response = await prisma.job.findMany({
             include: {
-                department: true
+                department: true,
+                requirements: true
             }
         })
 
@@ -26,17 +27,21 @@ export const createJobService = async (body: Omit<JobModel, "id" | "JobScreening
                 totalAvailable: Number(body.totalAvailable),
                 headerImage: file?.filename || body.headerImage,
                 department: {
-                    connect: { id: Number(body.departmentsId), }, // 🔹 Connects this job to department with ID = 2
+                    connect: { id: Number(body.departmentsId), },
                 },
+                requirements: {
+                    connect: body.requirementsId?.map(id => ({ id: Number(id) })) || [],
+                },
+
+
+
             },
             include: {
-                department: true, // ✅ Include department data in response
+                department: true,
+                requirements: true
             },
 
         })
-
-
-
         const finalData = {
             ...response,
             departmentTitle: response.department.title

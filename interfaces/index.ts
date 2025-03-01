@@ -9,8 +9,7 @@ export interface RequirementModel extends Timestamped {
     title: string;
     description: string;
     status: boolean
-    jobId?: number;
-    Job?: JobModel | undefined;
+    job?: JobModel[]
 }
 
 
@@ -24,8 +23,9 @@ export interface JobModel extends Timestamped {
     departmentsId: number,
     department?: DepartmentModel
     headerImage?: string;
+    requirementsId: number[];
     JobScreening?: JobScreeningModel[];
-    Requirements?: RequirementModel[]
+    requirements?: RequirementModel[]
 }
 
 export interface ScreeningModel {

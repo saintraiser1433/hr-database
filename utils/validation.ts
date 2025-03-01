@@ -54,6 +54,10 @@ export const jobValidation = {
                 "any.required": "The department field is required",
                 "number.empty": "The department field cannot be empty"
             }),
+            requirementsId: Joi.array().items(Joi.number()).optional().messages({
+                "array.base": "Requirements must be an array",
+                "array.includes": "Each requirement must be a number"
+            }),
             status: Joi.boolean().optional(),
             headerImage: Joi.string().optional(),
         });
