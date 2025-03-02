@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { fetchApplicants, insertApplicants, rejectApplicants } from '../controller/applicants';
+import { fetchApplicantsByOngoing, fetchApplicantsByPending, fetchApplicantsByRejected, insertApplicants, rejectApplicants } from '../controller/applicants';
 
 const route = Router();
 
-route.get('/', fetchApplicants);
+route.get('/pending', fetchApplicantsByPending);
+route.get('/ongoing', fetchApplicantsByOngoing);
+route.get('/rejected', fetchApplicantsByRejected);
 route.post('/', insertApplicants);
 route.delete('/:id', rejectApplicants);
 

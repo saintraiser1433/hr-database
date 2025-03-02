@@ -1,7 +1,7 @@
 import { ApplicantModel } from '../interfaces';
 import prisma from '../prisma';
 
-export const getApplicants = async () => {
+export const getApplicantsPending = async () => {
     try {
         const response = await prisma.applicant.findMany({
             include: {
@@ -9,19 +9,42 @@ export const getApplicants = async () => {
                 information: true
             },
             where: {
-                OR: [
-                    {
-                        status: 'ONGOING',
-                    },
-                    {
-                        status: 'PENDING',
-                    },
-                ]
-
-
+                status:'PENDING'
             }
         })
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
 
+export const getApplicantsOngoing = async () => {
+    try {
+        const response = await prisma.applicant.findMany({
+            include: {
+                jobApply: true,
+                information: true
+            },
+            where: {
+                status:'ONGOING'
+            }
+        })
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+export const getApplicantsRejected = async () => {
+    try {
+        const response = await prisma.applicant.findMany({
+            include: {
+                jobApply: true,
+                information: true
+            },
+            where: {
+                status:'REJECTED'
+            }
+        })
         return response;
     } catch (err) {
         throw err

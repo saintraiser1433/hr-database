@@ -1,11 +1,28 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, applicantsValidation } from '../utils/validation';
-import { createApplicants, getApplicants, rejectApplicant } from '../services/applicant';
+import { createApplicants, getApplicantsOngoing, getApplicantsPending, getApplicantsRejected, rejectApplicant } from '../services/applicant';
 
-export const fetchApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-        const response = await getApplicants();
+        const response = await getApplicantsPending();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+export const fetchApplicantsByOngoing = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantsOngoing();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const fetchApplicantsByRejected = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantsRejected();
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -26,6 +43,17 @@ export const insertApplicants = async (req: Request, res: Response, next: NextFu
     }
 };
 
+
+
+export const upda = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.id;
+    try {
+        await rejectApplicant(id);
+        return res.status(200).json({ message: "Applicantion successfully rejected" });
+    } catch (err) {
+        next(err)
+    }
+}
 
 
 export const rejectApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
