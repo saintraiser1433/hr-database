@@ -14,9 +14,9 @@ async function main() {
   //   const middleName = faker.person.firstName() // Using firstName generator for middle name
   //   const username = faker.internet.username({ firstName, lastName })
 
-    // Generate a simple password (in production, you'd want stronger passwords)
-    // const plainPassword = 'Password123!'
-    // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+  // Generate a simple password (in production, you'd want stronger passwords)
+  // const plainPassword = 'Password123!'
+  // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
 
   //   await prisma.requirements.upsert({
   //     where: {
@@ -53,8 +53,8 @@ async function main() {
 
 
   const numberofApplicants = 30
-  const d = ['1.pdf','2.pdf'];
-  const avatarArr = ['profile.png','profile2.jpg'];
+  const d = ['1.pdf', '2.pdf'];
+  const avatarArr = ['profile.png', 'profile2.jpg'];
   for (let i = 0; i < numberofApplicants; i++) {
 
     const fname = faker.person.firstName()
@@ -62,8 +62,8 @@ async function main() {
     const mname = faker.person.middleName()
     const email = faker.internet.email()
     const contact_number = faker.phone.number()
-    const resume= faker.helpers.arrayElement(d)
-    const avatar= faker.helpers.arrayElement(avatarArr)
+    const resume = faker.helpers.arrayElement(d)
+    const avatar = faker.helpers.arrayElement(avatarArr)
     // const resume = faker.word.sample()
     // Generate a simple password (in production, you'd want stronger passwords)
     // const plainPassword = 'Password123!'
@@ -71,7 +71,7 @@ async function main() {
 
     await prisma.applicant.create({
       data: {
-        jobApply: { connect: { id: 9 } },
+        jobApply: { connect: { id: 6 } },
         information: {
           create: {
             first_name: fname,

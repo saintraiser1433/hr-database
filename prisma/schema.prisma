@@ -27,6 +27,11 @@ enum EvaluationStatus {
   FINISHED
 }
 
+enum ScreeningStatus {
+  PASSED
+  FAILED
+}
+
 //END OF ENUMS
 model User {
   id           String   @id @default(cuid())
@@ -54,27 +59,29 @@ model Requirements {
 }
 
 model Job {
-  id             Int            @id @default(autoincrement())
-  title          String         @unique @db.VarChar(250)
-  description    String
-  totalAvailable Int            @db.Integer
-  departmentsId  Int
-  department     Departments    @relation(fields: [departmentsId], references: [id])
-  status         Boolean?       @default(true) @db.Boolean
-  headerImage    String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  JobScreening   JobScreening[]
-  Applicants     Applicant[]
-  requirements   Requirements[]
+  id                 Int                  @id @default(autoincrement())
+  title              String               @unique @db.VarChar(250)
+  description        String
+  totalAvailable     Int                  @db.Integer
+  departmentsId      Int
+  department         Departments          @relation(fields: [departmentsId], references: [id])
+  status             Boolean?             @default(true) @db.Boolean
+  headerImage        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  JobScreening       JobScreening[]
+  Applicants         Applicant[]
+  requirements       Requirements[]
+  applicantScreening ApplicantScreening[]
 }
 
 model Screening {
-  id           Int            @id @default(autoincrement())
-  title        String         @unique @db.VarChar(250)
-  description  String
-  status       Boolean?       @default(true) @db.Boolean
-  JobScreening JobScreening[]
+  id                 Int                  @id @default(autoincrement())
+  title              String               @unique @db.VarChar(250)
+  description        String
+  status             Boolean?             @default(true) @db.Boolean
+  JobScreening       JobScreening[]
+  applicantScreening ApplicantScreening[]
 }
 
 model JobScreening {
@@ -122,16 +129,29 @@ model Comments {
 }
 
 model Applicant {
-  id          Int                   @id @default(autoincrement())
-  jobApply    Job                   @relation(fields: [jobId], references: [id])
+  id          Int                  @id @default(autoincrement())
+  jobApply    Job                  @relation(fields: [jobId], references: [id])
   jobId       Int
-  status      ApplicationStatus     @default(PENDING)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  rejectedAt  DateTime?                
+  status      ApplicationStatus    @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  rejectedAt  DateTime?
   information ApplicantInformation @relation(fields: [informationId], references: [id])
 
-  informationId Int // Foreign key to ApplicantInformation
+  informationId      Int // Foreign key to ApplicantInformation
+  applicantScreening ApplicantScreening[]
+}
+
+model ApplicantScreening {
+  applicant   Applicant       @relation(fields: [applicantId], references: [id])
+  job         Job             @relation(fields: [jobId], references: [id])
+  screening   Screening       @relation(fields: [screeningId], references: [id])
+  applicantId Int
+  jobId       Int
+  screeningId Int
+  status      ScreeningStatus
+
+  @@id(name: "asKeys", [applicantId, screeningId, jobId])
 }
 
 model ApplicantInformation {
@@ -172,4 +192,3 @@ model ApplicantInformation {
 
   Applicant Applicant[]
 }
-

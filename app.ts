@@ -17,6 +17,7 @@ app.use(cors());
 app.use('/job-images', express.static('public/job-offer-uploads'));
 app.use('/avatar', express.static('public/avatar'));
 app.use('/resume', express.static('public/resume'));
+app.use('/uploads', express.static('public/uploads'));
 // API routes
 app.use('/api/v1', router);
 

@@ -7,7 +7,7 @@ route.get('/pending', fetchApplicantsByPending);
 route.get('/ongoing', fetchApplicantsByOngoing);
 route.get('/rejected', fetchApplicantsByRejected);
 route.post('/', insertApplicants);
-route.delete('/:id', rejectApplicants);
+route.put('/:id', rejectApplicants);
 
 
 

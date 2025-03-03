@@ -45,21 +45,22 @@ export const insertApplicants = async (req: Request, res: Response, next: NextFu
 
 
 
-export const upda = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const id = req.params.id;
-    try {
-        await rejectApplicant(id);
-        return res.status(200).json({ message: "Applicantion successfully rejected" });
-    } catch (err) {
-        next(err)
-    }
-}
+// export const upda = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+//     const id = req.params.id;
+//     try {
+//         await rejectApplicant(id);
+//         return res.status(200).json({ message: "Applicantion successfully rejected" });
+//     } catch (err) {
+//         next(err)
+//     }
+// }
 
 
 export const rejectApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const id = req.params.id;
+    const { rejectedDate } = req.body;
     try {
-        await rejectApplicant(id);
+        await rejectApplicant(id, rejectedDate);
         return res.status(200).json({ message: "Applicantion successfully rejected" });
     } catch (err) {
         next(err)
