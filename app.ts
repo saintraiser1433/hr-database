@@ -15,7 +15,8 @@ app.use(cors());
 
 // Serve static files from the 'public/uploads' directory under the '/job' route
 app.use('/job-images', express.static('public/job-offer-uploads'));
-
+app.use('/avatar', express.static('public/avatar'));
+app.use('/resume', express.static('public/resume'));
 // API routes
 app.use('/api/v1', router);
 

@@ -90,7 +90,7 @@ export interface ApplicantInformationModel {
     email: string;
     contact_number: string;
     resume_path: string;
-
+    photo_path: string;
     gender?: string;
     age?: number;
     civil_status?: string;

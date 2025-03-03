@@ -122,13 +122,16 @@ model Comments {
 }
 
 model Applicant {
-  id          Int                    @id @default(autoincrement())
-  jobApply    Job                    @relation(fields: [jobId], references: [id])
+  id          Int                   @id @default(autoincrement())
+  jobApply    Job                   @relation(fields: [jobId], references: [id])
   jobId       Int
-  status      ApplicationStatus      @default(PENDING)
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  information ApplicantInformation[]
+  status      ApplicationStatus     @default(PENDING)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  rejectedAt  DateTime?                
+  information ApplicantInformation @relation(fields: [informationId], references: [id])
+
+  informationId Int // Foreign key to ApplicantInformation
 }
 
 model ApplicantInformation {
@@ -139,6 +142,7 @@ model ApplicantInformation {
   email          String @db.VarChar(100)
   contact_number String @db.VarChar(100)
   resume_path    String
+  photo_path     String
 
   gender               String? @db.VarChar(100)
   age                  Int?
@@ -166,8 +170,6 @@ model ApplicantInformation {
   college                   String?
   college_years_attended    String?
 
-  //employment record
-  Applicant   Applicant @relation(fields: [applicantId], references: [id])
-  // Applicant Applicant[]
-  applicantId Int
+  Applicant Applicant[]
 }
+
