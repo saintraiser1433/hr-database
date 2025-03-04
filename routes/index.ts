@@ -6,7 +6,7 @@ import departmentRoute from './department';
 import fileRoute from './file';
 import evaluationRoute from './evaluation'
 import applicantRoute from './applicants'
-
+import interviewRoute from './interview'
 const route = Router();
 
 route.use('/requirements', requirementsRoute)
@@ -16,6 +16,7 @@ route.use('/file', fileRoute)
 route.use('/applicant', applicantRoute)
 route.use('/department', departmentRoute)
 route.use('/screening', screeningRoute)
+route.use('/interview', interviewRoute)
 
 
 

@@ -71,7 +71,7 @@ async function main() {
 
     await prisma.applicant.create({
       data: {
-        jobApply: { connect: { id: 6 } },
+        jobApply: { connect: { id: 9 } },
         information: {
           create: {
             first_name: fname,

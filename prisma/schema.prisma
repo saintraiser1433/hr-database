@@ -19,6 +19,7 @@ enum ApplicationStatus {
   ONGOING
   APPROVED
   REJECTED
+  FAILED
 }
 
 enum EvaluationStatus {
@@ -28,6 +29,7 @@ enum EvaluationStatus {
 }
 
 enum ScreeningStatus {
+  PENDING
   PASSED
   FAILED
 }
@@ -59,29 +61,28 @@ model Requirements {
 }
 
 model Job {
-  id                 Int                  @id @default(autoincrement())
-  title              String               @unique @db.VarChar(250)
-  description        String
-  totalAvailable     Int                  @db.Integer
-  departmentsId      Int
-  department         Departments          @relation(fields: [departmentsId], references: [id])
-  status             Boolean?             @default(true) @db.Boolean
-  headerImage        String?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  JobScreening       JobScreening[]
-  Applicants         Applicant[]
-  requirements       Requirements[]
-  applicantScreening ApplicantScreening[]
+  id             Int            @id @default(autoincrement())
+  title          String         @unique @db.VarChar(250)
+  description    String
+  totalAvailable Int            @db.Integer
+  departmentsId  Int
+  department     Departments    @relation(fields: [departmentsId], references: [id])
+  status         Boolean?       @default(true) @db.Boolean
+  headerImage    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  JobScreening   JobScreening[]
+  Applicants     Applicant[]
+  requirements   Requirements[]
 }
 
 model Screening {
-  id                 Int                  @id @default(autoincrement())
-  title              String               @unique @db.VarChar(250)
-  description        String
-  status             Boolean?             @default(true) @db.Boolean
-  JobScreening       JobScreening[]
-  applicantScreening ApplicantScreening[]
+  id                       Int                        @id @default(autoincrement())
+  title                    String                     @unique @db.VarChar(250)
+  description              String
+  status                   Boolean?                   @default(true) @db.Boolean
+  JobScreening             JobScreening[]
+  applicantScreeningResult ApplicantScreeningResult[]
 }
 
 model JobScreening {
@@ -138,20 +139,21 @@ model Applicant {
   rejectedAt  DateTime?
   information ApplicantInformation @relation(fields: [informationId], references: [id])
 
-  informationId      Int // Foreign key to ApplicantInformation
-  applicantScreening ApplicantScreening[]
+  informationId            Int // Foreign key to ApplicantInformation
+  applicantScreeningResult ApplicantScreeningResult[]
 }
 
-model ApplicantScreening {
-  applicant   Applicant       @relation(fields: [applicantId], references: [id])
-  job         Job             @relation(fields: [jobId], references: [id])
-  screening   Screening       @relation(fields: [screeningId], references: [id])
-  applicantId Int
-  jobId       Int
-  screeningId Int
-  status      ScreeningStatus
+model ApplicantScreeningResult {
+  id            Int             @id @default(autoincrement())
+  dateInterview DateTime?
+  screening     Screening       @relation(fields: [screeningId], references: [id])
+  Applicant     Applicant?      @relation(fields: [applicantId], references: [id])
+  applicantId   Int
+  screeningId   Int
+  status        ScreeningStatus
 
-  @@id(name: "asKeys", [applicantId, screeningId, jobId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ApplicantInformation {

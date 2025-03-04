@@ -117,3 +117,9 @@ export interface ApplicantInformationModel {
     Applicant?: ApplicantModel
     applicantId?: number
 }
+
+
+export interface InterviewDate{
+    id:number,
+    date:string
+} 

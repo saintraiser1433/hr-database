@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, applicantsValidation } from '../utils/validation';
-import { createApplicants, getApplicantsOngoing, getApplicantsPending, getApplicantsRejected, rejectApplicant } from '../services/applicant';
+import { createApplicants, getApplicantsOngoing, getApplicantsPending, getApplicantsRejected, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant } from '../services/applicant';
 
 export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -20,6 +20,16 @@ export const fetchApplicantsByOngoing = async (req: Request, res: Response, next
     }
 }
 
+export const fetchOngoingByApplicant = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.id;
+    try {
+        const response = await getOngoingStatusByApplicant(id);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const fetchApplicantsByRejected = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
         const response = await getApplicantsRejected();
@@ -28,6 +38,7 @@ export const fetchApplicantsByRejected = async (req: Request, res: Response, nex
         next(err);
     }
 }
+
 
 export const insertApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
@@ -45,23 +56,22 @@ export const insertApplicants = async (req: Request, res: Response, next: NextFu
 
 
 
-// export const upda = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-//     const id = req.params.id;
-//     try {
-//         await rejectApplicant(id);
-//         return res.status(200).json({ message: "Applicantion successfully rejected" });
-//     } catch (err) {
-//         next(err)
-//     }
-// }
+export const proceedApplicant = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.id;
+    try {
+        const response = await ongoingApplicants(id);
+        return res.status(200).json({ message: "Application successfully proceed", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
 
 
 export const rejectApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const id = req.params.id;
-    const { rejectedDate } = req.body;
     try {
-        await rejectApplicant(id, rejectedDate);
-        return res.status(200).json({ message: "Applicantion successfully rejected" });
+        const response = await rejectApplicant(id);
+        return res.status(200).json({ message: "Applicantion successfully rejected", data: response });
     } catch (err) {
         next(err)
     }
