@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { modifyInterviewDate } from '../controller/interview';
+import { modifyInterviewDate, modifyInterviewUpdate } from '../controller/interview';
 
 const route = Router();
 
 
-route.put('/:id', modifyInterviewDate);
-
+route.put('/date/:id', modifyInterviewDate);
+route.put('/status/:id', modifyInterviewUpdate)
 
 
 

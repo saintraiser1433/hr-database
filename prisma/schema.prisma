@@ -144,16 +144,16 @@ model Applicant {
 }
 
 model ApplicantScreeningResult {
-  id            Int             @id @default(autoincrement())
-  dateInterview DateTime?
-  screening     Screening       @relation(fields: [screeningId], references: [id])
-  Applicant     Applicant?      @relation(fields: [applicantId], references: [id])
-  applicantId   Int
-  screeningId   Int
-  status        ScreeningStatus
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int             @id @default(autoincrement())
+  dateInterview   DateTime?
+  screening       Screening       @relation(fields: [screeningId], references: [id])
+  Applicant       Applicant?      @relation(fields: [applicantId], references: [id])
+  applicantId     Int
+  screeningId     Int
+  status          ScreeningStatus
+  sequence_number Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model ApplicantInformation {

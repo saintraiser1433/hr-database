@@ -45,6 +45,7 @@ export const getOngoingStatusByApplicant = async (id: string) => {
                     { id: applicantId },
                 ]
             },
+
             select: {
                 id: true,
                 status: true,
@@ -67,11 +68,12 @@ export const getOngoingStatusByApplicant = async (id: string) => {
                 },
                 applicantScreeningResult: {
                     select: {
-                        id:true,
+                        id: true,
                         screeningId: true,
                         status: true,
-                        dateInterview:true,
-                        screening: { select: { title: true } }
+                        dateInterview: true,
+                        sequence_number: true,
+                        screening: { select: { title: true, } }
                     }
                 },
                 information: {
@@ -92,11 +94,16 @@ export const getOngoingStatusByApplicant = async (id: string) => {
         });
 
         return response.map(applicant => {
-            const screeningResults = applicant.applicantScreeningResult;
+            const screeningResults = applicant.applicantScreeningResult.sort((a, b) => a.sequence_number - b.sequence_number);
             const jobScreeningCount = screeningResults.length;
             let applicantScreeningCount = 0;
             let hasFailed = false;
 
+            // **Process all applicant screening results in one loop**
+            for (const screening of screeningResults) {
+                if (screening.status !== 'PENDING') applicantScreeningCount++;
+                if (screening.status === 'FAILED') hasFailed = true;
+            }
 
             // **Determine remarks efficiently**
             let remarks = 'FAILED';
@@ -129,96 +136,6 @@ export const getOngoingStatusByApplicant = async (id: string) => {
         throw err;
     }
 };
-
-// export const getOngoingStatusByApplicant = async (id: string) => {
-//     try {
-//         const response = await prisma.applicant.findMany({
-//             select: {
-//                 id: true,
-//                 status: true,
-//                 jobId: true,
-//                 createdAt: true,
-//                 jobApply: {
-//                     select: {
-//                         title: true,
-//                         JobScreening: {
-//                             select: {
-//                                 screening_id: true,
-//                                 sequence_number: true,
-//                                 screeningList: {
-//                                     select: {
-//                                         title: true,
-//                                     }
-//                                 },
-
-//                             },
-//                             orderBy: {
-//                                 sequence_number: 'asc'
-//                             }
-//                         },
-//                     }
-//                 },
-//                 applicantScreeningResult: true,
-//                 information: {
-//                     select: {
-//                         id: true,
-//                         first_name: true,
-//                         middle_name: true,
-//                         last_name: true,
-//                         email: true,
-//                         contact_number: true,
-//                         resume_path: true,
-//                         photo_path: true,
-//                     }
-//                 }
-//             },
-//             where: {
-//                 AND: [
-//                     { status: 'ONGOING' },
-//                     { id: Number(id) },
-//                 ]
-//             }
-//         })
-
-
-
-
-//         return response.map(applicant => {
-
-//             const jobScreeningCount = applicant.jobApply?.JobScreening?.length || 0;
-//             const applicantScreeningCount = applicant.applicantScreening?.length || 0;
-
-//             const jobScreeningProgress = applicant.jobApply?.JobScreening.map((screening) => {
-//                 const matchingInterview = applicant.applicantScreening.find(
-//                     (appScreening) => appScreening.screeningId === screening.screening_id
-//                 );
-
-//                 return {
-//                     title: screening.screeningList.title,
-//                     dateInterview: matchingInterview?.applicationInterviewDate?.[0]?.dateInterview || null
-//                 };
-//             });
-//             return {
-//                 id: applicant.id,
-//                 photo: applicant.information.photo_path,
-//                 jobId: applicant.jobId,
-//                 jobTitle: applicant.jobApply?.title || "N/A",
-//                 status: applicant.status,
-//                 applicantName: `${applicant.information.last_name}, ${applicant.information.first_name} ${applicant.information.middle_name || ''}`,
-//                 appliedDate: applicant.createdAt,
-//                 resume: applicant.information.resume_path,
-//                 email: applicant.information.email,
-//                 contactNumber: applicant.information.contact_number,
-//                 countJobScreening: jobScreeningCount,
-//                 countApplicantScreening: applicantScreeningCount,
-//                 progressList: jobScreeningProgress,
-
-//             };
-//         });
-//     } catch (err) {
-//         throw err
-//     }
-// }
 
 
 export const getApplicantsOngoing = async () => {
@@ -398,7 +315,8 @@ export const ongoingApplicants = async (id: string) => {
                             title: true,
                             JobScreening: {
                                 select: {
-                                    screening_id: true
+                                    screening_id: true,
+                                    sequence_number: true
                                 },
                                 orderBy: { sequence_number: 'asc' }
                             }
@@ -426,6 +344,7 @@ export const ongoingApplicants = async (id: string) => {
                         applicantId: updatedApplicant.id,
                         screeningId: screening.screening_id,
                         status: "PENDING",
+                        sequence_number: screening.sequence_number
                     }))
                 });
             }
