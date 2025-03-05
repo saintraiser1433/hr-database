@@ -44,11 +44,6 @@ export const updateInterviewStatus = async (id: string, status: ScreeningStatus)
         });
         if (!currentRecord) throw new Error("Record not found.");
 
-        // if (currentRecord.status !== "PENDING") {
-        //     throw new Error("Status update not allowed. The current status is not PENDING.");
-        // }
-
-        // If sequence number is greater than 1, check the previous sequence
         if (currentRecord.sequence_number > 1) {
             const previousRecord = await prisma.applicantScreeningResult.findFirst({
                 where: {

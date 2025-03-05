@@ -17,7 +17,7 @@ datasource db {
 enum ApplicationStatus {
   PENDING
   ONGOING
-  APPROVED
+  PASSED
   REJECTED
   FAILED
 }
@@ -137,6 +137,8 @@ model Applicant {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   rejectedAt  DateTime?
+  approvedAt  DateTime?
+  failedAt    DateTime?
   information ApplicantInformation @relation(fields: [informationId], references: [id])
 
   informationId            Int // Foreign key to ApplicantInformation

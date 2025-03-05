@@ -1,3 +1,4 @@
+import { ApplicationStatus, ScreeningStatus } from '@prisma/client';
 import { ApplicantModel } from '../interfaces';
 import prisma from '../prisma';
 
@@ -25,6 +26,70 @@ export const getApplicantsPending = async () => {
                 resume: item.information.resume_path,
                 email: item.information.email,
                 contactNumber: item.information.contact_number
+            }
+        });
+
+
+        return serializedData;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const getApplicantsFailed = async () => {
+    try {
+        const response = await prisma.applicant.findMany({
+            include: {
+                jobApply: true,
+                information: true
+            },
+            where: {
+                status: 'FAILED'
+            }
+        })
+
+        const serializedData = response.map((item) => {
+            return {
+                id: item.id,
+                photo: item.information.photo_path,
+                jobId: item.jobApply.id,
+                jobTitle: item.jobApply.title,
+                status: item.status,
+                applicantName: `${item.information.last_name}, ${item.information.first_name} ${item.information.middle_name}`,
+                appliedDate: item.createdAt,
+                failedDate: item.failedAt,
+            }
+        });
+
+
+        return serializedData;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const getApplicantsPassed = async () => {
+    try {
+        const response = await prisma.applicant.findMany({
+            include: {
+                jobApply: true,
+                information: true
+            },
+            where: {
+                status: 'PASSED',
+            }
+        })
+
+        const serializedData = response.map((item) => {
+            return {
+                id: item.id,
+                photo: item.information.photo_path,
+                jobId: item.jobApply.id,
+                jobTitle: item.jobApply.title,
+                status: item.status,
+                applicantName: `${item.information.last_name}, ${item.information.first_name} ${item.information.middle_name}`,
+                appliedDate: item.createdAt,
+                passedDate: item.approvedAt,
             }
         });
 
@@ -145,7 +210,6 @@ export const getApplicantsOngoing = async () => {
             select: {
                 id: true,
                 status: true,
-                jobId: true,
                 createdAt: true,
                 jobApply: {
                     select: {
@@ -166,6 +230,7 @@ export const getApplicantsOngoing = async () => {
                     select: {
                         screeningId: true,
                         status: true,
+                        sequence_number: true,
                         screening: { select: { title: true } }
                     }
                 },
@@ -175,9 +240,6 @@ export const getApplicantsOngoing = async () => {
                         first_name: true,
                         middle_name: true,
                         last_name: true,
-                        email: true,
-                        contact_number: true,
-                        resume_path: true,
                         photo_path: true,
                     }
                 }
@@ -185,15 +247,16 @@ export const getApplicantsOngoing = async () => {
         });
 
         return response.map(applicant => {
-            const screeningResults = applicant.applicantScreeningResult;
+            const screeningResults = applicant.applicantScreeningResult.sort((a, b) => a.sequence_number - b.sequence_number);
             const jobScreeningCount = screeningResults.length;
             let applicantScreeningCount = 0;
             let hasFailed = false;
             let jobScreeningProgress: string[] = [];
+            
 
             // **Process all applicant screening results in one loop**
             for (const screening of screeningResults) {
-                jobScreeningProgress.push(screening.screening.title);
+                jobScreeningProgress.push(screening.screening.title)
                 if (screening.status !== 'PENDING') applicantScreeningCount++;
                 if (screening.status === 'FAILED') hasFailed = true;
             }
@@ -209,14 +272,10 @@ export const getApplicantsOngoing = async () => {
             return {
                 id: applicant.id,
                 photo: applicant.information.photo_path,
-                jobId: applicant.jobId,
                 jobTitle: applicant.jobApply?.title || "N/A",
                 status: applicant.status,
                 applicantName: `${applicant.information.last_name}, ${applicant.information.first_name} ${applicant.information.middle_name || ''}`,
                 appliedDate: applicant.createdAt,
-                resume: applicant.information.resume_path,
-                email: applicant.information.email,
-                contactNumber: applicant.information.contact_number,
                 countJobScreening: jobScreeningCount,
                 countApplicantScreening: applicantScreeningCount,
                 progressList: jobScreeningProgress,
@@ -443,6 +502,36 @@ export const rejectApplicant = async (id: string) => {
     }
 
 }
+
+
+export const updateFinalizedApplicantStatus = async (id: string, status: ApplicationStatus) => {
+    try {
+        const apResultId = parseInt(id, 10);
+        if (isNaN(apResultId)) throw new Error("Invalid applicant ID.");
+
+        // Determine the update data
+        const updateData: Record<string, any> = { status };
+        if (status === 'PASSED') updateData.approvedAt = new Date();
+        if (status === 'FAILED') updateData.failedAt = new Date();
+
+        // Update applicant status
+        const response = await prisma.applicant.update({
+            where: { id: apResultId },
+            data: updateData
+        });
+
+        return {
+            id: response.id,
+            status: response.status
+        };
+
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 
 
 

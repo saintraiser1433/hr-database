@@ -1,11 +1,29 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, applicantsValidation } from '../utils/validation';
-import { createApplicants, getApplicantsOngoing, getApplicantsPending, getApplicantsRejected, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant } from '../services/applicant';
+import { createApplicants, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant';
 
 export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
         const response = await getApplicantsPending();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const fetchApplicantsByFailed = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantsFailed();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const fetchApplicantsByPassed = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantsPassed();
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -76,6 +94,18 @@ export const rejectApplicants = async (req: Request, res: Response, next: NextFu
         next(err)
     }
 }
+
+export const modifyFinailizedAppStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = req.params.id;
+    const { status } = req.body;
+    try {
+        const response = await updateFinalizedApplicantStatus(id, status);
+        return res.status(200).json({ message: "Application successfully updated", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
+
 
 
 
