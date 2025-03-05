@@ -1,4 +1,4 @@
-import { ApplicationStatus, ScreeningStatus } from '@prisma/client';
+import { ApplicationStatus } from '@prisma/client';
 import { ApplicantModel } from '../interfaces';
 import prisma from '../prisma';
 
@@ -35,6 +35,7 @@ export const getApplicantsPending = async () => {
         throw err
     }
 }
+
 
 export const getApplicantsFailed = async () => {
     try {
@@ -99,15 +100,17 @@ export const getApplicantsPassed = async () => {
         throw err
     }
 }
-export const getOngoingStatusByApplicant = async (id: string) => {
+
+export const getFailApprvStatusByApplicant = async (id: string) => {
     try {
         const applicantId = parseInt(id, 10);
         if (isNaN(applicantId)) throw new Error("Invalid applicant ID.");
         const response = await prisma.applicant.findMany({
             where: {
-                AND: [
-                    { status: 'ONGOING' },
-                    { id: applicantId },
+                id: applicantId,
+                OR: [
+                    { status: 'FAILED' },
+                    { status: 'PASSED' },
                 ]
             },
 
@@ -203,6 +206,118 @@ export const getOngoingStatusByApplicant = async (id: string) => {
 };
 
 
+export const getOngoingStatusByApplicant = async (id: string) => {
+    try {
+        const applicantId = parseInt(id, 10);
+        if (isNaN(applicantId)) throw new Error("Invalid applicant ID.");
+        const response = await prisma.applicant.findMany({
+            where: {
+                AND: [
+                    { status: 'ONGOING' },
+                    { id: applicantId },
+                ]
+            },
+
+            select: {
+                id: true,
+                status: true,
+                jobId: true,
+                createdAt: true,
+                jobApply: {
+                    select: {
+                        title: true,
+                        JobScreening: {
+                            select: {
+                                screening_id: true,
+                                sequence_number: true,
+                                screeningList: {
+                                    select: { title: true }
+                                }
+                            },
+                            orderBy: { sequence_number: 'asc' }
+                        },
+                    }
+                },
+                applicantScreeningResult: {
+                    select: {
+                        id: true,
+                        screeningId: true,
+                        status: true,
+                        dateInterview: true,
+                        sequence_number: true,
+                        screening: { select: { title: true, } }
+                    }
+                },
+                information: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        middle_name: true,
+                        last_name: true,
+                        email: true,
+                        contact_number: true,
+                        resume_path: true,
+                        photo_path: true,
+                    }
+                },
+
+            },
+
+        });
+
+        return response.map(applicant => {
+            const screeningResults = applicant.applicantScreeningResult
+                .sort((a, b) => a.sequence_number - b.sequence_number); // Sort by sequence_number (ascending)
+
+            let currentStage = null;
+            let nextStage = null;
+            let nextSched = null;
+
+            for (let i = 0; i < screeningResults.length; i++) {
+                const screening = screeningResults[i];
+
+                if (screening.status === ApplicationStatus.PENDING) {
+                    if (!currentStage) {
+                        currentStage = screening.screening.title;
+                    } else if (!nextStage) {
+                        nextStage = screening.screening.title;
+                        nextSched = screening.dateInterview;
+                        break;
+                    }
+                }
+            }
+
+            return {
+                id: applicant.id,
+                photo: applicant.information.photo_path,
+                jobId: applicant.jobId,
+                jobTitle: applicant.jobApply?.title || "N/A",
+                status: applicant.status,
+                applicantName: `${applicant.information.last_name}, ${applicant.information.first_name} ${applicant.information.middle_name || ''}`,
+                appliedDate: applicant.createdAt,
+                resume: applicant.information.resume_path,
+                email: applicant.information.email,
+                contactNumber: applicant.information.contact_number,
+                countJobScreening: screeningResults.length,
+                countApplicantScreening: screeningResults.filter(s => s.status !== 'PENDING').length,
+                progressList: screeningResults,
+                currentStage, // First "PENDING" stage (smallest sequence_number)
+                nextStep: nextStage, // Next "PENDING" stage after the currentStage
+                nextSched, // Interview date for the next step
+                remarks: screeningResults.some(s => s.status === 'FAILED') ? 'FAILED' :
+                    (screeningResults.every(s => s.status !== 'PENDING') ? 'PASSED' : 'ONGOING')
+            };
+        });
+
+
+
+    } catch (err) {
+        console.error("Error fetching ongoing applicants:", err);
+        throw err;
+    }
+};
+
+
 export const getApplicantsOngoing = async () => {
     try {
         const response = await prisma.applicant.findMany({
@@ -210,6 +325,7 @@ export const getApplicantsOngoing = async () => {
             select: {
                 id: true,
                 status: true,
+                jobId: true,
                 createdAt: true,
                 jobApply: {
                     select: {
@@ -240,6 +356,9 @@ export const getApplicantsOngoing = async () => {
                         first_name: true,
                         middle_name: true,
                         last_name: true,
+                        email: true,
+                        contact_number: true,
+                        resume_path: true,
                         photo_path: true,
                     }
                 }
@@ -252,11 +371,10 @@ export const getApplicantsOngoing = async () => {
             let applicantScreeningCount = 0;
             let hasFailed = false;
             let jobScreeningProgress: string[] = [];
-            
 
             // **Process all applicant screening results in one loop**
             for (const screening of screeningResults) {
-                jobScreeningProgress.push(screening.screening.title)
+                jobScreeningProgress.push(screening.screening.title);
                 if (screening.status !== 'PENDING') applicantScreeningCount++;
                 if (screening.status === 'FAILED') hasFailed = true;
             }
@@ -272,10 +390,14 @@ export const getApplicantsOngoing = async () => {
             return {
                 id: applicant.id,
                 photo: applicant.information.photo_path,
+                jobId: applicant.jobId,
                 jobTitle: applicant.jobApply?.title || "N/A",
                 status: applicant.status,
                 applicantName: `${applicant.information.last_name}, ${applicant.information.first_name} ${applicant.information.middle_name || ''}`,
                 appliedDate: applicant.createdAt,
+                resume: applicant.information.resume_path,
+                email: applicant.information.email,
+                contactNumber: applicant.information.contact_number,
                 countJobScreening: jobScreeningCount,
                 countApplicantScreening: applicantScreeningCount,
                 progressList: jobScreeningProgress,
@@ -529,10 +651,6 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
         throw error;
     }
 };
-
-
-
-
 
 
 
