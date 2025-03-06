@@ -1,4 +1,5 @@
-import { ApplicationStatus, StatusesEvaluation } from "../types";
+import { EmployeeRequirements, RoleStatus } from "@prisma/client";
+import { ApplicationStatus, StatusesEvaluation } from "../types/index.ts";
 
 export interface Timestamped {
     createdAt?: Date;
@@ -119,7 +120,25 @@ export interface ApplicantInformationModel {
 }
 
 
-export interface InterviewDate{
-    id:number,
-    date:string
+export interface EmployeeModel {
+    id: number;
+    status: boolean;
+    jobId: number;
+    departmentId: number;
+    informationId: number;
+    username: string;
+    password: string;
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    role: RoleStatus;
+    createdAt: Date;
+    updatedAt: Date;
+    employeeRequirements: EmployeeRequirements[];
+}
+
+
+
+export interface InterviewDate {
+    id: number,
+    date: string
 } 

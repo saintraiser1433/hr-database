@@ -70,7 +70,7 @@ model Requirements {
 
   Job                  Job?                   @relation(fields: [jobId], references: [id])
   jobId                Int?
-  EmployeeRequirements EmployeeRequirements[]
+  employeeRequirements EmployeeRequirements[]
 }
 
 model Job {
@@ -169,11 +169,11 @@ model EmployeeRequirements {
   id             Int               @id @default(autoincrement())
   employee       Employees         @relation(fields: [employeeId], references: [id])
   employeeId     Int
-  requirementId  Requirements      @relation(fields: [requirementsId], references: [id])
+  requirements   Requirements      @relation(fields: [requirementsId], references: [id])
   requirementsId Int
   submittedAt    DateTime?
   expiryDate     DateTime?
-  status         RequirementStatus?
+  status         RequirementStatus @default(PENDING)
 }
 
 model Applicant {

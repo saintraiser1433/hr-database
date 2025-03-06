@@ -4,6 +4,6 @@ import { fetchAllEmployeesByDeptID, fetchRequirementByEmpID } from '../controlle
 const route = Router();
 
 route.get('/:id', fetchAllEmployeesByDeptID);
-route.get('req/:empId', fetchRequirementByEmpID);
+route.get('/req/:empId', fetchRequirementByEmpID);
 
 export default route;

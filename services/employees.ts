@@ -56,26 +56,43 @@ export const getRequirementsByEmployeeId = async (id: string) => {
                 id: employeeId
             },
             select: {
-                job: {
+
+                employeeRequirements: {
                     select: {
-                        requirements: {
-                            select: {
-                                id: true,
-                                title: true,
-                                description: true,
-                                status: true
-                            }
-                        }
+                        id: true,
+                        employeeId: true,
+                        submittedAt: true,
+                        expiryDate: true,
+                        requirementsId: true,
+                        status: true
                     }
                 }
             }
         })
-        return response?.job?.requirements || [];
+
+        const listrequirements = await prisma.requirements.findMany({
+            where: {
+                status: true
+            }
+        });
+        const unchosenRequirements = listrequirements.map((item) => ({
+            id: item.id,
+            title: item.title
+        })).filter((item) => !response?.employeeRequirements.some((req) => req.requirementsId === item.id));
+
+        const allData = {
+            ...response,
+            unchosenRequirements
+        }
+
+        return allData;
     } catch (err) {
         throw err;
     }
 
 }
+
+
 
 
 
