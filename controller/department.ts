@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { handleValidationError, departmentValidation } from '../utils/validation';
-import { createDepartmentService, getDepartmentService, removeDepartmentService, updateDepartmentService } from '../services/department';
+import { handleValidationError, departmentValidation } from '../utils/validation.ts';
+import { createDepartmentService, getDepartmentService, removeDepartmentService, updateDepartmentService } from '../services/department.ts';
 
 
 export const getDepartment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

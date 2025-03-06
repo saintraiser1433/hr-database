@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationQuestion, deleteEvaluationQuestion, insertEvaluationQuestion, updateEvaluationQuestion } from '../controller/evaluation';
+import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationQuestion, deleteEvaluationQuestion, insertEvaluationQuestion, updateEvaluationQuestion } from '../controller/evaluation.ts';
 
 const route = Router();
 

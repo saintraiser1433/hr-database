@@ -1,7 +1,8 @@
 import { ApplicationStatus } from '@prisma/client';
-import { ApplicantModel } from '../interfaces';
-import prisma from '../prisma';
-
+import { ApplicantModel } from '../interfaces/index.ts';
+import prisma from '../prisma/index.ts';
+import { insertEmployee } from './employees.ts';
+import { customAlphabet } from "nanoid";
 export const getApplicantsPending = async () => {
     try {
         const response = await prisma.applicant.findMany({
@@ -340,7 +341,8 @@ export const getApplicantsOngoing = async () => {
                             },
                             orderBy: { sequence_number: 'asc' }
                         },
-                    }
+                    },
+
                 },
                 applicantScreeningResult: {
                     select: {
@@ -626,31 +628,96 @@ export const rejectApplicant = async (id: string) => {
 }
 
 
+
 export const updateFinalizedApplicantStatus = async (id: string, status: ApplicationStatus) => {
-    try {
+    const transaction = await prisma.$transaction(async (tx) => {
         const apResultId = parseInt(id, 10);
         if (isNaN(apResultId)) throw new Error("Invalid applicant ID.");
 
-        // Determine the update data
+        const { customAlphabet } = await import("nanoid");
+        const nanoid = customAlphabet("1234567890abcdef", 5);
+        const random5DigitNumber = Math.floor(10000 + Math.random() * 90000);
+
         const updateData: Record<string, any> = { status };
-        if (status === 'PASSED') updateData.approvedAt = new Date();
-        if (status === 'FAILED') updateData.failedAt = new Date();
+        if (status === "PASSED") updateData.approvedAt = new Date();
+        if (status === "FAILED") updateData.failedAt = new Date();
 
         // Update applicant status
-        const response = await prisma.applicant.update({
+        const response = await tx.applicant.update({
             where: { id: apResultId },
-            data: updateData
+            data: updateData,
+            select: {
+                id: true,
+                status: true,
+                jobId: true,
+                informationId: true,
+                jobApply: {
+                    select: {
+                        departmentsId: true,
+
+                    },
+                },
+                information: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                    },
+                },
+            },
         });
+
+        if (status === "PASSED") {
+            const firstName = response.information.first_name.toLowerCase();
+            const lastName = response.information.last_name.toLowerCase();
+            const shortFirstName = firstName.slice(-3);
+            const username = `${shortFirstName}_${lastName}_${random5DigitNumber}`;
+            const employeesResponse = await tx.employees.create({
+                data: {
+                    job: {
+                        connect: { id: response.jobId }
+                    },
+                    information: {
+                        connect: { id: response.informationId }
+                    },
+                    department: {
+                        connect: { id: response.jobApply.departmentsId }
+                    },
+                    username: username,
+                    password: nanoid(),
+                },
+                select: {
+                    id: true,
+                    job: {
+                        select: {
+                            requirements: {
+                                select: {
+                                    id: true
+                                },
+                                where: {
+                                    status: true
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+            await tx.employeeRequirements.createMany({
+                data: employeesResponse.job.requirements.map(requirement => ({
+                    employeeId: employeesResponse.id,
+                    requirementsId: requirement.id
+                }))
+            })
+        }
 
         return {
             id: response.id,
-            status: response.status
+            status: response.status,
         };
+    });
 
-    } catch (error) {
-        throw error;
-    }
+    return transaction;
 };
+
 
 
 

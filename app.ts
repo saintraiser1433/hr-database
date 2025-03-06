@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
-import router from './routes/index';
-import { expressLogger, errorLogger } from './utils/logger';
-import { errorHandler } from './middleware/errorHandler';
+import router from './routes/index.ts';
+import { expressLogger, errorLogger } from './utils/logger.ts';
+import { errorHandler } from './middleware/errorHandler.ts';
 
 const app = express();
 const PORT = process.env.APP_PORT || 3000;

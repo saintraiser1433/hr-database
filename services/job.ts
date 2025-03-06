@@ -1,5 +1,5 @@
-import { JobModel, RequirementModel } from '../interfaces';
-import prisma from '../prisma';
+import { JobModel, RequirementModel } from '../interfaces/index.ts';
+import prisma from '../prisma/index.ts';
 
 export const getJobService = async () => {
     try {

@@ -1,5 +1,5 @@
-import { DepartmentModel, RequirementModel } from '../interfaces';
-import prisma from '../prisma';
+import { DepartmentModel, RequirementModel } from '../interfaces/index.ts';
+import prisma from '../prisma/index.ts';
 
 export const getDepartmentService = async () => {
     try {
@@ -8,6 +8,9 @@ export const getDepartmentService = async () => {
                 id: true,
                 title: true,
                 status: true
+            },
+            orderBy:{
+                title: 'asc'
             }
         })
 

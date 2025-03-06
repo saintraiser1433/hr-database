@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addJobToScreening, addScreening, fetchJobScreenings, fetchScreenings, filterScreeningTypeByJobId, modifyJobScreeningSequence, modifyScreening, removeScreening, unassignJobFromScreening } from '../controller/screening';
+import { addJobToScreening, addScreening, fetchJobScreenings, fetchScreenings, filterScreeningTypeByJobId, modifyJobScreeningSequence, modifyScreening, removeScreening, unassignJobFromScreening } from '../controller/screening.ts';
 
 
 const route = Router();

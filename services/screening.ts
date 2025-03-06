@@ -1,5 +1,5 @@
-import { JobScreeningModel, ScreeningModel } from '../interfaces';
-import prisma from '../prisma';
+import { JobScreeningModel, ScreeningModel } from '../interfaces/index.ts';
+import prisma from '../prisma/index.ts';
 
 export const getScreenings = async () => {
     try {

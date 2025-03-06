@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchApplicantsByFailed, fetchApplicantsByOngoing, fetchApplicantsByPassed, fetchApplicantsByPending, fetchApplicantsByRejected, fetchFailApproveByApplicant, fetchOngoingByApplicant, insertApplicants, modifyFinailizedAppStatus, proceedApplicant, rejectApplicants } from '../controller/applicants';
+import { fetchApplicantsByFailed, fetchApplicantsByOngoing, fetchApplicantsByPassed, fetchApplicantsByPending, fetchApplicantsByRejected, fetchFailApproveByApplicant, fetchOngoingByApplicant, insertApplicants, modifyFinailizedAppStatus, proceedApplicant, rejectApplicants } from '../controller/applicants.ts';
 
 const route = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getRequirements, insertRequirements, updateRequirements, deleteRequirements } from '../controller/requirements';
+import { getRequirements, insertRequirements, updateRequirements, deleteRequirements } from '../controller/requirements.ts';
 
 const route = Router();
 

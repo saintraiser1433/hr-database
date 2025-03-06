@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Response } from 'express';
-import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces';
-import { appLogger } from './logger';
+import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
+import { appLogger } from './logger.ts';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {

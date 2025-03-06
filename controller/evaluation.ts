@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { handleValidationError, departmentValidation, evaluationValidation, questionValidation } from '../utils/validation';
-import { createEvaluation, createEvaluationQuestion, getEvaluation, getEvaluationQuestion, modifyEvaluation, modifyEvaluationQuestion, removeEvaluation, removeEvaluationQuestion } from '../services/evaluation';
+import { handleValidationError, departmentValidation, evaluationValidation, questionValidation } from '../utils/validation.ts';
+import { createEvaluation, createEvaluationQuestion, getEvaluation, getEvaluationQuestion, modifyEvaluation, modifyEvaluationQuestion, removeEvaluation, removeEvaluationQuestion } from '../services/evaluation.ts';
 
 
 export const fetchEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

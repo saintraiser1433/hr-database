@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { createRequirementService, getRequirementService, removeRequirementService, updateRequirementService } from '../services/requirements';
-import { handleValidationError, requirementValidation } from '../utils/validation';
+import { createRequirementService, getRequirementService, removeRequirementService, updateRequirementService } from '../services/requirements.ts';
+import { handleValidationError, requirementValidation } from '../utils/validation.ts';
 
 
 export const getRequirements = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

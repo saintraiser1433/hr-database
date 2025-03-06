@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { handleValidationError, jobValidation } from '../utils/validation';
-import { createJobService, getJobService, removeJobService, updateJobService } from '../services/job';
+import { handleValidationError, jobValidation } from '../utils/validation.ts';
+import { createJobService, getJobService, removeJobService, updateJobService } from '../services/job.ts';
 
 
 export const getJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

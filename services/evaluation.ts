@@ -1,6 +1,6 @@
-import { EvaluationModel, QuestionModel } from '../interfaces';
+import { EvaluationModel, QuestionModel } from '../interfaces/index.ts';
 import { Response } from 'express';
-import prisma from '../prisma';
+import prisma from '../prisma/index.ts';
 
 export const getEvaluation = async () => {
     try {

@@ -1,6 +1,6 @@
 
 import { ScreeningStatus } from '@prisma/client';
-import prisma from '../prisma';
+import prisma from '../prisma/index.ts';
 import { parseISO } from 'date-fns';
 export const updateInterviewDate = async (id: string, date: string) => {
     try {

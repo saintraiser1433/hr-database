@@ -34,6 +34,18 @@ enum ScreeningStatus {
   FAILED
 }
 
+enum RoleStatus {
+  Admin
+  Employee
+  TeamLead
+}
+
+enum RequirementStatus {
+  PENDING
+  SUBMITTED
+  EXPIRED
+}
+
 //END OF ENUMS
 model User {
   id           String   @id @default(cuid())
@@ -56,8 +68,9 @@ model Requirements {
   status      Boolean? @default(true) @db.Boolean
   description String
 
-  Job   Job? @relation(fields: [jobId], references: [id])
-  jobId Int?
+  Job                  Job?                   @relation(fields: [jobId], references: [id])
+  jobId                Int?
+  EmployeeRequirements EmployeeRequirements[]
 }
 
 model Job {
@@ -74,6 +87,7 @@ model Job {
   JobScreening   JobScreening[]
   Applicants     Applicant[]
   requirements   Requirements[]
+  Employees      Employees[]
 }
 
 model Screening {
@@ -99,10 +113,11 @@ model JobScreening {
 }
 
 model Departments {
-  id     Int      @id @default(autoincrement())
-  title  String   @unique @db.VarChar(250)
-  status Boolean? @default(true) @db.Boolean
-  Job    Job[]
+  id        Int         @id @default(autoincrement())
+  title     String      @unique @db.VarChar(250)
+  status    Boolean?    @default(true) @db.Boolean
+  Job       Job[]
+  Employees Employees[]
 }
 
 model Evaluation {
@@ -127,6 +142,38 @@ model Question {
 model Comments {
   id          Int    @id @default(autoincrement())
   description String
+}
+
+model Employees {
+  id                   Int                    @id @default(autoincrement())
+  status               Boolean                @default(true)
+  job                  Job                    @relation(fields: [jobId], references: [id])
+  department           Departments            @relation(fields: [departmentId], references: [id])
+  information          ApplicantInformation   @relation(fields: [informationId], references: [id])
+  username             String                 @db.VarChar(100)
+  password             String                 @db.VarChar(100)
+  informationId        Int
+  jobId                Int
+  departmentId         Int
+  accessToken          String?
+  refreshToken         String?
+  role                 RoleStatus             @default(Employee)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  employeeRequirements EmployeeRequirements[]
+
+  @@unique([username])
+}
+
+model EmployeeRequirements {
+  id             Int               @id @default(autoincrement())
+  employee       Employees         @relation(fields: [employeeId], references: [id])
+  employeeId     Int
+  requirementId  Requirements      @relation(fields: [requirementsId], references: [id])
+  requirementsId Int
+  submittedAt    DateTime?
+  expiryDate     DateTime?
+  status         RequirementStatus?
 }
 
 model Applicant {
@@ -195,4 +242,5 @@ model ApplicantInformation {
   college_years_attended    String?
 
   Applicant Applicant[]
+  Employees Employees[]
 }

@@ -1,5 +1,5 @@
-import { RequirementModel } from '../interfaces';
-import prisma from '../prisma';
+import { RequirementModel } from '../interfaces/index.ts';
+import prisma from '../prisma/index.ts';
 
 export const getRequirementService = async () => {
     try {
@@ -18,7 +18,7 @@ export const getRequirementService = async () => {
 }
 
 
-export const createRequirementService = async (data: Omit<RequirementModel, "id" | "Job">) => {
+export const createRequirementService = async (data: Omit<RequirementModel, "id" | "Job" | "employeeRequirements">) => {
     try {
         const response = await prisma.requirements.create({
             data

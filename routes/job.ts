@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { deleteJob, getJob, insertJob, updateJob } from '../controller/job';
-import { upload } from '../config/multer';
+import { deleteJob, getJob, insertJob, updateJob } from '../controller/job.ts';
+import { upload } from '../config/multer.ts';
 
 const route = Router();
 

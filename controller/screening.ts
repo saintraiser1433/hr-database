@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation';
-import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening';
+import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation.ts';
+import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening.ts';
 
 
 

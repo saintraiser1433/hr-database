@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { updateInterviewDate, updateInterviewStatus } from '../services/interview';
+import { updateInterviewDate, updateInterviewStatus } from '../services/interview.ts';
 
 
 

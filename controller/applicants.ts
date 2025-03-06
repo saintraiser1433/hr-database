@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { handleValidationError, applicantsValidation } from '../utils/validation';
-import { createApplicants, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getFailApprvStatusByApplicant, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant';
+import { handleValidationError, applicantsValidation } from '../utils/validation.ts';
+import { createApplicants, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getFailApprvStatusByApplicant, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant.ts';
 
 export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -110,6 +110,7 @@ export const modifyFinailizedAppStatus = async (req: Request, res: Response, nex
     const { status } = req.body;
     try {
         const response = await updateFinalizedApplicantStatus(id, status);
+
         return res.status(200).json({ message: "Application successfully updated", data: response });
     } catch (err) {
         next(err)
