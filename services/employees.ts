@@ -1,4 +1,5 @@
 
+import { EmployeeRequirements, RequirementStatus } from '@prisma/client';
 import { EmployeeModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
@@ -64,6 +65,11 @@ export const getRequirementsByEmployeeId = async (id: string) => {
                         submittedAt: true,
                         expiryDate: true,
                         requirementsId: true,
+                        requirements: {
+                            select: {
+                                title: true,
+                            }
+                        },
                         status: true
                     }
                 }
@@ -79,9 +85,13 @@ export const getRequirementsByEmployeeId = async (id: string) => {
             id: item.id,
             title: item.title
         })).filter((item) => !response?.employeeRequirements.some((req) => req.requirementsId === item.id));
+        const employeeRequirements = response?.employeeRequirements.map((item) => ({
+            ...item,
+            requirements: item.requirements.title
+        }))
 
         const allData = {
-            ...response,
+            employeeRequirements,
             unchosenRequirements
         }
 
@@ -92,6 +102,83 @@ export const getRequirementsByEmployeeId = async (id: string) => {
 
 }
 
+
+export const assignEmployeeToRequirements = async (body: Omit<EmployeeRequirements, "id">[]) => {
+    try {
+        const responses = await Promise.all(
+            body.map((data) =>
+                prisma.employeeRequirements.create({
+                    data,
+                    select: { 
+                        id: true,
+                        requirements:true,
+                        status: true
+                     }
+                })
+            )
+        );
+
+        const data = responses.map((item) => ({
+            ...item,
+            requirements: item.requirements.title
+        }));
+        return data;
+        // return responses; // Returns an array of created IDs
+
+    } catch (err) {
+        throw err
+    }
+}
+
+
+export const unAssignEmployeeToRequirements = async (body: number[]) => {
+    try {
+  
+        const responses = await Promise.all(
+            body.map((data) =>
+                prisma.employeeRequirements.delete({
+                    where:{
+                        id: data
+                    },
+                    select: { 
+                        id: true,
+                        requirements:true,
+                     }
+                })
+            )
+        );
+        const data = responses.map((item) => ({
+            id:item.id,
+            title: item.requirements.title
+        }));
+        return data;
+    } catch (err) {
+        throw err;
+    }
+}
+
+
+export const modifyRequirementStatus = async(id:string,body:EmployeeRequirements) => {
+    try {
+        const requirementId = parseInt(id, 10);
+        if (isNaN(requirementId)) throw new Error("Invalid employee ID.");
+        const response = await prisma.employeeRequirements.update({
+            where: {
+                id: requirementId
+            },
+            data: {
+                submittedAt: body.submittedAt,
+                expiryDate: body.expiryDate,
+                status: body.status
+            }
+        });
+
+
+        return response;
+    } catch (err) {
+        throw err;
+    }
+}
 
 
 

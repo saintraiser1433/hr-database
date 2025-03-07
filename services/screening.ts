@@ -129,17 +129,7 @@ export const getJobScreeningsByJobId = async (id: string) => {
 }
 
 
-export const assignJobToScreening = async (body: Omit<JobScreeningModel, "id" | "screening_title " | "jobList" | "screeningList">) => {
-    try {
-        console.log(body);
-        const response = await prisma.jobScreening.createMany({
-            data: body
-        });
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
+
 
 
 
@@ -189,17 +179,81 @@ export const updateJobScreeningSequence = async (id: string, direction: "up" | "
     }
 }
 
-export const deleteJobScreening = async (body: number[]) => {
+
+export const assignJobToScreening = async (
+    body: Omit<JobScreeningModel, "id" | "screening_title" | "jobList" | "screeningList">[]
+) => {
     try {
-        const response = await prisma.jobScreening.deleteMany({
-            where: {
-                id: {
-                    in: body
-                }
-            }
+        if (body.length === 0) return [];
+
+
+        const jobId = body[0].job_id;
+        const lastEntry = await prisma.jobScreening.findFirst({
+            where: { job_id: jobId },
+            orderBy: { sequence_number: "desc" },
+            select: { sequence_number: true }
         });
 
-        return response;
+        let lastSequenceNumber = lastEntry?.sequence_number ?? 0;
+
+
+        const responses = await Promise.all(
+            body.map(async (data) => {
+                lastSequenceNumber++;
+                return prisma.jobScreening.create({
+                    data: {
+                        job_id: data.job_id,
+                        screening_id: data.screening_id,
+                        sequence_number: lastSequenceNumber
+                    },
+                    select: {
+                        id: true,
+                        job_id: true,
+                        screeningList: { select: { id: true, title: true } },
+                        sequence_number: true
+                    }
+                });
+            })
+        );
+
+        // 🔹 Format response
+        return responses.map((item) => ({
+            id: item.id,
+            job_id: item.job_id,
+            screening_id: item.screeningList.id,
+            screening_title: item.screeningList.title,
+            sequence_number: item.sequence_number
+        }));
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+export const deleteJobToScreening = async (body: number[]) => {
+    try {
+        const responses = await Promise.all(
+            body.map((data) =>
+                prisma.jobScreening.delete({
+                    where: {
+                        id: data
+                    },
+                    select: {
+                        id: true,
+                        screeningList: true,
+                    }
+                })
+            )
+        );
+        const data = responses.map((item) => ({
+            id: item.id,
+            title: item.screeningList.title
+        }));
+
+
+
+
+        return data;
     } catch (err) {
         throw err;
     }

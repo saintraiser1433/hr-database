@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation.ts';
-import { assignJobToScreening, createScreening, deleteJobScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening.ts';
+import { assignJobToScreening, createScreening, deleteJobToScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening.ts';
 
 
 
@@ -100,8 +100,8 @@ export const addJobToScreening = async (req: Request, res: Response, next: NextF
 export const unassignJobFromScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
-        await deleteJobScreening(body);
-        return res.status(200).json({ message: "Screening Assign successfully deleted" });
+        const response = await deleteJobToScreening(body);
+        return res.status(200).json({ message: "Screening Assign successfully deleted", data: response });
     } catch (err) {
         next(err)
     }

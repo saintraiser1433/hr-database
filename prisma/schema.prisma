@@ -206,24 +206,25 @@ model ApplicantScreeningResult {
 }
 
 model ApplicantInformation {
-  id             Int    @id @default(autoincrement())
-  first_name     String @db.VarChar(100)
-  middle_name    String @db.VarChar(100)
-  last_name      String @db.VarChar(100)
-  email          String @db.VarChar(100)
-  contact_number String @db.VarChar(100)
-  resume_path    String
-  photo_path     String
-
-  gender               String? @db.VarChar(100)
-  age                  Int?
-  civil_status         String? @db.VarChar(100)
-  date_of_birth        String? @db.VarChar(100)
-  city_address         String?
-  provincial_address   String?
-  telephone_number     Int?
+  //main
+  id                   Int       @id @default(autoincrement())
+  first_name           String    @db.VarChar(100)
+  middle_name          String    @db.VarChar(100)
+  last_name            String    @db.VarChar(100)
+  email                String    @db.VarChar(100)
+  contact_number       String    @db.VarChar(100)
+  resume_path          String
+  photo_path           String
+  date_of_birth        DateTime?
+  permanent_address    String?
+  current_address      String?
+  gender               String?   @db.VarChar(100)
+  telephone_number     String?
   religion             String?
   citizenship          String?
+  civil_status         String?   @db.VarChar(100)
+  language_spoken      String?
+  //family background
   fathers_name         String?
   fathers_occupation   String?
   mothers_name         String?
@@ -232,14 +233,23 @@ model ApplicantInformation {
   person_to_be_contact String?
 
   //educational background
-  elementary String?
-
+  elementary                String?
   elementary_years_attended String?
 
   highschool                String?
   highschool_years_attended String?
-  college                   String?
-  college_years_attended    String?
+  strand_course             String?
+
+  college                String?
+  college_years_attended String?
+  college_course         String?
+
+
+  //work experience
+  
+
+
+
 
   Applicant Applicant[]
   Employees Employees[]

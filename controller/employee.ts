@@ -1,6 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { getAllEmployees, getRequirementsByEmployeeId } from '../services/employees.ts';
+import { assignEmployeeToRequirements, getAllEmployees, getRequirementsByEmployeeId, modifyRequirementStatus, unAssignEmployeeToRequirements } from '../services/employees.ts';
+import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 
 export const fetchAllEmployeesByDeptID = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const deptId = req.params.id;
@@ -25,6 +26,44 @@ export const fetchRequirementByEmpID = async (req: Request, res: Response, next:
 
 
 
+export const insertEmptoRequire = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const body = req.body;
+    try {
+        const { error } = assignEmpToRequirements.assign(body);
+        if (error) {
+            return handleValidationError(error, res);
+        }
+
+
+        const response = await assignEmployeeToRequirements(body);
+        return res.status(200).json({ message: "Requirements succesfully inserted", data: response });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+export const removeEmpToRequire = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const body = req.body;
+    try {
+        const response = await unAssignEmployeeToRequirements(body);
+        return res.status(200).json({ message: "Requirement successfully remove", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const updateEmpRequireStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const body = req.body;
+    const id = req.params.id;
+    try {
+        const response = await modifyRequirementStatus(id, body);
+        return res.status(200).json({ message: "Screening Assign successfull", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
 
 
 

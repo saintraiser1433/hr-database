@@ -2,6 +2,7 @@ import Joi from 'joi';
 import { Response } from 'express';
 import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
 import { appLogger } from './logger.ts';
+import { EmployeeRequirements } from '@prisma/client';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {
@@ -174,6 +175,26 @@ export const assignScreeningValidation = {
                     "number.base": "The Screening field must be a number",
                 }),
                 sequence_number: Joi.number().optional()
+            })
+        );
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+export const assignEmpToRequirements = {
+    assign: (data: EmployeeRequirements) => {
+        const schema = Joi.array().items(
+            Joi.object({
+                id: Joi.number().optional(),
+                employeeId: Joi.number().required().messages({
+                    "any.required": "The Employee field is required",
+                    "number.base": "The Employee field must be a number",
+                }),
+                requirementsId: Joi.number().required().messages({
+                    "any.required": "The Requirements field is required",
+                    "number.base": "The Requirements field must be a number",
+                }),
+                status: Joi.string().optional()
             })
         );
         return schema.validate(data, { abortEarly: false });
