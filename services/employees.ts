@@ -1,6 +1,6 @@
 
 import { EmployeeRequirements, RequirementStatus } from '@prisma/client';
-import { EmployeeModel } from '../interfaces/index.ts';
+import { CombinedData, EmployeeModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
 export const getAllEmployees = async (id: string) => {
@@ -208,6 +208,143 @@ export const insertEmployee = async (data: Omit<EmployeeModel, 'id' | 'role'>) =
     }
 
 }
+
+
+export const modifyInformation = async (applicantId: number, data: CombinedData) => {
+    const { educData, workData, skillsData, referencesData, applicantInfo } = data;
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // Step 1: Update Applicant Information
+            await tx.applicantInformation.update({
+                where: { id: applicantId },
+                data: {
+                    first_name: applicantInfo.first_name,
+                    middle_name: applicantInfo.middle_name,
+                    last_name: applicantInfo.last_name,
+                    gender: applicantInfo.gender,
+                    date_of_birth: applicantInfo.date_of_birth ? new Date(applicantInfo.date_of_birth) : null,
+                    email: applicantInfo.email,
+                    contact_number: applicantInfo.contact_number,
+                    telephone_number: applicantInfo.telephone_number,
+                    permanent_address: applicantInfo.permanent_address,
+                    current_address: applicantInfo.current_address,
+                    religion: applicantInfo.religion,
+                    citizenship: applicantInfo.citizenship,
+                    language_spoken: applicantInfo.language_spoken,
+                    civil_status: applicantInfo.civil_status,
+                    nickname: applicantInfo.nickname,
+                    fathers_name: applicantInfo.fathers_name,
+                    fathers_occupation: applicantInfo.fathers_occupation,
+                    mothers_name: applicantInfo.mothers_name,
+                    mothers_occupation: applicantInfo.mothers_occupation,
+                    parents_current_address: applicantInfo.parents_address,
+                    person_to_be_contact: applicantInfo.person_to_be_contact,
+                },
+            });
+
+            // Step 2: Upsert Education Background
+            for (const edu of educData) {
+                if (!edu.school_name) continue; 
+                await tx.educationBackground.upsert({
+                    where: {
+                        applicantInformationId_school_name: {
+                            applicantInformationId: applicantId,
+                            school_name: edu.school_name,
+                        },
+                    },
+                    update: {
+                        degree: edu.degree,
+                        year_started: edu.year_started,
+                        year_ended: edu.year_ended,
+                        description: edu.description,
+                    },
+                    create: {
+                        school_name: edu.school_name,
+                        degree: edu.degree,
+                        year_started: edu.year_started,
+                        year_ended: edu.year_ended,
+                        description: edu.description,
+                        applicantInformationId: applicantId,
+                    },
+                });
+            }
+
+            // Step 3: Upsert Work Experience
+            for (const work of workData) {
+                if (!work.company_name) continue; 
+                await tx.workExperience.upsert({
+                    where: {
+                        applicantInformationId_company_name: {
+                            applicantInformationId: applicantId,
+                            company_name: work.company_name,
+                        },
+                    },
+                    update: {
+                        job_title: work.job_title,
+                        work_year_started: work.work_year_started,
+                        work_year_ended: work.work_year_ended,
+                    },
+                    create: {
+                        company_name: work.company_name,
+                        job_title: work.job_title,
+                        work_year_started: work.work_year_started,
+                        work_year_ended: work.work_year_ended,
+                        applicantInformationId: applicantId,
+                    },
+                });
+            }
+
+            // Step 4: Upsert Skills Expertise
+            for (const skill of skillsData) {
+                if (!skill.skills_name) continue; 
+                await tx.skillsExpertise.upsert({
+                    where: {
+                        applicantInformationId_skills_name: {
+                            applicantInformationId: applicantId,
+                            skills_name: skill.skills_name,
+                        },
+                    },
+                    update: {},
+                    create: {
+                        skills_name: skill.skills_name,
+                        applicantInformationId: applicantId,
+                    },
+                });
+            }
+
+            // Step 5: Upsert References
+            for (const ref of referencesData) {
+                if (!ref.name_of_person) continue; 
+                await tx.references.upsert({
+                    where: {
+                        applicantInformationId_name_of_person: {
+                            applicantInformationId: applicantId,
+                            name_of_person: ref.name_of_person,
+                        },
+                    },
+                    update: {
+                        position: ref.position,
+                        ref_contact_number: ref.ref_contact_number,
+                    },
+                    create: {
+                        name_of_person: ref.name_of_person,
+                        position: ref.position,
+                        ref_contact_number: ref.ref_contact_number,
+                        applicantInformationId: applicantId,
+                    },
+                });
+            }
+        });
+
+        console.log("Transaction completed successfully.");
+    } catch (error) {
+        console.error("Transaction failed:", error);
+    } finally {
+        await prisma.$disconnect();
+    }
+};
+
 
 
 

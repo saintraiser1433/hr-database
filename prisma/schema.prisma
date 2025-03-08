@@ -207,50 +207,84 @@ model ApplicantScreeningResult {
 
 model ApplicantInformation {
   //main
-  id                   Int       @id @default(autoincrement())
-  first_name           String    @db.VarChar(100)
-  middle_name          String    @db.VarChar(100)
-  last_name            String    @db.VarChar(100)
-  email                String    @db.VarChar(100)
-  contact_number       String    @db.VarChar(100)
-  resume_path          String
-  photo_path           String
-  date_of_birth        DateTime?
-  permanent_address    String?
-  current_address      String?
-  gender               String?   @db.VarChar(100)
-  telephone_number     String?
-  religion             String?
-  citizenship          String?
-  civil_status         String?   @db.VarChar(100)
-  language_spoken      String?
+  id                Int       @id @default(autoincrement())
+  first_name        String    @db.VarChar(100)
+  middle_name       String    @db.VarChar(100)
+  last_name         String    @db.VarChar(100)
+  gender            String?   @db.VarChar(100)
+  date_of_birth     DateTime?
+  email             String    @db.VarChar(100)
+  contact_number    String    @db.VarChar(100)
+  telephone_number  String?
+  permanent_address String?
+  current_address   String?
+  religion          String?
+  citizenship       String?
+  language_spoken   String?
+  nicename          String?
+  civil_status      String?   @db.VarChar(100)
+  nickname          String?   @db.VarChar(100)
+  resume_path       String
+  photo_path        String
+
   //family background
-  fathers_name         String?
-  fathers_occupation   String?
-  mothers_name         String?
-  mothers_occupation   String?
-  parents_address      String?
-  person_to_be_contact String?
+  fathers_name            String?
+  fathers_occupation      String?
+  mothers_name            String?
+  mothers_occupation      String?
+  parents_address         String?
+  person_to_be_contact    String?
+  parents_current_address String?
 
-  //educational background
-  elementary                String?
-  elementary_years_attended String?
+  Education      EducationBackground[]
+  WorkExperience WorkExperience[]
+  Skills         SkillsExpertise[]
+  References     References[]
+  Applicant      Applicant[]
+  Employees      Employees[]
+}
 
-  highschool                String?
-  highschool_years_attended String?
-  strand_course             String?
+model EducationBackground {
+  id                     Int                   @id @default(autoincrement())
+  school_name            String?
+  degree                 String?
+  year_started           String?
+  year_ended             String?
+  description            String?
+  ApplicantInformation   ApplicantInformation? @relation(fields: [applicantInformationId], references: [id])
+  applicantInformationId Int?
 
-  college                String?
-  college_years_attended String?
-  college_course         String?
+  @@unique([applicantInformationId, school_name])
+}
 
+model WorkExperience {
+  id                     Int                   @id @default(autoincrement())
+  company_name           String?
+  job_title              String?
+  work_year_started      String?
+  work_year_ended        String?
+  ApplicantInformation   ApplicantInformation? @relation(fields: [applicantInformationId], references: [id])
+  applicantInformationId Int?
 
-  //work experience
-  
+  @@unique([applicantInformationId, company_name])
+}
 
+model SkillsExpertise {
+  id                     Int                   @id @default(autoincrement())
+  skills_name            String?
+  ApplicantInformation   ApplicantInformation? @relation(fields: [applicantInformationId], references: [id])
+  applicantInformationId Int?
 
+  @@unique([applicantInformationId, skills_name])
+}
 
+model References {
+  id                     Int                   @id @default(autoincrement())
+  name_of_person         String?
+  position               String?
+  ref_contact_number     String?
+  ApplicantInformation   ApplicantInformation? @relation(fields: [applicantInformationId], references: [id])
+  applicantInformationId Int?
 
-  Applicant Applicant[]
-  Employees Employees[]
+  @@unique([applicantInformationId, name_of_person])
 }

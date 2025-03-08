@@ -1,4 +1,4 @@
-import { EmployeeRequirements, RoleStatus } from "@prisma/client";
+import { ApplicantInformation, EducationBackground, EmployeeRequirements, References, RoleStatus, SkillsExpertise, WorkExperience } from "@prisma/client";
 import { ApplicationStatus, StatusesEvaluation } from "../types/index.ts";
 
 export interface Timestamped {
@@ -141,4 +141,13 @@ export interface EmployeeModel {
 export interface InterviewDate {
     id: number,
     date: string
-} 
+}
+
+export interface CombinedData {
+    applicantInfo: ApplicantInformation,
+    educData: EducationBackground[],
+    referencesData: References[],
+    skillsData: SkillsExpertise[],
+    workData: WorkExperience[]
+}
+
