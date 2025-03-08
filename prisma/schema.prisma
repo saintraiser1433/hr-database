@@ -221,25 +221,23 @@ model ApplicantInformation {
   religion          String?
   citizenship       String?
   language_spoken   String?
-  nicename          String?
   civil_status      String?   @db.VarChar(100)
   nickname          String?   @db.VarChar(100)
   resume_path       String
   photo_path        String
 
   //family background
-  fathers_name            String?
-  fathers_occupation      String?
-  mothers_name            String?
-  mothers_occupation      String?
-  parents_address         String?
-  person_to_be_contact    String?
-  parents_current_address String?
+  fathers_name         String?
+  fathers_occupation   String?
+  mothers_name         String?
+  mothers_occupation   String?
+  parents_address      String?
+  person_to_be_contact String?
 
-  Education      EducationBackground[]
-  WorkExperience WorkExperience[]
-  Skills         SkillsExpertise[]
-  References     References[]
+  education      EducationBackground[]
+  workExperience WorkExperience[]
+  skills         SkillsExpertise[]
+  references     References[]
   Applicant      Applicant[]
   Employees      Employees[]
 }

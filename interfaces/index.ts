@@ -144,6 +144,7 @@ export interface InterviewDate {
 }
 
 export interface CombinedData {
+    status: boolean,
     applicantInfo: ApplicantInformation,
     educData: EducationBackground[],
     referencesData: References[],

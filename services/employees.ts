@@ -1,5 +1,5 @@
 
-import { EmployeeRequirements, RequirementStatus } from '@prisma/client';
+import { EmployeeRequirements, RequirementStatus, RoleStatus } from '@prisma/client';
 import { CombinedData, EmployeeModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
@@ -34,7 +34,7 @@ export const getAllEmployees = async (id: string) => {
                 departmentId: departmentId
             },
             orderBy: [
-                { status: 'asc' },
+                { role: 'desc' },
                 { createdAt: 'desc' }
             ]
         })
@@ -109,11 +109,11 @@ export const assignEmployeeToRequirements = async (body: Omit<EmployeeRequiremen
             body.map((data) =>
                 prisma.employeeRequirements.create({
                     data,
-                    select: { 
+                    select: {
                         id: true,
-                        requirements:true,
+                        requirements: true,
                         status: true
-                     }
+                    }
                 })
             )
         );
@@ -133,22 +133,22 @@ export const assignEmployeeToRequirements = async (body: Omit<EmployeeRequiremen
 
 export const unAssignEmployeeToRequirements = async (body: number[]) => {
     try {
-  
+
         const responses = await Promise.all(
             body.map((data) =>
                 prisma.employeeRequirements.delete({
-                    where:{
+                    where: {
                         id: data
                     },
-                    select: { 
+                    select: {
                         id: true,
-                        requirements:true,
-                     }
+                        requirements: true,
+                    }
                 })
             )
         );
         const data = responses.map((item) => ({
-            id:item.id,
+            id: item.id,
             title: item.requirements.title
         }));
         return data;
@@ -158,7 +158,7 @@ export const unAssignEmployeeToRequirements = async (body: number[]) => {
 }
 
 
-export const modifyRequirementStatus = async(id:string,body:EmployeeRequirements) => {
+export const modifyRequirementStatus = async (id: string, body: EmployeeRequirements) => {
     try {
         const requirementId = parseInt(id, 10);
         if (isNaN(requirementId)) throw new Error("Invalid employee ID.");
@@ -209,15 +209,148 @@ export const insertEmployee = async (data: Omit<EmployeeModel, 'id' | 'role'>) =
 
 }
 
+export const getEmployeeInformationById = async (id: number) => {
+    try {
+        const response = await prisma.employees.findUnique({
+            select: {
+                status: true,
+                createdAt: true,
+                department: {
+                    select: {
+                        title: true
+                    }
+                },
+                job: {
+                    select: {
+                        title: true,
+                    }
+                },
+                information: {
+                    select: {
+                        first_name: true,
+                        middle_name: true,
+                        last_name: true,
+                        gender: true,
+                        date_of_birth: true,
+                        email: true,
+                        contact_number: true,
+                        telephone_number: true,
+                        permanent_address: true,
+                        current_address: true,
+                        religion: true,
+                        language_spoken: true,
+                        civil_status: true,
+                        citizenship: true,
+                        nickname: true,
+                        resume_path: true,
+                        photo_path: true,
+                        fathers_name: true,
+                        fathers_occupation: true,
+                        mothers_name: true,
+                        mothers_occupation: true,
+                        parents_address: true,
+                        person_to_be_contact: true,
+                        education: true,
+                        workExperience: true,
+                        skills: true,
+                        references: true
+                    }
+                }
+            },
+            where: {
+                id: id
+            }
+        })
+        const data = {
+            status: response?.status,
+            applicantInfo: {
+                jobTitle: response?.job.title,
+                hiredDate: response?.createdAt,
+                department: response?.department.title,
+                first_name: response?.information.first_name,
+                middle_name: response?.information.middle_name,
+                last_name: response?.information.last_name,
+                gender: response?.information.gender,
+                date_of_birth: response?.information.date_of_birth,
+                email: response?.information.email,
+                contact_number: response?.information.contact_number,
+                telephone_number: response?.information.telephone_number,
+                permanent_address: response?.information.permanent_address,
+                current_address: response?.information.current_address,
+                religion: response?.information.religion,
+                civil_status: response?.information.civil_status,
+                language_spoken: response?.information.language_spoken,
+                citizenship: response?.information.citizenship,
+                nickname: response?.information.nickname,
+                resume_path: response?.information.resume_path,
+                photo_path: response?.information.photo_path,
+                fathers_name: response?.information.fathers_name,
+                fathers_occupation: response?.information.fathers_occupation,
+                mothers_name: response?.information.mothers_name,
+                mothers_occupation: response?.information.mothers_occupation,
+                parents_address: response?.information.parents_address,
+                person_to_be_contact: response?.information.person_to_be_contact,
+            },
+            educData: response?.information.education,
+            workData: response?.information.workExperience,
+            skillsData: response?.information.skills,
+            referencesData: response?.information.references
+        }
+        return data;
+    } catch (err) {
+        throw err;
+    }
+}
 
-export const modifyInformation = async (applicantId: number, data: CombinedData) => {
-    const { educData, workData, skillsData, referencesData, applicantInfo } = data;
+
+export const modifyRoleStatus = async (employeeId: number, data: RoleStatus) => {
+    try {
+
+        const checkRoleIfExist = await prisma.employees.findFirst({
+            where: {
+                AND: [
+                    { departmentId: department },
+                    { role: 'TeamLead' }
+                ]
+
+            }
+        })
+
+        if (!checkRoleIfExist) {
+            const response = await prisma.employees.update({
+                where: {
+                    id: employeeId,
+                    departmentId: data.departmentId
+                },
+                data: {
+                    role: data
+                }
+            })
+            return response;
+        }
+
+
+    } catch (err) {
+        throw err;
+    }
+}
+
+
+export const modifyInformation = async (employeeId: number, data: CombinedData) => {
+    const { educData, workData, skillsData, referencesData, applicantInfo, status } = data;
 
     try {
         await prisma.$transaction(async (tx) => {
             // Step 1: Update Applicant Information
+            await tx.employees.update({
+                where: { id: employeeId },
+                data: {
+                    status: status
+                }
+            })
+
             await tx.applicantInformation.update({
-                where: { id: applicantId },
+                where: { id: employeeId },
                 data: {
                     first_name: applicantInfo.first_name,
                     middle_name: applicantInfo.middle_name,
@@ -238,18 +371,18 @@ export const modifyInformation = async (applicantId: number, data: CombinedData)
                     fathers_occupation: applicantInfo.fathers_occupation,
                     mothers_name: applicantInfo.mothers_name,
                     mothers_occupation: applicantInfo.mothers_occupation,
-                    parents_current_address: applicantInfo.parents_address,
+                    parents_address: applicantInfo.parents_address,
                     person_to_be_contact: applicantInfo.person_to_be_contact,
                 },
             });
 
             // Step 2: Upsert Education Background
             for (const edu of educData) {
-                if (!edu.school_name) continue; 
+                if (!edu.school_name) continue;
                 await tx.educationBackground.upsert({
                     where: {
                         applicantInformationId_school_name: {
-                            applicantInformationId: applicantId,
+                            applicantInformationId: employeeId,
                             school_name: edu.school_name,
                         },
                     },
@@ -265,18 +398,18 @@ export const modifyInformation = async (applicantId: number, data: CombinedData)
                         year_started: edu.year_started,
                         year_ended: edu.year_ended,
                         description: edu.description,
-                        applicantInformationId: applicantId,
+                        applicantInformationId: employeeId,
                     },
                 });
             }
 
             // Step 3: Upsert Work Experience
             for (const work of workData) {
-                if (!work.company_name) continue; 
+                if (!work.company_name) continue;
                 await tx.workExperience.upsert({
                     where: {
                         applicantInformationId_company_name: {
-                            applicantInformationId: applicantId,
+                            applicantInformationId: employeeId,
                             company_name: work.company_name,
                         },
                     },
@@ -290,36 +423,36 @@ export const modifyInformation = async (applicantId: number, data: CombinedData)
                         job_title: work.job_title,
                         work_year_started: work.work_year_started,
                         work_year_ended: work.work_year_ended,
-                        applicantInformationId: applicantId,
+                        applicantInformationId: employeeId,
                     },
                 });
             }
 
             // Step 4: Upsert Skills Expertise
             for (const skill of skillsData) {
-                if (!skill.skills_name) continue; 
+                if (!skill.skills_name) continue;
                 await tx.skillsExpertise.upsert({
                     where: {
                         applicantInformationId_skills_name: {
-                            applicantInformationId: applicantId,
+                            applicantInformationId: employeeId,
                             skills_name: skill.skills_name,
                         },
                     },
                     update: {},
                     create: {
                         skills_name: skill.skills_name,
-                        applicantInformationId: applicantId,
+                        applicantInformationId: employeeId,
                     },
                 });
             }
 
             // Step 5: Upsert References
             for (const ref of referencesData) {
-                if (!ref.name_of_person) continue; 
+                if (!ref.name_of_person) continue;
                 await tx.references.upsert({
                     where: {
                         applicantInformationId_name_of_person: {
-                            applicantInformationId: applicantId,
+                            applicantInformationId: employeeId,
                             name_of_person: ref.name_of_person,
                         },
                     },
@@ -331,7 +464,7 @@ export const modifyInformation = async (applicantId: number, data: CombinedData)
                         name_of_person: ref.name_of_person,
                         position: ref.position,
                         ref_contact_number: ref.ref_contact_number,
-                        applicantInformationId: applicantId,
+                        applicantInformationId: employeeId,
                     },
                 });
             }

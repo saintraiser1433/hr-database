@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, getAllEmployees, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements } from '../services/employees.ts';
+import { assignEmployeeToRequirements, getAllEmployees, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, modifyRoleStatus, unAssignEmployeeToRequirements } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 
@@ -25,6 +25,15 @@ export const fetchRequirementByEmpID = async (req: Request, res: Response, next:
     }
 }
 
+export const fetchEmployeeInformationById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const empId = Number(req.params.empId);
+    try {
+        const response = await getEmployeeInformationById(empId);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
 
 
 export const insertEmptoRequire = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -68,10 +77,22 @@ export const updateEmpRequireStatus = async (req: Request, res: Response, next: 
 
 
 export const updateEmpInformation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const body:CombinedData = req.body;
+    const body: CombinedData = req.body;
     const id = Number(req.params.id);
     try {
         const response = await modifyInformation(id, body);
+        return res.status(200).json({ message: "Successfully update Information", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const updateRoleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = Number(req.params.empId);
+    const body = req.body;
+    try {
+        const response = await modifyRoleStatus(id, body);
         return res.status(200).json({ message: "Successfully update Information", data: response });
     } catch (err) {
         next(err)
