@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { Response } from 'express';
 import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
 import { appLogger } from './logger.ts';
-import { EmployeeRequirements } from '@prisma/client';
+import { EmployeeRequirements, Peer, Question, Template } from '@prisma/client';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {
@@ -271,7 +271,7 @@ export const applicantsValidation = {
             resume_path: Joi.string().required().messages({
                 "any.required": "The Resume Path field is required"
             }),
-            
+
             gender: Joi.string().optional(),
             age: Joi.number().optional(),
             civil_status: Joi.string().optional(),
@@ -316,7 +316,7 @@ export const applicantsValidation = {
             email: Joi.string().email().required(),
             contact_number: Joi.number().required(),
             resume_path: Joi.string().required(),
-            
+
             gender: Joi.string().optional(),
             age: Joi.number().optional(),
             civil_status: Joi.string().optional(),
@@ -353,16 +353,16 @@ export const applicantsValidation = {
 
 
 export const questionValidation = {
-    insert: (data: QuestionModel) => {
+    insert: (data: Question) => {
         const schema = Joi.object({
             id: Joi.number().optional(),
             question: Joi.string().required().messages({
                 "any.required": "The Questions field is required",
-                "string.empty": "The School Year field is required"
+                "string.empty": "The Question  field is required"
             }),
-            evaluationId: Joi.number().required().messages({
-                "any.required": "Can't find evaluation",
-                "number.empty": "Can't find evaluation"
+            peerId: Joi.number().required().messages({
+                "any.required": "Can't find peer ID",
+                "number.empty": "Can't find peer ID"
             }),
 
         });
@@ -378,11 +378,64 @@ export const questionValidation = {
                 "any.required": "The Questions field is required",
                 "string.empty": "The School Year field is required"
             }),
-            evaluationId: Joi.number().required().messages({
-                "any.required": "Can't find evaluation",
-                "number.empty": "Can't find evaluation"
+            peerId: Joi.number().required().messages({
+                "any.required": "Can't find peer ID",
+                "number.empty": "Can't find peer ID"
             }),
 
+        });
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+
+export const peerCategoryValidation = {
+    validate: (data: Peer) => {
+        const schema = Joi.object({
+            id: Joi.number().optional(),
+            title: Joi.string().required().messages({
+                "any.required": "The Title field is required",
+                "string.base": "The Title field must be a string",
+            }),
+            evaluationId: Joi.number().required().messages({
+                "any.required": "The Evaluation field is required",
+                "number.base": "The Evaluation field must be a number",
+            }),
+        })
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+
+export const templateValidation = {
+    insert: (data: Template) => {
+        const schema = Joi.object({
+            id: Joi.number().optional(),
+            template_name: Joi.string().required().messages({
+                "any.required": "The title field is required",
+                "string.empty": "The title field cannot be empty"
+            }),
+            description: Joi.string().required().messages({
+                "any.required": "The description field is required",
+                "string.empty": "The description field cannot be empty"
+            }),
+        });
+        return schema.validate(data, { abortEarly: false });
+    },
+    update: (data: Template) => {
+        const schema = Joi.object({
+            id: Joi.number().required().messages({
+                "any.required": "The ID field is required",
+                "number.base": "The ID field must be a number"
+            }),
+            template_name: Joi.string().required().messages({
+                "any.required": "The title field is required",
+                "string.empty": "The title field cannot be empty"
+            }),
+            description: Joi.string().required().messages({
+                "any.required": "The description field is required",
+                "string.empty": "The description field cannot be empty"
+            }),
         });
         return schema.validate(data, { abortEarly: false });
     },

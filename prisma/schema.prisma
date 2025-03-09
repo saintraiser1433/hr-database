@@ -120,30 +120,6 @@ model Departments {
   Employees Employees[]
 }
 
-model Evaluation {
-  id           Int              @id @default(autoincrement())
-  school_year  String           @db.VarChar(100)
-  semester     Int
-  status       EvaluationStatus @default(NOT_SET)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  questionList Question[]
-
-  @@unique([school_year, semester])
-}
-
-model Question {
-  id           Int         @id @default(autoincrement())
-  question     String
-  Evaluation   Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId Int
-}
-
-model Comments {
-  id          Int    @id @default(autoincrement())
-  description String
-}
-
 model Employees {
   id                   Int                    @id @default(autoincrement())
   status               Boolean                @default(true)
@@ -285,4 +261,42 @@ model References {
   applicantInformationId Int?
 
   @@unique([applicantInformationId, name_of_person])
+}
+
+model Peer {
+  id           Int         @id @default(autoincrement())
+  title        String?     @db.VarChar(100)
+  evaluation   Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId Int
+  question     Question[]
+}
+
+model Evaluation {
+  id          Int              @id @default(autoincrement())
+  school_year String           @db.VarChar(100)
+  semester    Int
+  status      EvaluationStatus @default(NOT_SET)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  Peer        Peer[]
+
+  @@unique([school_year, semester])
+}
+
+model Question {
+  id       Int    @id @default(autoincrement())
+  question String
+  peer     Peer   @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peerId   Int
+}
+
+model Comments {
+  id          Int    @id @default(autoincrement())
+  description String
+}
+
+model Template {
+  id            Int    @id @default(autoincrement())
+  template_name String @db.VarChar(100)
+  description   String
 }

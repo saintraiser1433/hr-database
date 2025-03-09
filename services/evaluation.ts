@@ -1,6 +1,7 @@
 import { EvaluationModel, QuestionModel } from '../interfaces/index.ts';
 import { Response } from 'express';
 import prisma from '../prisma/index.ts';
+import { Evaluation, Peer, Question } from '@prisma/client';
 
 export const getEvaluation = async () => {
     try {
@@ -28,7 +29,7 @@ export const getEvaluation = async () => {
     }
 }
 
-export const createEvaluation = async (body: Omit<EvaluationModel, "id" | "questionList">) => {
+export const createEvaluation = async (body: Evaluation) => {
     try {
         const response = await prisma.evaluation.create({
             data: body
@@ -39,46 +40,71 @@ export const createEvaluation = async (body: Omit<EvaluationModel, "id" | "quest
     }
 }
 
-export const modifyEvaluation = async (id: string, data: Omit<EvaluationModel, "id" | "questionList">, res: Response) => {
+export const modifyEvaluation = async (id: number, data: Evaluation) => {
 
-
-    const checkDuplicateStatus = await prisma.evaluation.findFirst({
-        where: {
-            status: 'ONGOING'
+    try {
+        const checkDuplicateStatus = await prisma.evaluation.findFirst({
+            where: {
+                status: 'ONGOING'
+            }
+        });
+        if (checkDuplicateStatus) {
+            throw new Error("Please update the ongoing status to finished before update");
         }
-    });
-    if (checkDuplicateStatus) {
-        throw new Error("Please update the ongoing status to finished before update");
+
+        return await prisma.evaluation.update({
+            where: {
+                id: id
+            },
+            data,
+        });
+    } catch (err) {
+        throw err
     }
 
-    return await prisma.evaluation.update({
-        where: {
-            id: Number(id),
-        },
-        data,
-    });
 };
 
-export const removeEvaluation = async (id: string) => {
+export const removeEvaluation = async (id: number) => {
     return await prisma.evaluation.delete({
         where: {
-            id: Number(id)
+            id: id
         }
     })
 }
 
-
-export const getEvaluationQuestion = async (id: string) => {
+//creation of peer to peer category
+export const createEvaluationPeerCategory = async (body: Peer) => {
     try {
-        const response = await prisma.question.findMany({
+        const response = await prisma.peer.create({
+            data: {
+                title: body.title,
+                evaluation: {
+                    connect: { id: body.evaluationId }
+                }
+            }
+        })
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const getEvaluationPeerCategory = async (id: number) => {
+    try {
+        const response = await prisma.peer.findMany({
             select: {
                 id: true,
-                question: true,
-                evaluationId: true
-
+                title: true,
+                question: {
+                    select: {
+                        id: true,
+                        question: true
+                    }
+                },
             },
             where: {
-                evaluationId: Number(id)
+                evaluationId: id
             },
             orderBy: {
                 id: 'asc'
@@ -91,14 +117,70 @@ export const getEvaluationQuestion = async (id: string) => {
     }
 }
 
+export const modifyEvaluationPeerCategory = async (id: number, body: Peer) => {
+    try {
+        const response = await prisma.peer.update({
+            data: {
+                title: body.title,
+            },
+            where: {
+                id: id
+            }
+        })
 
-export const createEvaluationQuestion = async (body: Omit<QuestionModel, "id">) => {
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const removeEvaluationPeerCategory = async (id: number) => {
+    return await prisma.peer.delete({
+        where: {
+            id: id
+        }
+    })
+}
+
+//end
+
+
+
+
+//peer questions
+export const getEvaluationPeerQuestion = async (id: number) => {
+    try {
+        const response = await prisma.question.findMany({
+            select: {
+                id: true,
+                question: true,
+                peerId: true
+
+            },
+            where: {
+                peerId: id
+            },
+            orderBy: {
+                id: 'asc'
+            }
+        })
+
+
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+
+export const createEvaluationPeerQuestion = async (body: Question) => {
     try {
         const response = await prisma.question.create({
             data: {
                 question: body.question,
-                Evaluation: {
-                    connect: { id: body.evaluationId }
+                peer: {
+                    connect: { id: body.peerId }
                 }
             }
         })
@@ -109,17 +191,14 @@ export const createEvaluationQuestion = async (body: Omit<QuestionModel, "id">) 
     }
 }
 
-export const modifyEvaluationQuestion = async (id: string, body: QuestionModel) => {
+export const modifyEvaluationPeerQuestion = async (id: number, body: Question) => {
     try {
-
-
-
         const response = await prisma.question.update({
             data: {
                 question: body.question,
             },
             where: {
-                id: Number(id)
+                id: id
             }
         })
 
@@ -129,11 +208,13 @@ export const modifyEvaluationQuestion = async (id: string, body: QuestionModel) 
     }
 }
 
-export const removeEvaluationQuestion = async (id: string) => {
+export const removeEvaluationPeerQuestion = async (id: number) => {
     return await prisma.question.delete({
         where: {
-            id: Number(id)
+            id: id
         }
     })
 }
 
+
+//end peer questions

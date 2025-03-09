@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, getAllEmployees, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, modifyRoleStatus, unAssignEmployeeToRequirements } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 
@@ -88,12 +88,23 @@ export const updateEmpInformation = async (req: Request, res: Response, next: Ne
 }
 
 
-export const updateRoleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const assignStatusTeamlead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const id = Number(req.params.empId);
     const body = req.body;
     try {
-        const response = await modifyRoleStatus(id, body);
-        return res.status(200).json({ message: "Successfully update Information", data: response });
+        const response = await assignTeamLead(id, body);
+        return res.status(200).json({ message: "Successfully update role", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const unassignStatusTeamlead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const id = Number(req.params.empId);
+    const body = req.body;
+    try {
+        const response = await unassignTeamlead(id, body);
+        return res.status(200).json({ message: "Successfully update role", data: response });
     } catch (err) {
         next(err)
     }

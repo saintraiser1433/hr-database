@@ -8,6 +8,7 @@ import evaluationRoute from './evaluation.ts'
 import applicantRoute from './applicants.ts'
 import interviewRoute from './interview.ts'
 import employeesRoute from './employees.ts'
+import templateRoute from './template.ts'
 const route = Router();
 
 route.use('/requirements', requirementsRoute)
@@ -19,7 +20,7 @@ route.use('/department', departmentRoute)
 route.use('/screening', screeningRoute)
 route.use('/interview', interviewRoute)
 route.use('/employees', employeesRoute)
-
+route.use('/template', templateRoute)
 
 
 

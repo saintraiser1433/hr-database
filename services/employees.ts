@@ -303,37 +303,57 @@ export const getEmployeeInformationById = async (id: number) => {
 }
 
 
-export const modifyRoleStatus = async (employeeId: number, data: RoleStatus) => {
+export const assignTeamLead = async (employeeId: number, data: EmployeeModel) => {
     try {
 
-        const checkRoleIfExist = await prisma.employees.findFirst({
+        const checkRole = await prisma.employees.findFirst({
             where: {
-                AND: [
-                    { departmentId: department },
-                    { role: 'TeamLead' }
-                ]
-
+                role: RoleStatus.TeamLead,
+                departmentId: data.departmentId
             }
         })
 
-        if (!checkRoleIfExist) {
-            const response = await prisma.employees.update({
-                where: {
-                    id: employeeId,
-                    departmentId: data.departmentId
-                },
-                data: {
-                    role: data
-                }
-            })
-            return response;
-        }
+        if (checkRole) {
+            throw new Error('Please unassign the previous teamlead to proceed')
+        };
+
+        const response = await prisma.employees.update({
+            where: {
+                id: employeeId,
+                departmentId: data.departmentId
+            },
+            data: {
+                role: RoleStatus.TeamLead
+            }
+        })
+        return response;
 
 
     } catch (err) {
         throw err;
     }
 }
+
+export const unassignTeamlead = async (employeeId: number, data: EmployeeModel) => {
+    try {
+        const response = await prisma.employees.update({
+            where: {
+                id: employeeId,
+                departmentId: data.departmentId
+            },
+            data: {
+                role: RoleStatus.Employee
+            }
+        })
+        return response;
+
+
+    } catch (err) {
+        throw err;
+    }
+}
+
+
 
 
 export const modifyInformation = async (employeeId: number, data: CombinedData) => {
