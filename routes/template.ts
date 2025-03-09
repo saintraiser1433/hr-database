@@ -1,12 +1,18 @@
 import { Router } from 'express';
-import { fetchTemplate, insertTemplate, modifyTemplate, deleteTemplate } from '../controller/template.ts';
+import { fetchTemplateHeader, insertTemplateHeader, modifyTemplateHeader, deleteTemplateHeader, deleteTemplateDetail, fetchTemplateDetail, insertTemplateDetail, modifyTemplateDetail } from '../controller/template.ts';
 
 const route = Router();
 
 //template
-route.get('/', fetchTemplate);
-route.post('/', insertTemplate);
-route.put('/:id', modifyTemplate);
-route.delete('/:id', deleteTemplate);
+route.get('/', fetchTemplateHeader);
+route.post('/', insertTemplateHeader);
+route.put('/:id', modifyTemplateHeader);
+route.delete('/:id', deleteTemplateHeader);
+
+
+route.get('/detail/:id', fetchTemplateDetail);
+route.post('/detail', insertTemplateDetail);
+route.put('/detail/:id', modifyTemplateDetail);
+route.delete('/detail/:id', deleteTemplateDetail);
 
 export default route;

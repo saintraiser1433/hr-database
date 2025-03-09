@@ -264,11 +264,13 @@ model References {
 }
 
 model Peer {
-  id           Int         @id @default(autoincrement())
-  title        String?     @db.VarChar(100)
-  evaluation   Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId Int
-  question     Question[]
+  id               Int             @id @default(autoincrement())
+  title            String?         @db.VarChar(100)
+  evaluation       Evaluation?     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId     Int
+  templateHeader   TemplateHeader? @relation(fields: [templateHeaderId], references: [id])
+  question         Question[]
+  templateHeaderId Int?
 }
 
 model Evaluation {
@@ -295,8 +297,19 @@ model Comments {
   description String
 }
 
-model Template {
-  id            Int    @id @default(autoincrement())
-  template_name String @db.VarChar(100)
-  description   String
+model TemplateHeader {
+  id             Int              @id @default(autoincrement())
+  template_name  String           @db.VarChar(100)
+  description    String
+  TemplateDetail TemplateDetail[]
+  Peer           Peer[]
+}
+
+model TemplateDetail {
+  id          Int            @id @default(autoincrement())
+  title       String         @db.VarChar(100)
+  description String
+  score       Int
+  template    TemplateHeader @relation(fields: [templateId], references: [id])
+  templateId  Int
 }
