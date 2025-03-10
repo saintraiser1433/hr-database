@@ -102,6 +102,11 @@ export const getEvaluationPeerCategory = async (id: number) => {
                         question: true
                     }
                 },
+                template: {
+                    select: {
+                        template_name: true
+                    }
+                }
             },
             where: {
                 evaluationId: id
@@ -111,7 +116,11 @@ export const getEvaluationPeerCategory = async (id: number) => {
             }
         })
 
-        return response;
+        const res = response.map((item) => ({
+            ...item,
+            template: item.template?.template_name
+        }))
+        return res;
     } catch (err) {
         throw err
     }
@@ -150,28 +159,48 @@ export const removeEvaluationPeerCategory = async (id: number) => {
 //peer questions
 export const getEvaluationPeerQuestion = async (id: number) => {
     try {
-        const response = await prisma.question.findMany({
+        const peerWithQuestions = await prisma.peer.findUnique({
+            where: { id },
             select: {
-                id: true,
-                question: true,
-                peerId: true
-
+                question: {
+                    select: {
+                        id: true,
+                        question: true,
+                        peerId: true,
+                    },
+                    orderBy: {
+                        id: 'asc',
+                    },
+                },
+                template: {
+                    select: {
+                        templateDetail: {
+                            select: {
+                                title: true,
+                                score: true,
+                            },
+                            orderBy: {
+                                score: 'asc',
+                            },
+                        },
+                    },
+                },
             },
-            where: {
-                peerId: id
-            },
-            orderBy: {
-                id: 'asc'
-            }
-        })
+        });
 
+        if (!peerWithQuestions) {
+            throw new Error(`Peer with id ${id} not found.`);
+        }
 
-
-        return response;
+        return {
+            questions: peerWithQuestions.question,
+            legends: peerWithQuestions.template?.templateDetail || [],
+        };
     } catch (err) {
-        throw err
+        console.error(`Error fetching evaluation peer question for id ${id}:`, err);
+        throw err;
     }
-}
+};
 
 
 export const createEvaluationPeerQuestion = async (body: Question) => {
@@ -218,3 +247,42 @@ export const removeEvaluationPeerQuestion = async (id: number) => {
 
 
 //end peer questions
+
+
+//assign template 
+export const bundleUpdateTemplatePeer = async (id: number, body: Peer) => {
+    try {
+        const response = await prisma.peer.updateMany({
+            data: {
+                templateHeaderId: body.templateHeaderId
+            },
+            where: {
+                evaluationId: id
+            }
+        })
+
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+
+export const assignTemplatePeer = async (id: number, body: Peer) => {
+    try {
+        const response = await prisma.peer.update({
+            data: {
+                templateHeaderId: body.templateHeaderId
+            },
+            where: {
+                id: id
+            }
+        })
+
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}

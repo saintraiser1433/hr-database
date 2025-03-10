@@ -103,3 +103,9 @@ export const removeTemplateDetail = async (id: number) => {
     },
   });
 };
+
+
+
+
+
+

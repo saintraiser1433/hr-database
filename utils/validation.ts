@@ -401,6 +401,10 @@ export const peerCategoryValidation = {
                 "any.required": "The Evaluation field is required",
                 "number.base": "The Evaluation field must be a number",
             }),
+            // templateHeaderId: Joi.number().required().messages({
+            //     "any.required": "Please select template first before adding category",
+            //     "number.empty": "Please select template first before adding category"
+            // }),
         })
         return schema.validate(data, { abortEarly: false });
     },
@@ -419,6 +423,7 @@ export const templateValidation = {
                 "any.required": "The description field is required",
                 "string.empty": "The description field cannot be empty"
             }),
+
         });
         return schema.validate(data, { abortEarly: false });
     },
@@ -490,6 +495,8 @@ export const templateDetailValidation = {
         return schema.validate(data, { abortEarly: false });
     },
 };
+
+
 
 
 

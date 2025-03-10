@@ -263,16 +263,6 @@ model References {
   @@unique([applicantInformationId, name_of_person])
 }
 
-model Peer {
-  id               Int             @id @default(autoincrement())
-  title            String?         @db.VarChar(100)
-  evaluation       Evaluation?     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId     Int
-  templateHeader   TemplateHeader? @relation(fields: [templateHeaderId], references: [id])
-  question         Question[]
-  templateHeaderId Int?
-}
-
 model Evaluation {
   id          Int              @id @default(autoincrement())
   school_year String           @db.VarChar(100)
@@ -297,11 +287,21 @@ model Comments {
   description String
 }
 
+model Peer {
+  id               Int            @id @default(autoincrement())
+  title            String?        @db.VarChar(100)
+  evaluation       Evaluation?    @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId     Int
+  question         Question[]
+  template TemplateHeader? @relation(fields: [templateHeaderId], references: [id])
+  templateHeaderId Int?
+}
+
 model TemplateHeader {
   id             Int              @id @default(autoincrement())
   template_name  String           @db.VarChar(100)
   description    String
-  TemplateDetail TemplateDetail[]
+  templateDetail TemplateDetail[]
   Peer           Peer[]
 }
 
