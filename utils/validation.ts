@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { Response } from 'express';
 import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
 import { appLogger } from './logger.ts';
-import { EmployeeRequirements, Peer, Question, TemplateDetail, TemplateHeader } from '@prisma/client';
+import { EmployeeRequirements, Peer, Question, TeamLeadCriteria, TemplateDetail, TemplateHeader } from '@prisma/client';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {
@@ -389,11 +389,11 @@ export const questionValidation = {
 };
 
 
-export const peerCategoryValidation = {
+export const evalCategoryValidation = {
     validate: (data: Peer) => {
         const schema = Joi.object({
             id: Joi.number().optional(),
-            title: Joi.string().required().messages({
+            name: Joi.string().required().messages({
                 "any.required": "The Title field is required",
                 "string.base": "The Title field must be a string",
             }),
@@ -401,10 +401,27 @@ export const peerCategoryValidation = {
                 "any.required": "The Evaluation field is required",
                 "number.base": "The Evaluation field must be a number",
             }),
-            // templateHeaderId: Joi.number().required().messages({
-            //     "any.required": "Please select template first before adding category",
-            //     "number.empty": "Please select template first before adding category"
-            // }),
+            percentage: Joi.number().required().messages({
+                "any.required": "The Percentage field is required",
+                "number.base": "The Percentage field must be a number",
+            }),
+        })
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+export const subCategoryValidation = {
+    validate: (data: TeamLeadCriteria) => {
+        const schema = Joi.object({
+            id: Joi.number().optional(),
+            name: Joi.string().required().messages({
+                "any.required": "The Sub Category field is required",
+                "string.base": "The Sub Category field must be a string",
+            }),
+            teamLeadEvaluationId: Joi.number().required().messages({
+                "any.required": "The Team Lead Evaluation field is required",
+                "number.base": "The Team Lead Evaluation field must be a number",
+            }),
         })
         return schema.validate(data, { abortEarly: false });
     },

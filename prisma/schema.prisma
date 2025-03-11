@@ -264,22 +264,16 @@ model References {
 }
 
 model Evaluation {
-  id          Int              @id @default(autoincrement())
-  school_year String           @db.VarChar(100)
-  semester    Int
-  status      EvaluationStatus @default(NOT_SET)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  Peer        Peer[]
+  id                 Int                  @id @default(autoincrement())
+  school_year        String               @db.VarChar(100)
+  semester           Int
+  status             EvaluationStatus     @default(NOT_SET)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  Peer               Peer[]
+  TeamLeadEvaluation TeamLeadEvaluation[]
 
   @@unique([school_year, semester])
-}
-
-model Question {
-  id       Int    @id @default(autoincrement())
-  question String
-  peer     Peer   @relation(fields: [peerId], references: [id], onDelete: Cascade)
-  peerId   Int
 }
 
 model Comments {
@@ -288,21 +282,51 @@ model Comments {
 }
 
 model Peer {
-  id               Int            @id @default(autoincrement())
-  title            String?        @db.VarChar(100)
-  evaluation       Evaluation?    @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  id               Int             @id @default(autoincrement())
+  name             String          @unique
+  evaluation       Evaluation?     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationId     Int
   question         Question[]
-  template TemplateHeader? @relation(fields: [templateHeaderId], references: [id])
+  template         TemplateHeader? @relation(fields: [templateHeaderId], references: [id])
   templateHeaderId Int?
+  percentage       Decimal         @db.Decimal(10, 2)
+}
+
+model TeamLeadEvaluation {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  percentage       Decimal            @db.Decimal(10, 2)
+  evaluation       Evaluation?        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId     Int
+  template         TemplateHeader?    @relation(fields: [templateHeaderId], references: [id])
+  templateHeaderId Int?
+  teamLeadCriteria TeamLeadCriteria[]
+}
+
+model TeamLeadCriteria {
+  id                   Int                @id @default(autoincrement())
+  name                 String
+  teamLeadEvaluation   TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
+  question             Question[]
+  teamLeadEvaluationId Int
+}
+
+model Question {
+  id                 Int               @id @default(autoincrement())
+  question           String
+  peer               Peer?             @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peerId             Int?
+  teamLeadCriteria   TeamLeadCriteria? @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
+  teamLeadCriteriaId Int?
 }
 
 model TemplateHeader {
-  id             Int              @id @default(autoincrement())
-  template_name  String           @db.VarChar(100)
-  description    String
-  templateDetail TemplateDetail[]
-  Peer           Peer[]
+  id                 Int                  @id @default(autoincrement())
+  template_name      String               @db.VarChar(100)
+  description        String
+  templateDetail     TemplateDetail[]
+  Peer               Peer[]
+  TeamLeadEvaluation TeamLeadEvaluation[]
 }
 
 model TemplateDetail {
