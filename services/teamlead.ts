@@ -193,6 +193,7 @@ export const getCriteriaWithQuestion = async (id: number) => {
             },
             select: {
                 teamLeadCriteria: {
+                    where: { id: id }, // Filter to only the requested criteria
                     select: {
                         question: {
                             select: {

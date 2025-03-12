@@ -123,14 +123,14 @@ model Departments {
 model Employees {
   id                   Int                    @id @default(autoincrement())
   status               Boolean                @default(true)
-  job                  Job                    @relation(fields: [jobId], references: [id])
-  department           Departments            @relation(fields: [departmentId], references: [id])
-  information          ApplicantInformation   @relation(fields: [informationId], references: [id])
+  job                  Job?                    @relation(fields: [jobId], references: [id])
+  department           Departments?            @relation(fields: [departmentId], references: [id])
+  information          ApplicantInformation?   @relation(fields: [informationId], references: [id])
   username             String                 @db.VarChar(100)
   password             String                 @db.VarChar(100)
-  informationId        Int
-  jobId                Int
-  departmentId         Int
+  informationId        Int?
+  jobId                Int?
+  departmentId         Int?
   accessToken          String?
   refreshToken         String?
   role                 RoleStatus             @default(Employee)

@@ -154,3 +154,11 @@ export interface CombinedData {
     workData: WorkExperience[]
 }
 
+export interface TokenDetail {
+    id:number;
+    first_name:string;
+    last_name:string;
+    middle_name:string;
+    role:string;
+}
+
