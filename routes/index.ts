@@ -12,6 +12,7 @@ import templateRoute from './template.ts'
 import peerRoute from './peer.ts'
 import teamleadRoute from './teamlead.ts'
 import authRoute from './auth.ts';
+import questionRoute from './question.ts';
 const route = Router();
 
 route.use('/requirements', requirementsRoute)
@@ -27,4 +28,5 @@ route.use('/template', templateRoute)
 route.use('/peer', peerRoute)
 route.use('/teamlead', teamleadRoute)
 route.use('/auth', authRoute)
+route.use('/question', questionRoute)
 export default route;

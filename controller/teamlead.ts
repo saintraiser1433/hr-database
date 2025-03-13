@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getColleagueByDept,createCriteriaByColleague,modifyCriteriaByColleague,removeEvaluationCriteriaByColleague,getCriteriaByColleague,getEvaluationTeamLeadCategory, createEvaluationTeamLeadCategory, modifyEvaluationTeamLeadCategory, removeEvaluationTeamLeadCategory, getEvaluationTeamLeadCriteria, createEvaluationTeamLeadCriteria, modifyEvaluationTeamLeadCriteria, removeEvaluationTeamLeadCriteria, createCriteriaQuestion, getCriteriaWithQuestion, modifyCriteriaQuestion, removeCriteriaQuestion, getFilterCategoryByLead } from "../services/teamlead.ts";
+import { getColleagueByDept, createCriteriaByColleague, modifyCriteriaByColleague, removeEvaluationCriteriaByColleague, getCriteriaByColleague, getEvaluationTeamLeadCategory, createEvaluationTeamLeadCategory, modifyEvaluationTeamLeadCategory, removeEvaluationTeamLeadCategory, getEvaluationTeamLeadCriteria, createEvaluationTeamLeadCriteria, modifyEvaluationTeamLeadCriteria, removeEvaluationTeamLeadCriteria, getFilterCategoryByLead } from "../services/teamlead.ts";
 import { evalCategoryValidation, handleValidationError, subCategoryValidation } from "../utils/validation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -132,56 +132,6 @@ export const deleteEvaluationTeamLeadCriteria = async (req: Request, res: Respon
 //end
 
 
-export const fetchCriteriaQuestion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const criteriaId = parseId(req.params.id);
-    if (!criteriaId) {
-        return res.status(400).json({ error: "Invalid Criteria ID." });
-    }
-    try {
-        const response = await getCriteriaWithQuestion(criteriaId);
-        return res.status(200).json(response);
-    } catch (err) {
-        next(err);
-    }
-}
-
-
-export const insertCriteriaQuestion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const body = req.body;
-    try {
-        const response = await createCriteriaQuestion(body);
-        return res.status(200).json({ message: "Question created successfully", data: response });
-    } catch (err) {
-        next(err);
-    }
-};
-
-export const updateCriteriaQuestion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const body = req.body;
-    const questionId = parseId(req.params.id);
-    if (!questionId) {
-        return res.status(400).json({ error: "Invalid Question ID." });
-    }
-    try {
-        const response = await modifyCriteriaQuestion(questionId, body);
-        return res.status(200).json({ message: "Question updated successfully", data: response });
-    } catch (err) {
-        next(err);
-    }
-}
-
-export const deleteCriteriaQuestion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const questionId = parseId(req.params.id);
-    if (!questionId) {
-        return res.status(400).json({ error: "Invalid Question ID." });
-    }
-    try {
-        await removeCriteriaQuestion(questionId);
-        return res.status(200).json({ message: "Question removed successfully" });
-    } catch (err) {
-        next(err)
-    }
-}
 
 //fetch for data for teamlead module
 export const fetchFilterCategoryByLead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -223,7 +173,7 @@ export const fetchCriteriaByColleague = async (req: Request, res: Response, next
         return res.status(400).json({ error: "Invalid Employee ID." });
     }
     try {
-        const response = await getCriteriaByColleague(evaluationId,employeeId);
+        const response = await getCriteriaByColleague(evaluationId, employeeId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -242,7 +192,7 @@ export const insertCriteriaByColleague = async (req: Request, res: Response, nex
 
 export const updateCriteriaByColleague = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
-    const criteriaId = parseId(req.params.criteriaId);
+    const criteriaId = parseId(req.params.id);
     if (!criteriaId) {
         return res.status(400).json({ error: "Invalid Criteria ID." });
     }
@@ -255,7 +205,7 @@ export const updateCriteriaByColleague = async (req: Request, res: Response, nex
 }
 
 export const deleteCriteriaByColleague = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const criteriaId = parseId(req.params.criteriaId);
+    const criteriaId = parseId(req.params.id);
     if (!criteriaId) {
         return res.status(400).json({ error: "Invalid Criteria ID." });
     }

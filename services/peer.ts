@@ -31,10 +31,10 @@ const checkingPeerPercentage = async (evaluationId: number, percentage: Decimal)
             where: { evaluationId: evaluationId }
         });
 
-        const totalPercentage = existingPeers.reduce((sum, peer) => sum + Number(peer.percentage), 0) 
-        + Number(percentage); 
+        const totalPercentage = existingPeers.reduce((sum, peer) => sum + Number(peer.percentage), 0)
+            + Number(percentage);
 
-        if (totalPercentage > 1) { 
+        if (totalPercentage > 1) {
             throw new Error('Cannot add because the total percentage exceeds 100%');
         }
     } catch (err) {
@@ -112,96 +112,7 @@ export const removeEvaluationPeerCategory = async (id: number) => {
 
 
 //peer questions
-export const getEvaluationPeerQuestion = async (id: number) => {
-    try {
-        const peerWithQuestions = await prisma.peer.findUnique({
-            where: { id },
-            select: {
-                question: {
-                    select: {
-                        id: true,
-                        question: true,
-                        peerId: true,
-                    },
-                    orderBy: {
-                        id: 'asc',
-                    },
-                },
-                template: {
-                    select: {
-                        templateDetail: {
-                            select: {
-                                title: true,
-                                score: true,
-                            },
-                            orderBy: {
-                                score: 'asc',
-                            },
-                        },
-                    },
-                },
-            },
-        });
 
-        if (!peerWithQuestions) {
-            throw new Error(`Peer with id ${id} not found.`);
-        }
-
-        return {
-            questions: peerWithQuestions.question,
-            legends: peerWithQuestions.template?.templateDetail || [],
-        };
-    } catch (err) {
-        console.error(`Error fetching evaluation peer question for id ${id}:`, err);
-        throw err;
-    }
-};
-
-
-export const createEvaluationPeerQuestion = async (body: Question) => {
-    try {
-        const response = await prisma.question.create({
-            data: {
-                question: body.question,
-                peer: {
-                    connect: { id: body.peerId as number }
-                }
-            }
-        })
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
-
-export const modifyEvaluationPeerQuestion = async (id: number, body: Question) => {
-    try {
-        const response = await prisma.question.update({
-            data: {
-                question: body.question,
-            },
-            where: {
-                id: id
-            }
-        })
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
-
-export const removeEvaluationPeerQuestion = async (id: number) => {
-    return await prisma.question.delete({
-        where: {
-            id: id
-        }
-    })
-}
-
-
-//end peer questions
 
 
 //assign template 
