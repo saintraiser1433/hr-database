@@ -1,4 +1,4 @@
-import { Peer, Question, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
+import { Peer, AssignTaskCriteria, Question, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import prisma from "../prisma/index.ts";
 
@@ -11,9 +11,11 @@ export const createEvaluationTeamLeadCategory = async (body: TeamLeadEvaluation)
             data: {
                 name: body.name,
                 percentage: body.percentage,
+                forTeamLead: body.forTeamLead,
                 evaluation: {
                     connect: { id: body.evaluationId }
-                }
+                },
+
             }
         });
 
@@ -48,6 +50,7 @@ export const getEvaluationTeamLeadCategory = async (id: number) => {
                 id: true,
                 name: true,
                 percentage: true,
+                forTeamLead: true,
                 template: {
                     select: {
                         template_name: true
@@ -72,12 +75,53 @@ export const getEvaluationTeamLeadCategory = async (id: number) => {
     }
 }
 
+export const getFilterCategoryByLead = async (id: number) => {
+    try {
+        const response = await prisma.teamLeadEvaluation.findMany({
+            select: {
+                id: true,
+                name: true,
+                percentage: true,
+                forTeamLead: true,
+                template: {
+                    select: {
+                        template_name: true
+                    }
+                }
+            },
+            where: {
+                AND: [
+                    {
+                        evaluationId: id
+                    },
+                    {
+                        forTeamLead: true
+                    }
+                ]
+
+            },
+            orderBy: {
+                percentage: 'desc'
+            }
+        })
+
+        const res = response.map((item) => ({
+            ...item,
+            template: item.template?.template_name
+        }))
+        return res;
+    } catch (err) {
+        throw err
+    }
+}
+
 export const modifyEvaluationTeamLeadCategory = async (id: number, body: TeamLeadEvaluation) => {
     try {
         const response = await prisma.teamLeadEvaluation.update({
             data: {
                 name: body.name,
-                percentage: body.percentage
+                percentage: body.percentage,
+                forTeamLead: body.forTeamLead
             },
             where: {
                 id: id
@@ -134,7 +178,10 @@ export const getEvaluationTeamLeadCriteria = async (id: number) => {
                 }
             },
             where: {
-                teamLeadEvaluationId: id
+                teamLeadEvaluationId: id,
+                teamLeadEvaluation: {
+                    forTeamLead: false
+                }
             },
             orderBy: {
                 id: 'asc'
@@ -185,11 +232,18 @@ export const getCriteriaWithQuestion = async (id: number) => {
     try {
         const criteriaWithQuestion = await prisma.teamLeadEvaluation.findMany({
             where: {
-                teamLeadCriteria: {
-                    some: {
-                        id: id
+                AND: [
+                    {
+                        forTeamLead: false
+                    },
+                    {
+                        teamLeadCriteria: {
+                            some: {
+                                id: id
+                            }
+                        }
                     }
-                }
+                ]
             },
             select: {
                 teamLeadCriteria: {
@@ -322,4 +376,135 @@ export const assignTemplateTeamLead = async (id: number, body: TeamLeadEvaluatio
     } catch (err) {
         throw err
     }
+}
+
+export const getColleagueByDept = async (id: number) => {
+    try {
+        const response = await prisma.employees.findMany({
+            select: {
+                id: true,
+                job: {
+                    select: {
+                        title: true,
+                    }
+                },
+                information: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                        middle_name: true,
+                        photo_path: true
+                    }
+                },
+            },
+            where: {
+                AND: [
+                    {
+                        departmentId: id
+                    },
+                    {
+                        role: 'Employee'
+                    }
+                ]
+
+            }
+        })
+
+        const serialized = response.map((item) => ({
+
+            id: item.id,
+            label: item.information?.first_name + " " + item.information?.last_name,
+            suffix: item.job?.title,
+            photo: item.information?.photo_path
+        }))
+
+
+        return serialized;
+    } catch (err) {
+        throw err
+    }
+}
+
+
+
+//assigning criteria to colleagues
+export const createCriteriaByColleague = async (body: AssignTaskCriteria) => {
+    try {
+        const response = await prisma.assignTaskCriteria.create({
+            data: {
+                name: body.name,
+                employee: {
+                    connect: { id: body.employeesId }
+                },
+                teamLead: {
+                    connect: { id: body.teamLeadEvaluationId }
+                }
+            }
+        });
+
+        return response;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+export const getCriteriaByColleague = async (evaluationId: number, employeeId: number) => {
+    try {
+        const response = await prisma.assignTaskCriteria.findMany({
+            select: {
+                id: true,
+                name: true,
+                question: {
+                    select: {
+                        id: true,
+                        question: true
+                    }
+                },
+            },
+            where: {
+                AND: [
+                    {
+                        teamLeadEvaluationId: evaluationId
+                    },
+                    {
+                        employeesId: employeeId
+                    }
+                ]
+            },
+            orderBy: {
+                id: 'asc'
+            }
+        })
+
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const modifyCriteriaByColleague = async (id: number, body: AssignTaskCriteria) => {
+    try {
+        const response = await prisma.assignTaskCriteria.update({
+            data: {
+                name: body.name,
+            },
+            where: {
+                id: id
+            }
+        })
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
+export const removeEvaluationCriteriaByColleague = async (id: number) => {
+    return await prisma.assignTaskCriteria.delete({
+        where: {
+            id: id
+        }
+    })
 }

@@ -10,12 +10,13 @@ export const signInService = async (username: string, password: string) => {
         const user = await prisma.employees.findFirst({
             select: {
                 id: true,
+                departmentId:true,
                 information: {
                     select: {
                         first_name: true,
                         last_name: true,
                         middle_name: true,
-
+                        
                     }
                 },
                 password: true,
@@ -39,6 +40,7 @@ export const signInService = async (username: string, password: string) => {
                 last_name: user.information?.last_name || "",
                 middle_name: user.information?.middle_name || "",
                 role: user.role,
+                departmentId:user.departmentId || undefined
             };
             const accessToken = generateAccessToken(users);
             const refreshToken = generateRefreshToken(users);
@@ -85,12 +87,13 @@ export const refreshTokenService = async (id: number, token: string) => {
         const user = await prisma.employees.findFirst({
             select: {
                 id: true,
+                departmentId:true,
                 information: {
                     select: {
                         first_name: true,
                         last_name: true,
                         middle_name: true,
-
+                        
                     }
                 },
                 password: true,
@@ -112,6 +115,7 @@ export const refreshTokenService = async (id: number, token: string) => {
             last_name: user.information?.last_name || "",
             middle_name: user.information?.middle_name || "",
             role: user.role,
+            departmentId: user.departmentId || undefined
         };
 
         const accessToken = generateAccessToken(users);

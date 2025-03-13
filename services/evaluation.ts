@@ -27,6 +27,36 @@ export const getEvaluation = async () => {
     }
 }
 
+export const getEvaluationOngoing = async () => {
+    try {
+        const response = await prisma.evaluation.findFirst({
+            select: {
+                id: true,
+                school_year: true,
+                semester: true,
+                status: true
+            },
+            where:{
+                status:'ONGOING'
+            },
+            orderBy: [
+                {
+                    school_year: 'asc',
+                },
+                {
+                    semester: 'asc'
+                },
+
+            ],
+
+        })
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
 export const createEvaluation = async (body: Evaluation) => {
     try {
         const response = await prisma.evaluation.create({

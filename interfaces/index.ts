@@ -160,5 +160,6 @@ export interface TokenDetail {
     last_name:string;
     middle_name:string;
     role:string;
+    departmentId?:number;
 }
 

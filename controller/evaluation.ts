@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, evaluationValidation } from '../utils/validation.ts';
-import { createEvaluation, getEvaluation, modifyEvaluation, removeEvaluation } from '../services/evaluation.ts';
+import { createEvaluation, getEvaluation, getEvaluationOngoing, modifyEvaluation, removeEvaluation } from '../services/evaluation.ts';
 
 
 export const fetchEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -12,6 +12,19 @@ export const fetchEvaluation = async (req: Request, res: Response, next: NextFun
         next(err);
     }
 }
+export const fetchEvaluationByOngoing = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getEvaluationOngoing();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+
+
+
 
 export const insertEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;

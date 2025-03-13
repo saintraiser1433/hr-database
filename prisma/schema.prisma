@@ -123,9 +123,9 @@ model Departments {
 model Employees {
   id                   Int                    @id @default(autoincrement())
   status               Boolean                @default(true)
-  job                  Job?                    @relation(fields: [jobId], references: [id])
-  department           Departments?            @relation(fields: [departmentId], references: [id])
-  information          ApplicantInformation?   @relation(fields: [informationId], references: [id])
+  job                  Job?                   @relation(fields: [jobId], references: [id])
+  department           Departments?           @relation(fields: [departmentId], references: [id])
+  information          ApplicantInformation?  @relation(fields: [informationId], references: [id])
   username             String                 @db.VarChar(100)
   password             String                 @db.VarChar(100)
   informationId        Int?
@@ -137,6 +137,7 @@ model Employees {
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
   employeeRequirements EmployeeRequirements[]
+  assignTaskCriteria    AssignTaskCriteria[]
 
   @@unique([username])
 }
@@ -293,14 +294,26 @@ model Peer {
 }
 
 model TeamLeadEvaluation {
-  id               Int                @id @default(autoincrement())
-  name             String             @unique
-  percentage       Decimal            @db.Decimal(10, 2)
-  evaluation       Evaluation?        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId     Int
-  template         TemplateHeader?    @relation(fields: [templateHeaderId], references: [id])
-  templateHeaderId Int?
-  teamLeadCriteria TeamLeadCriteria[]
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  percentage        Decimal             @db.Decimal(10, 2)
+  evaluation        Evaluation?         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId      Int
+  template          TemplateHeader?     @relation(fields: [templateHeaderId], references: [id])
+  templateHeaderId  Int?
+  teamLeadCriteria  TeamLeadCriteria[]
+  forTeamLead       Boolean             @default(false)
+  assignTaskCriteria AssignTaskCriteria[]
+}
+
+model AssignTaskCriteria {
+  id                   Int                @id @default(autoincrement())
+  teamLead             TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
+  employee             Employees          @relation(fields: [employeesId], references: [id])
+  employeesId          Int
+  teamLeadEvaluationId Int
+  name         String
+  question             Question[]
 }
 
 model TeamLeadCriteria {
@@ -312,12 +325,14 @@ model TeamLeadCriteria {
 }
 
 model Question {
-  id                 Int               @id @default(autoincrement())
-  question           String
-  peer               Peer?             @relation(fields: [peerId], references: [id], onDelete: Cascade)
-  peerId             Int?
-  teamLeadCriteria   TeamLeadCriteria? @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
-  teamLeadCriteriaId Int?
+  id                  Int                @id @default(autoincrement())
+  question            String
+  peer                Peer?              @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peerId              Int?
+  teamLeadCriteria    TeamLeadCriteria?  @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
+  teamLeadCriteriaId  Int?
+  assignTaskCriteria   AssignTaskCriteria? @relation(fields: [assignTaskCriteriaId], references: [id])
+  assignTaskCriteriaId Int?
 }
 
 model TemplateHeader {

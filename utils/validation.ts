@@ -405,6 +405,8 @@ export const evalCategoryValidation = {
                 "any.required": "The Percentage field is required",
                 "number.base": "The Percentage field must be a number",
             }),
+            forTeamLead: Joi.boolean().optional(),
+            
         })
         return schema.validate(data, { abortEarly: false });
     },

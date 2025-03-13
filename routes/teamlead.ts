@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchEvaluationTeamLeadCategory, insertEvaluationTeamLeadCategory, updateEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCriteria, fetchEvaluationTeamLeadCriteria, insertEvaluationTeamLeadCriteria, updateEvaluationTeamLeadCriteria, deleteCriteriaQuestion, fetchCriteriaQuestion, insertCriteriaQuestion, updateCriteriaQuestion } from '../controller/teamlead.ts';
+import { fetchCriteriaByColleague,insertCriteriaByColleague,updateCriteriaByColleague,deleteCriteriaByColleague,fetchColleagueByDept,fetchEvaluationTeamLeadCategory, insertEvaluationTeamLeadCategory, updateEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCriteria, fetchEvaluationTeamLeadCriteria, insertEvaluationTeamLeadCriteria, updateEvaluationTeamLeadCriteria, deleteCriteriaQuestion, fetchCriteriaQuestion, insertCriteriaQuestion, updateCriteriaQuestion, fetchFilterCategoryByLead } from '../controller/teamlead.ts';
 import { modifyBundleTemplateTeamLead, modifyTemplateTeamLead } from '../controller/template.ts';
 
 const route = Router();
@@ -27,7 +27,16 @@ route.post('/criteria', insertEvaluationTeamLeadCriteria);
 route.put('/criteria/:id', updateEvaluationTeamLeadCriteria);
 route.delete('/criteria/:id', deleteEvaluationTeamLeadCriteria);
 
+//teamlead module
 
+route.get('/main/:id', fetchFilterCategoryByLead);
+route.get('/main/emp/:deptId', fetchColleagueByDept)
+
+//teamlead module criteria
+route.get('/main/criteria/:evalId/:employeeId', fetchCriteriaByColleague);
+route.post('/main/criteria', insertCriteriaByColleague);
+route.put('/main/criteria/:id', updateCriteriaByColleague);
+route.delete('/main/criteria/:id', deleteCriteriaByColleague);
 
 
 
