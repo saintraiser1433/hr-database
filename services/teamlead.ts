@@ -1,4 +1,4 @@
-import { Peer, AssignTaskCriteria, Question, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
+import { Peer, Question, TeamLeadAssignTaskCriteria, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import prisma from "../prisma/index.ts";
 
@@ -318,9 +318,9 @@ export const getColleagueByDept = async (id: number) => {
 
 
 //assigning criteria to colleagues
-export const createCriteriaByColleague = async (body: AssignTaskCriteria) => {
+export const createCriteriaByColleague = async (body: TeamLeadAssignTaskCriteria) => {
     try {
-        const response = await prisma.assignTaskCriteria.create({
+        const response = await prisma.teamLeadAssignTaskCriteria.create({
             data: {
                 name: body.name,
                 employee: {
@@ -341,7 +341,7 @@ export const createCriteriaByColleague = async (body: AssignTaskCriteria) => {
 
 export const getCriteriaByColleague = async (evaluationId: number, employeeId: number) => {
     try {
-        const response = await prisma.assignTaskCriteria.findMany({
+        const response = await prisma.teamLeadAssignTaskCriteria.findMany({
             select: {
                 id: true,
                 name: true,
@@ -374,9 +374,9 @@ export const getCriteriaByColleague = async (evaluationId: number, employeeId: n
     }
 }
 
-export const modifyCriteriaByColleague = async (id: number, body: AssignTaskCriteria) => {
+export const modifyCriteriaByColleague = async (id: number, body: TeamLeadAssignTaskCriteria) => {
     try {
-        const response = await prisma.assignTaskCriteria.update({
+        const response = await prisma.teamLeadAssignTaskCriteria.update({
             data: {
                 name: body.name,
             },
@@ -392,9 +392,13 @@ export const modifyCriteriaByColleague = async (id: number, body: AssignTaskCrit
 }
 
 export const removeEvaluationCriteriaByColleague = async (id: number) => {
-    return await prisma.assignTaskCriteria.delete({
+    return await prisma.teamLeadAssignTaskCriteria.delete({
         where: {
             id: id
         }
     })
 }
+
+
+
+

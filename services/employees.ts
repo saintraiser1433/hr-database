@@ -4,7 +4,6 @@ import { CombinedData, EmployeeModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
 export const getAllEmployees = async (id: string) => {
-
     try {
         const departmentId = parseInt(id, 10);
         if (isNaN(departmentId)) throw new Error("Invalid department ID.");
@@ -12,23 +11,24 @@ export const getAllEmployees = async (id: string) => {
             select: {
                 id: true,
                 status: true,
-                jobId: true,
                 job: {
                     select: {
                         title: true,
                     },
                 },
-                department: {
+
+                information: {
                     select: {
-                        title: true
+                        last_name: true,
+                        first_name: true,
+                        middle_name: true,
+                        photo_path: true,
                     }
                 },
-                information: true,
                 role: true,
                 username: true,
                 password: true,
                 createdAt: true,
-                departmentId: true
             },
             where: {
                 departmentId: departmentId
@@ -40,13 +40,16 @@ export const getAllEmployees = async (id: string) => {
         })
         return response.map((item) => ({
             ...item,
-            employeeName: `${item.information.last_name}, ${item.information.first_name} ${item.information.middle_name ? `${item.information.middle_name[0]}.` : ''
+            employeeName: `${item.information?.last_name}, ${item.information?.first_name} ${item.information?.middle_name ? `${item.information.middle_name[0]}.` : ''
                 }`,
         }));
     } catch (err) {
         throw err
     }
 }
+
+
+
 
 export const getRequirementsByEmployeeId = async (id: string) => {
     try {
@@ -261,41 +264,43 @@ export const getEmployeeInformationById = async (id: number) => {
                 id: id
             }
         })
+        if (!response) return null;
         const data = {
-            status: response?.status,
+            status: response.status,
             applicantInfo: {
-                jobTitle: response?.job.title,
-                hiredDate: response?.createdAt,
-                department: response?.department.title,
-                first_name: response?.information.first_name,
-                middle_name: response?.information.middle_name,
-                last_name: response?.information.last_name,
-                gender: response?.information.gender,
-                date_of_birth: response?.information.date_of_birth,
-                email: response?.information.email,
-                contact_number: response?.information.contact_number,
-                telephone_number: response?.information.telephone_number,
-                permanent_address: response?.information.permanent_address,
-                current_address: response?.information.current_address,
-                religion: response?.information.religion,
-                civil_status: response?.information.civil_status,
-                language_spoken: response?.information.language_spoken,
-                citizenship: response?.information.citizenship,
-                nickname: response?.information.nickname,
-                resume_path: response?.information.resume_path,
-                photo_path: response?.information.photo_path,
-                fathers_name: response?.information.fathers_name,
-                fathers_occupation: response?.information.fathers_occupation,
-                mothers_name: response?.information.mothers_name,
-                mothers_occupation: response?.information.mothers_occupation,
-                parents_address: response?.information.parents_address,
-                person_to_be_contact: response?.information.person_to_be_contact,
+                jobTitle: response.job?.title ?? null,
+                hiredDate: response.createdAt,
+                department: response.department?.title ?? null, // Ensure this won't break
+                first_name: response.information?.first_name ?? null,
+                middle_name: response.information?.middle_name ?? null,
+                last_name: response.information?.last_name ?? null,
+                gender: response.information?.gender ?? null,
+                date_of_birth: response.information?.date_of_birth ?? null,
+                email: response.information?.email ?? null,
+                contact_number: response.information?.contact_number ?? null,
+                telephone_number: response.information?.telephone_number ?? null,
+                permanent_address: response.information?.permanent_address ?? null,
+                current_address: response.information?.current_address ?? null,
+                religion: response.information?.religion ?? null,
+                civil_status: response.information?.civil_status ?? null,
+                language_spoken: response.information?.language_spoken ?? null,
+                citizenship: response.information?.citizenship ?? null,
+                nickname: response.information?.nickname ?? null,
+                resume_path: response.information?.resume_path ?? null,
+                photo_path: response.information?.photo_path ?? null,
+                fathers_name: response.information?.fathers_name ?? null,
+                fathers_occupation: response.information?.fathers_occupation ?? null,
+                mothers_name: response.information?.mothers_name ?? null,
+                mothers_occupation: response.information?.mothers_occupation ?? null,
+                parents_address: response.information?.parents_address ?? null,
+                person_to_be_contact: response.information?.person_to_be_contact ?? null,
             },
-            educData: response?.information.education,
-            workData: response?.information.workExperience,
-            skillsData: response?.information.skills,
-            referencesData: response?.information.references
+            educData: response.information?.education ?? null,
+            workData: response.information?.workExperience ?? null,
+            skillsData: response.information?.skills ?? null,
+            referencesData: response.information?.references ?? null
         }
+
         return data;
     } catch (err) {
         throw err;
@@ -497,6 +502,39 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
         await prisma.$disconnect();
     }
 };
+
+
+export const getAllEmployeesWithEvaluationStatus = async (deptId: number) => {
+    try {
+        const employees = await prisma.employees.findMany({
+            include: {
+                information: true,
+                teamLeadEvaluationHeader: true,
+            },
+            where: {
+                departmentId: deptId
+            }
+        });
+
+        const result = employees.map((employee) => ({
+            id: employee.id,
+            photo_path: employee.information?.photo_path,
+            fullname: `${employee.information?.first_name} ${employee.information?.last_name}`,
+            status: employee.teamLeadEvaluationHeader?.status ?? false, // Default to false if no record
+        }));
+
+        return result;
+    } catch (err) {
+        throw err
+    }
+
+}
+
+
+
+
+
+
 
 
 

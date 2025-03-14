@@ -1,7 +1,8 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, evaluationValidation } from '../utils/validation.ts';
-import { createEvaluation, getEvaluation, getEvaluationOngoing, modifyEvaluation, removeEvaluation } from '../services/evaluation.ts';
+import { createEvaluation, getEvaluationEmployeeCriteria, getEvaluation, getEvaluationOngoing, modifyEvaluation, removeEvaluation } from '../services/evaluation.ts';
+import { parseId } from '../utils/parseId.ts';
 
 
 export const fetchEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -20,6 +21,26 @@ export const fetchEvaluationByOngoing = async (req: Request, res: Response, next
         next(err);
     }
 }
+
+export const fetchEvaluationEmployeeCriteria = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const employeeId = parseId(req.params.employeeId);
+    const deptId = parseId(req.params.deptId);
+    if (!employeeId) {
+        return res.status(400).json({ error: "Invalid Question ID." });
+    }
+    if (!deptId) {
+        return res.status(400).json({ error: "Invalid Department ID." });
+    }
+    try {
+        const response = await getEvaluationEmployeeCriteria(employeeId,deptId);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+
 
 
 

@@ -1,13 +1,27 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getAllEmployeesWithEvaluationStatus, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
+import { parseId } from '../utils/parseId.ts';
 
 export const fetchAllEmployeesByDeptID = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const deptId = req.params.id;
     try {
         const response = await getAllEmployees(deptId);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const fetchAllEmployeesWithEvaluationStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const deptId = parseId(req.params.deptId);
+    if (!deptId) {
+        return res.status(400).json({ error: "Invalid departmentId ID." });
+    }
+    try {
+        const response = await getAllEmployeesWithEvaluationStatus(deptId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);

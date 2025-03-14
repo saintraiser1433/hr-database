@@ -36,8 +36,8 @@ export const getEvaluationOngoing = async () => {
                 semester: true,
                 status: true
             },
-            where:{
-                status:'ONGOING'
+            where: {
+                status: 'ONGOING'
             },
             orderBy: [
                 {
@@ -99,4 +99,93 @@ export const removeEvaluation = async (id: number) => {
         }
     })
 }
+
+export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: number) => {
+    try {
+        // Get all TeamLeadEvaluation related to the department
+        const teamLeadEvaluations = await prisma.teamLeadEvaluation.findMany({
+            where: {
+                evaluation: {
+                    id: deptId
+                },
+
+            },
+            orderBy:{
+                forTeamLead:'desc',
+            },
+            include: {
+                template: {
+                    include: {
+                        templateDetail: true
+                    },
+                },
+                teamLeadCriteria: {
+                    where:{
+                        teamLeadEvaluation:{
+                            forTeamLead:false
+                        }
+                    },
+                    include: {
+                        question: true,
+                        teamLeadEvaluation:true
+                    }
+                },
+                assignTaskCriteria: {
+                    where: {
+                        employeesId: employeeId
+                    },
+                    include: {
+                        question: true
+                    }
+                }
+            }
+        });
+
+        // Format the result
+        const groupedResult = teamLeadEvaluations.map((evaluation) => ({
+            teamLeadEvaluation: {
+                id:evaluation.id,
+                name:evaluation.name,
+                percentage:evaluation.percentage,
+            }, // Example: "Employee Soft Skill"
+            template: evaluation.template
+                ? {
+                    name: evaluation.template.template_name, // Example: "Team Lead Legend"
+                    details: evaluation.template.templateDetail.map(d => ({
+                        id:d.id,
+                        title: d.title,
+                        description: d.description,
+                        score: d.score
+                    })).sort((a, b) => a.score - b.score)
+                }
+                : null,
+            criteria: [
+                ...evaluation.teamLeadCriteria.map(criteria => ({
+                    name: criteria.name, 
+                    questions: criteria.question.map(q => ({
+                        criteriaId:q.teamLeadCriteriaId,
+                        name: criteria.name,
+                        id: q.id,
+                        question: q.question
+                    }))
+                })),
+                ...evaluation.assignTaskCriteria.map(criteria => ({
+                    questions: criteria.question.map(q => ({
+                        criteriaId:q.assignTaskCriteriaId,
+                        name: criteria.name,
+                        id: q.id,
+                        question: q.question
+                    }))
+                }))
+            ]
+        }));
+
+        return groupedResult;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+
 
