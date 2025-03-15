@@ -1,5 +1,5 @@
 import prisma from '../prisma/index.ts';
-import { Evaluation } from '@prisma/client';
+import { Comments, Evaluation, TeamLeadEvaluationResult } from '@prisma/client';
 
 export const getEvaluation = async () => {
     try {
@@ -110,8 +110,8 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
                 },
 
             },
-            orderBy:{
-                forTeamLead:'desc',
+            orderBy: {
+                forTeamLead: 'desc',
             },
             include: {
                 template: {
@@ -120,14 +120,14 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
                     },
                 },
                 teamLeadCriteria: {
-                    where:{
-                        teamLeadEvaluation:{
-                            forTeamLead:false
+                    where: {
+                        teamLeadEvaluation: {
+                            forTeamLead: false
                         }
                     },
                     include: {
                         question: true,
-                        teamLeadEvaluation:true
+                        teamLeadEvaluation: true
                     }
                 },
                 assignTaskCriteria: {
@@ -144,15 +144,15 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
         // Format the result
         const groupedResult = teamLeadEvaluations.map((evaluation) => ({
             teamLeadEvaluation: {
-                id:evaluation.id,
-                name:evaluation.name,
-                percentage:evaluation.percentage,
-            }, // Example: "Employee Soft Skill"
+                id: evaluation.id,
+                name: evaluation.name,
+                percentage: evaluation.percentage,
+            },
             template: evaluation.template
                 ? {
                     name: evaluation.template.template_name, // Example: "Team Lead Legend"
                     details: evaluation.template.templateDetail.map(d => ({
-                        id:d.id,
+                        id: d.id,
                         title: d.title,
                         description: d.description,
                         score: d.score
@@ -161,9 +161,9 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
                 : null,
             criteria: [
                 ...evaluation.teamLeadCriteria.map(criteria => ({
-                    name: criteria.name, 
                     questions: criteria.question.map(q => ({
-                        criteriaId:q.teamLeadCriteriaId,
+                        categoryId: evaluation.id,
+                        criteriaId: q.teamLeadCriteriaId,
                         name: criteria.name,
                         id: q.id,
                         question: q.question
@@ -171,7 +171,8 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
                 })),
                 ...evaluation.assignTaskCriteria.map(criteria => ({
                     questions: criteria.question.map(q => ({
-                        criteriaId:q.assignTaskCriteriaId,
+                        categoryId: evaluation.id,
+                        criteriaId: q.assignTaskCriteriaId,
                         name: criteria.name,
                         id: q.id,
                         question: q.question
@@ -181,6 +182,39 @@ export const getEvaluationEmployeeCriteria = async (employeeId: number, deptId: 
         }));
 
         return groupedResult;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+export const insertTeamLeadEvaluation = async (
+    body: TeamLeadEvaluationResult,
+    commentsBody: Comments
+) => {
+    try {
+        // Validate input data (example using a hypothetical validation function)
+        if (!body || !commentsBody) {
+            throw new Error('Invalid input data');
+        }
+
+        // Perform the transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // Create team lead evaluation results
+            const evaluationResults = await tx.teamLeadEvaluationResult.createMany({
+                data: body,
+            });
+
+            // Create comments
+            const comments = await tx.comments.create({
+                data: commentsBody,
+            });
+
+            // Return the results
+            return { evaluationResults, comments };
+        });
+
+        return result;
     } catch (err) {
         throw err;
     }

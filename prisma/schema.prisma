@@ -46,6 +46,11 @@ enum RequirementStatus {
   EXPIRED
 }
 
+enum CommentType {
+  TeamLead
+  Employee
+}
+
 //END OF ENUMS
 model User {
   id           String   @id @default(cuid())
@@ -121,25 +126,27 @@ model Departments {
 }
 
 model Employees {
-  id                       Int                        @id @default(autoincrement())
-  status                   Boolean                    @default(true)
-  job                      Job?                       @relation(fields: [jobId], references: [id])
-  department               Departments?               @relation(fields: [departmentId], references: [id])
-  information              ApplicantInformation?      @relation(fields: [informationId], references: [id])
-  username                 String                     @db.VarChar(100)
-  password                 String                     @db.VarChar(100)
+  id                       Int                          @id @default(autoincrement())
+  status                   Boolean                      @default(true)
+  job                      Job?                         @relation(fields: [jobId], references: [id])
+  department               Departments?                 @relation(fields: [departmentId], references: [id])
+  information              ApplicantInformation?        @relation(fields: [informationId], references: [id])
+  username                 String                       @db.VarChar(100)
+  password                 String                       @db.VarChar(100)
   informationId            Int?
   jobId                    Int?
   departmentId             Int?
   accessToken              String?
   refreshToken             String?
-  role                     RoleStatus                 @default(Employee)
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
+  role                     RoleStatus                   @default(Employee)
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
   employeeRequirements     EmployeeRequirements[]
   assignTaskCriteria       TeamLeadAssignTaskCriteria[]
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
   teamLeadEvaluationHeader TeamLeadEvaluationHeader?
+  evaluatedComments  Comments[] @relation(name: "EvaluatedEmployee")
+  commenterComments  Comments[] @relation(name: "CommenterComments")
 
   @@unique([username])
 }
@@ -276,13 +283,9 @@ model Evaluation {
   Peer                     Peer[]
   TeamLeadEvaluation       TeamLeadEvaluation[]
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
+  Comments                 Comments[]
 
   @@unique([school_year, semester])
-}
-
-model Comments {
-  id          Int    @id @default(autoincrement())
-  description String
 }
 
 model Peer {
@@ -296,17 +299,31 @@ model Peer {
   percentage       Decimal         @db.Decimal(10, 2)
 }
 
+model Comments {
+  id           Int         @id @default(autoincrement())
+  evaluation   Evaluation  @relation(fields: [evaluationId], references: [id])
+  evaluationId Int
+  employee     Employees   @relation(name: "EvaluatedEmployee", fields: [employeesId], references: [id])
+  employeesId  Int
+  commentType  CommentType
+  commenter    Employees   @relation(name: "CommenterComments", fields: [commenterId], references: [id])
+  commenterId  Int
+  description  String
+}
+
 model TeamLeadEvaluation {
-  id                 Int                  @id @default(autoincrement())
-  name               String               @unique
-  percentage         Decimal              @db.Decimal(10, 2)
-  evaluation         Evaluation?          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId       Int
-  template           TemplateHeader?      @relation(fields: [templateHeaderId], references: [id])
-  templateHeaderId   Int?
-  teamLeadCriteria   TeamLeadCriteria[]
-  forTeamLead        Boolean              @default(false)
-  assignTaskCriteria TeamLeadAssignTaskCriteria[]
+  id                       Int                          @id @default(autoincrement())
+  name                     String                       @unique
+  percentage               Decimal                      @db.Decimal(10, 2)
+  evaluation               Evaluation?                  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationId             Int
+  template                 TemplateHeader?              @relation(fields: [templateHeaderId], references: [id])
+  templateHeaderId         Int?
+  teamLeadCriteria         TeamLeadCriteria[]
+  forTeamLead              Boolean                      @default(false)
+  assignTaskCriteria       TeamLeadAssignTaskCriteria[]
+  TeamLeadEvaluationHeader TeamLeadEvaluationHeader[]
+  TeamLeadEvaluationResult TeamLeadEvaluationResult[]
 }
 
 model TeamLeadAssignTaskCriteria {
@@ -320,25 +337,30 @@ model TeamLeadAssignTaskCriteria {
 }
 
 model TeamLeadEvaluationHeader {
-  id         Int       @id @default(autoincrement())
-  employee   Employees @relation(fields: [employeeId], references: [id])
-  employeeId Int       @unique
-  status     Boolean   @default(false) // "Not evaluate yet" | "Evaluated"
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id                   Int                @id @default(autoincrement())
+  teamLeadEvaluation   TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
+  teamLeadEvaluationId Int
+  employee             Employees          @relation(fields: [employeeId], references: [id])
+  employeeId           Int                @unique
+  status               Boolean            @default(false) // "Not evaluate yet" | "Evaluated"
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 }
 
 model TeamLeadEvaluationResult {
-  evaluation       Evaluation     @relation(fields: [evaluationId], references: [id])
-  evaluationId     Int
-  question         Question       @relation(fields: [questionId], references: [id])
-  questionId       Int
-  employee         Employees      @relation(fields: [employeesId], references: [id])
-  employeesId      Int
-  templateDetail   TemplateDetail @relation(fields: [templateDetailId], references: [id])
-  templateDetailId Int
+  id                   Int                @id @default(autoincrement()) // Add a unique ID for easier management
+  evaluation           Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluationId         Int
+  teamLeadEvaluation   TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
+  teamLeadEvaluationId Int
+  question             Question           @relation(fields: [questionId], references: [id])
+  questionId           Int
+  employee             Employees          @relation(fields: [employeesId], references: [id])
+  employeesId          Int
+  templateDetail       TemplateDetail     @relation(fields: [templateDetailId], references: [id])
+  templateDetailId     Int
 
-  @@id([evaluationId, questionId, employeesId, templateDetailId])
+  @@unique([evaluationId, questionId,teamLeadEvaluationId, employeesId, templateDetailId])
 }
 
 model TeamLeadCriteria {
@@ -350,13 +372,13 @@ model TeamLeadCriteria {
 }
 
 model Question {
-  id                       Int                        @id @default(autoincrement())
+  id                       Int                         @id @default(autoincrement())
   question                 String
-  peer                     Peer?                      @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer                     Peer?                       @relation(fields: [peerId], references: [id], onDelete: Cascade)
   peerId                   Int?
-  teamLeadCriteria         TeamLeadCriteria?          @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
+  teamLeadCriteria         TeamLeadCriteria?           @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
   teamLeadCriteriaId       Int?
-  assignTaskCriteria       TeamLeadAssignTaskCriteria?        @relation(fields: [assignTaskCriteriaId], references: [id])
+  assignTaskCriteria       TeamLeadAssignTaskCriteria? @relation(fields: [assignTaskCriteriaId], references: [id])
   assignTaskCriteriaId     Int?
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
 }

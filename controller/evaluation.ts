@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, evaluationValidation } from '../utils/validation.ts';
-import { createEvaluation, getEvaluationEmployeeCriteria, getEvaluation, getEvaluationOngoing, modifyEvaluation, removeEvaluation } from '../services/evaluation.ts';
+import { createEvaluation, getEvaluationEmployeeCriteria, getEvaluation, getEvaluationOngoing, modifyEvaluation, removeEvaluation, insertTeamLeadEvaluation } from '../services/evaluation.ts';
 import { parseId } from '../utils/parseId.ts';
 
 
@@ -38,13 +38,6 @@ export const fetchEvaluationEmployeeCriteria = async (req: Request, res: Respons
         next(err);
     }
 }
-
-
-
-
-
-
-
 
 
 export const insertEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -90,6 +83,24 @@ export const deleteEvaluation = async (req: Request, res: Response, next: NextFu
         next(err)
     }
 }
+
+
+
+export const submissionTeamLeadEvaluation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const body = req.body;
+    try {
+        // const { error } = evaluationValidation.insert(body);
+        // if (error) {
+        //     return handleValidationError(error, res);
+        // }
+        const response = await insertTeamLeadEvaluation(body,body);
+        return res.status(200).json({ message: "Evaluation created successfully", data: response });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 
 
 
