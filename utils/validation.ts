@@ -214,6 +214,8 @@ export const evaluationValidation = {
                 "any.required": "The semester field is required",
                 "number.empty": "The semester field cannot be empty"
             }),
+            peerTemplateId: Joi.number().optional(),
+            teamLeadTemplateId: Joi.number().optional(),
             status: Joi.string().optional()
 
         });
@@ -233,6 +235,8 @@ export const evaluationValidation = {
                 "any.required": "The semester field is required",
                 "number.empty": "The semester field cannot be empty"
             }),
+            peerTemplateId: Joi.number().optional(),
+            teamLeadTemplateId: Joi.number().optional(),
             status: Joi.string().required().messages({
                 "any.required": "The status field is required",
                 "string.empty": "The status field cannot be empty"

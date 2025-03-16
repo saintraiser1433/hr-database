@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation } from '../controller/evaluation.ts';
+import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults } from '../controller/evaluation.ts';
 const route = Router();
 
 //evaluation
@@ -12,7 +12,7 @@ route.post('/submit', submissionTeamLeadEvaluation);
 
 route.put('/:id', updateEvaluation);
 route.delete('/:id', deleteEvaluation);
-
+route.get('/test/:id', fetchTeamLeadResults);
 
 
 

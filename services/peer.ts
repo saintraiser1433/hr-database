@@ -55,11 +55,16 @@ export const getEvaluationPeerCategory = async (id: number) => {
                         question: true
                     }
                 },
-                template: {
-                    select: {
-                        template_name: true
+                evaluation:{
+                    select:{
+                        teamLeadTemplate:{
+                            select:{
+                                template_name:true
+                            }
+                        }
                     }
                 }
+                
             },
             where: {
                 evaluationId: id
@@ -71,7 +76,7 @@ export const getEvaluationPeerCategory = async (id: number) => {
 
         const res = response.map((item) => ({
             ...item,
-            template: item.template?.template_name
+            template: item.evaluation?.teamLeadTemplate?.template_name
         }))
         return res;
     } catch (err) {
@@ -106,49 +111,3 @@ export const removeEvaluationPeerCategory = async (id: number) => {
     })
 }
 
-//end
-
-
-
-
-//peer questions
-
-
-
-//assign template 
-export const bundleUpdateTemplatePeer = async (id: number, body: Peer) => {
-    try {
-        const response = await prisma.peer.updateMany({
-            data: {
-                templateHeaderId: body.templateHeaderId
-            },
-            where: {
-                evaluationId: id
-            }
-        })
-
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
-
-
-export const assignTemplatePeer = async (id: number, body: Peer) => {
-    try {
-        const response = await prisma.peer.update({
-            data: {
-                templateHeaderId: body.templateHeaderId
-            },
-            where: {
-                id: id
-            }
-        })
-
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}

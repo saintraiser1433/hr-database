@@ -10,6 +10,7 @@ route.put('/:id', modifyTemplateHeader);
 route.delete('/:id', deleteTemplateHeader);
 
 
+
 route.get('/detail/:id', fetchTemplateDetail);
 route.post('/detail', insertTemplateDetail);
 route.put('/detail/:id', modifyTemplateDetail);

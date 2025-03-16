@@ -51,11 +51,8 @@ export const getEvaluationTeamLeadCategory = async (id: number) => {
                 name: true,
                 percentage: true,
                 forTeamLead: true,
-                template: {
-                    select: {
-                        template_name: true
-                    }
-                }
+
+              
             },
             where: {
                 evaluationId: id
@@ -65,11 +62,8 @@ export const getEvaluationTeamLeadCategory = async (id: number) => {
             }
         })
 
-        const res = response.map((item) => ({
-            ...item,
-            template: item.template?.template_name
-        }))
-        return res;
+
+        return response;
     } catch (err) {
         throw err
     }
@@ -83,9 +77,13 @@ export const getFilterCategoryByLead = async (id: number) => {
                 name: true,
                 percentage: true,
                 forTeamLead: true,
-                template: {
-                    select: {
-                        template_name: true
+                evaluation:{
+                    select:{
+                        teamLeadTemplate:{
+                            select:{
+                                template_name:true
+                            }
+                        }
                     }
                 }
             },
@@ -107,7 +105,7 @@ export const getFilterCategoryByLead = async (id: number) => {
 
         const res = response.map((item) => ({
             ...item,
-            template: item.template?.template_name
+            template: item.evaluation?.teamLeadTemplate?.template_name
         }))
         return res;
     } catch (err) {
@@ -223,50 +221,6 @@ export const removeEvaluationTeamLeadCriteria = async (id: number) => {
 
 //end
 
-
-
-
-
-
-
-
-// //assign template 
-export const bundleUpdateTemplateTeamLead = async (id: number, body: TeamLeadEvaluation) => {
-    try {
-        const response = await prisma.teamLeadEvaluation.updateMany({
-            data: {
-                templateHeaderId: body.templateHeaderId
-            },
-            where: {
-                evaluationId: id
-            }
-        })
-
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
-
-
-export const assignTemplateTeamLead = async (id: number, body: TeamLeadEvaluation) => {
-    try {
-        const response = await prisma.teamLeadEvaluation.update({
-            data: {
-                templateHeaderId: body.templateHeaderId
-            },
-            where: {
-                id: id
-            }
-        })
-
-
-        return response;
-    } catch (err) {
-        throw err
-    }
-}
 
 export const getColleagueByDept = async (id: number) => {
     try {

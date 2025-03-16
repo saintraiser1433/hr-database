@@ -1,4 +1,4 @@
-import { TemplateDetail, TemplateHeader } from "@prisma/client";
+import { Evaluation, TemplateDetail, TemplateHeader } from "@prisma/client";
 import prisma from "../prisma/index.ts";
 
 export const getAllTemplateHeader = async () => {
@@ -103,9 +103,5 @@ export const removeTemplateDetail = async (id: number) => {
     },
   });
 };
-
-
-
-
 
 

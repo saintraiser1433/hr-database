@@ -163,3 +163,11 @@ export interface TokenDetail {
     departmentId?:number;
 }
 
+export interface EvaluateSubmission {
+    evaluationId:number;
+    teamLeadEvaluationId:number;
+    questionId:number;
+    templateDetailId:number;
+    employeesId:number;
+}
+

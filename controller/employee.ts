@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getAllEmployeesWithEvaluationStatus, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeAssociateByTeamDept, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 import { parseId } from '../utils/parseId.ts';
@@ -15,13 +15,17 @@ export const fetchAllEmployeesByDeptID = async (req: Request, res: Response, nex
     }
 }
 
-export const fetchAllEmployeesWithEvaluationStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+export const fetchEmployeeAssociateByTeamDept = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const deptId = parseId(req.params.deptId);
     if (!deptId) {
         return res.status(400).json({ error: "Invalid departmentId ID." });
     }
+    const evalId = parseId(req.params.evalId);
+    if (!evalId) {
+        return res.status(400).json({ error: "Invalid Evaluation ID." });
+    }
     try {
-        const response = await getAllEmployeesWithEvaluationStatus(deptId);
+        const response = await getEmployeeAssociateByTeamDept(deptId,evalId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);

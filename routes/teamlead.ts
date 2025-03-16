@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { fetchCriteriaByColleague, insertCriteriaByColleague, updateCriteriaByColleague, deleteCriteriaByColleague, fetchColleagueByDept, fetchEvaluationTeamLeadCategory, insertEvaluationTeamLeadCategory, updateEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCategory, deleteEvaluationTeamLeadCriteria, fetchEvaluationTeamLeadCriteria, insertEvaluationTeamLeadCriteria, updateEvaluationTeamLeadCriteria, fetchFilterCategoryByLead } from '../controller/teamlead.ts';
-import { modifyBundleTemplateTeamLead, modifyTemplateTeamLead } from '../controller/template.ts';
+
 
 const route = Router();
 
@@ -15,8 +15,6 @@ route.delete('/:id', deleteEvaluationTeamLeadCategory);
 
 
 //assigningtemplate
-route.put('/temp/:evaluationId', modifyBundleTemplateTeamLead);
-route.put('/temp/s/:id', modifyTemplateTeamLead);
 
 //assigning criteria
 route.get('/criteria/:id', fetchEvaluationTeamLeadCriteria);
