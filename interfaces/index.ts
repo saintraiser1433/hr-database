@@ -155,19 +155,43 @@ export interface CombinedData {
 }
 
 export interface TokenDetail {
-    id:number;
-    first_name:string;
-    last_name:string;
-    middle_name:string;
-    role:string;
-    departmentId?:number;
+    id: number;
+    first_name: string;
+    last_name: string;
+    middle_name: string;
+    role: string;
+    departmentId?: number;
 }
 
 export interface EvaluateSubmission {
-    evaluationId:number;
-    teamLeadEvaluationId:number;
-    questionId:number;
-    templateDetailId:number;
-    employeesId:number;
+    evaluationId: number;
+    teamLeadEvaluationId: number;
+    questionId: number;
+    templateDetailId: number;
+    employeesId: number;
 }
 
+
+export interface EmployeeRating {
+    employeeId: number;
+    name: string;
+
+    rating: {
+        categoryName: string;
+        percentage: number;
+        ratingPercentage: number | null;
+        totalScore: number;
+        totalPossibleScore: number;
+        averageRating?: number; // Add averageRating to the category
+    }[];
+    summaryRating?: {
+        rating: number;
+        adjectiveRating: string;
+    };
+    templateDetailCounts: { // No longer optional
+        [key: string]: {
+            title: string;
+            count: number;
+        };
+    };
+}

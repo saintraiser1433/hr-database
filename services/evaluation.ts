@@ -1,3 +1,4 @@
+import { EmployeeRating } from "../interfaces/index.ts";
 import prisma from "../prisma/index.ts";
 import {
   Evaluation,
@@ -15,6 +16,16 @@ export const getEvaluation = async () => {
         status: true,
         peerTemplateId: true,
         teamLeadTemplateId: true,
+        teamLeadTemplate: {
+          select: {
+            template_name: true
+          }
+        },
+        peerTemplate: {
+          select: {
+            template_name: true
+          }
+        }
       },
       orderBy: [
         {
@@ -31,6 +42,9 @@ export const getEvaluation = async () => {
     throw err;
   }
 };
+
+
+
 
 export const getEvaluationOngoing = async () => {
   try {
@@ -65,6 +79,25 @@ export const getEvaluationOngoing = async () => {
 export const createEvaluation = async (body: Evaluation) => {
   try {
     const response = await prisma.evaluation.create({
+      select: {
+        id: true,
+        school_year: true,
+        semester: true,
+        status: true,
+        peerTemplate: {
+          select: {
+            template_name: true,
+          }
+        },
+        teamLeadTemplate: {
+          select: {
+            template_name: true,
+          }
+        },
+        peerTemplateId: true,
+        teamLeadTemplateId: true,
+
+      },
       data: body,
     });
     return response;
@@ -87,6 +120,25 @@ export const modifyEvaluation = async (id: number, data: Evaluation) => {
     }
 
     return await prisma.evaluation.update({
+      select: {
+        id: true,
+        school_year: true,
+        semester: true,
+        status: true,
+        peerTemplate: {
+          select: {
+            template_name: true,
+          }
+        },
+        teamLeadTemplate: {
+          select: {
+            template_name: true,
+          }
+        },
+        peerTemplateId: true,
+        teamLeadTemplateId: true,
+
+      },
       where: {
         id: id,
       },
@@ -161,16 +213,16 @@ export const getEvaluationEmployeeCriteria = async (
       },
       template: data.evaluation?.teamLeadTemplate
         ? {
-            name: data.evaluation?.teamLeadTemplate.template_name, // Example: "Team Lead Legend"
-            details: data.evaluation?.teamLeadTemplate.templateDetail
-              .map((d) => ({
-                id: d.id,
-                title: d.title,
-                description: d.description,
-                score: d.score,
-              }))
-              .sort((a, b) => a.score - b.score),
-          }
+          name: data.evaluation?.teamLeadTemplate.template_name, // Example: "Team Lead Legend"
+          details: data.evaluation?.teamLeadTemplate.templateDetail
+            .map((d) => ({
+              id: d.id,
+              title: d.title,
+              description: d.description,
+              score: d.score,
+            }))
+            .sort((a, b) => a.score - b.score),
+        }
         : null,
       criteria: [
         ...data.teamLeadCriteria.map((criteria) => ({
@@ -224,95 +276,92 @@ export const insertTeamLeadEvaluation = async (
     throw err;
   }
 };
-interface EmployeeRating {
-  employeeId: number; // Add employeeId to the interface
-  name: string;
-  rating: {
-    categoryName: string;
-    percentage: number;
-    ratingPercentage: number | null;
-    totalScore: number;
-    totalPossibleScore: number;
-    averageScore: number;
-  }[];
-  summary: {
-    summaryRating: number;
-    remarks: string;
-  };
-}
+
+
 export const getTeamLeadResults = async (evaluationId: number) => {
   try {
     const results = await prisma.teamLeadEvaluationResult.findMany({
-      where: { evaluationId: evaluationId },
-      select: {
-        employeesId: true,
-        employee:{
-            select:{
-                information:{
-                    select:{
-                        first_name:true,
-                        last_name:true,
-                    }
-                }
-            }
-        },
-        templateDetail: { select: { score: true } },
+      where: {
+        evaluationId: evaluationId,
+      },
+      include: {
         question: {
-          select: {
+          include: {
             teamLeadCriteria: {
-              select: {
-
+              include: {
                 teamLeadEvaluation: {
-                  select: { name: true, percentage: true,evaluation:{
-                    select:{
-                        teamLeadTemplate:{
-                            select:{
-                                templateDetail:{
-                                    select:{
-                                        score:true,
-                                        title:true
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                  } },
+                  include: {
+                    evaluation: {
+                      include: {
+                        teamLeadTemplate: {
+                          include: {
+                            templateDetail: true, // Include templateDetail to get the adjectiveRating
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
             assignTaskCriteria: {
-              select: {
-                name: true,
-                teamLead: { select: { percentage: true } },
+              include: {
+                teamLead: {
+                  include: {
+                    evaluation: {
+                      include: {
+                        teamLeadTemplate: {
+                          include: {
+                            templateDetail: true, // Include templateDetail to get the adjectiveRating
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
+          },
+        },
+        templateDetail: true,
+        employee: {
+          include: {
+            information: true,
           },
         },
       },
     });
 
-    const employeeMap = new Map<number, EmployeeRating>();
+    // Get all templateDetails for the evaluation
+    const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.evaluation ||
+                       results[0]?.question?.assignTaskCriteria?.teamLead?.evaluation;
 
-    results.forEach((result) => {
-      if (!employeeMap.has(result.employeesId)) {
-        employeeMap.set(result.employeesId, {
-          employeeId: result.employeesId,
-          name: `${result.employee.information?.first_name} ${result.employee.information?.last_name}`,
-          rating: [],
-          summary: { summaryRating: 0, remarks: "" },
-        });
-      }
+    const allTemplateDetails = evaluation?.teamLeadTemplate?.templateDetail || [];
 
+    // Group results by employee and then by category
+    const employeeRatings = results.reduce<{ [key: number]: EmployeeRating }>((acc, result) => {
+      const employeeId = result.employeesId;
+      const employeeName = `${result.employee.information?.first_name} ${result.employee.information?.last_name}`;
       const categoryName =
         result.question.teamLeadCriteria?.teamLeadEvaluation.name ||
         result.question.assignTaskCriteria?.name ||
-        "Uncategorized";
+        'Uncategorized';
 
-      const employee = employeeMap.get(result.employeesId)!;
-      let category = employee.rating.find(
-        (cat) => cat.categoryName === categoryName
-      );
+      // Initialize employee entry if it doesn't exist
+      if (!acc[employeeId]) {
+        acc[employeeId] = {
+          employeeId,
+          name: employeeName,
+          rating: [],
+          templateDetailCounts: allTemplateDetails.reduce((counts, detail) => {
+            counts[detail.title] = { title: detail.title, score: detail.score, count: 0 }; // Include score and initialize count to 0
+            return counts;
+          }, {} as { [key: string]: { title: string; score: number; count: number } }),
+        };
+      }
+
+      // Find or create the category entry
+      let category = acc[employeeId].rating.find((cat) => cat.categoryName === categoryName);
       if (!category) {
         category = {
           categoryName,
@@ -324,95 +373,98 @@ export const getTeamLeadResults = async (evaluationId: number) => {
           ratingPercentage: null,
           totalScore: 0,
           totalPossibleScore: 0,
-          averageScore: 0,
         };
-        employee.rating.push(category);
+        acc[employeeId].rating.push(category);
       }
 
+      // Update scores for the category
       category.totalScore += result.templateDetail.score;
-      category.totalPossibleScore = result.templateDetail.score;
-    });
 
-    const formattedRatings = Array.from(employeeMap.values()).map(
-      (employee) => {
-        employee.rating = employee.rating
-          .map((category) => {
-            const totalQuestionsInCategory = results.filter(
-              (result) =>
-                result.employeesId === employee.employeeId &&
-                (result.question.teamLeadCriteria?.teamLeadEvaluation.name ===
-                  category.categoryName ||
-                  result.question.assignTaskCriteria?.name ===
-                    category.categoryName)
-            ).length;
+      // Calculate total possible score: maxScoreInTemplateDetail * totalQuestionsInCategory
+      const maxScoreInTemplateDetail = Math.max(
+        ...(result.question.teamLeadCriteria?.teamLeadEvaluation.evaluation?.teamLeadTemplate?.templateDetail.map(
+          (detail) => detail.score
+        ) ||
+          result.question.assignTaskCriteria?.teamLead.evaluation?.teamLeadTemplate?.templateDetail.map(
+            (detail) => detail.score
+          ) || [0])
+      );
 
-            const maxScoreInTemplateDetail = Math.max(
-              ...results
-                .filter(
-                  (result) =>
-                    result.employeesId === employee.employeeId &&
-                    (result.question.teamLeadCriteria?.teamLeadEvaluation
-                      .name === category.categoryName ||
-                      result.question.assignTaskCriteria?.name ===
-                        category.categoryName)
-                )
-                .map((result) => result.templateDetail.score)
-            );
+      const totalQuestionsInCategory = results.filter(
+        (result) =>
+          result.employeesId === employeeId &&
+          (result.question.teamLeadCriteria?.teamLeadEvaluation.name === categoryName ||
+            result.question.assignTaskCriteria?.name === categoryName)
+      ).length;
 
-            category.totalPossibleScore =
-              maxScoreInTemplateDetail * totalQuestionsInCategory;
-            category.averageScore =
-              category.totalScore / totalQuestionsInCategory;
+      category.totalPossibleScore = maxScoreInTemplateDetail * totalQuestionsInCategory;
 
-            const ratingPercentage =
-              category.totalPossibleScore > 0
-                ? (category.totalScore / category.totalPossibleScore) *
-                  100 *
-                  category.percentage
-                : null;
-
-            return {
-              ...category,
-              ratingPercentage:
-                ratingPercentage !== null
-                  ? parseFloat(ratingPercentage.toFixed(2))
-                  : null,
-              averageScore: parseFloat(category.averageScore.toFixed(2)),
-            };
-          })
-          .filter((category) => category.categoryName !== "Uncategorized");
-
-        const totalAverageScores = employee.rating.reduce(
-          (sum, category) => sum + category.averageScore,
-          0
-        );
-        const totalCategories = employee.rating.length;
-        const summaryRating = totalAverageScores / totalCategories;
-
-        const templateDetails =
-          results[0]?.question.teamLeadCriteria?.teamLeadEvaluation.evaluation?.teamLeadTemplate?.templateDetail || [];
-        const sortedTemplateDetails = templateDetails.sort(
-          (a, b) => a.score - b.score
-        );
-
-        let remarks = "Unclassified";
-        for (const detail of sortedTemplateDetails) {
-          if (summaryRating >= detail.score) {
-            remarks = detail.title;
-          }
-        }
-
-        employee.summary = {
-          summaryRating: parseFloat(summaryRating.toFixed(2)),
-          remarks,
-        };
-
-        return employee;
+      // Update templateDetail counts
+      const templateDetailTitle = result.templateDetail.title;
+      if (acc[employeeId].templateDetailCounts![templateDetailTitle]) {
+        acc[employeeId].templateDetailCounts![templateDetailTitle].count += 1;
       }
-    );
+
+      return acc;
+    }, {});
+
+    // Calculate total possible score and rating percentage for each category for each employee
+    const formattedRatings = Object.values(employeeRatings).map((employee) => {
+      employee.rating = employee.rating
+        .map((category) => {
+          // Calculate rating percentage
+          const ratingPercentage =
+            category.totalPossibleScore > 0
+              ? ((category.totalScore / category.totalPossibleScore) * 100) * category.percentage
+              : null;
+
+          // Calculate average rating for the category
+          const totalQuestionsInCategory = results.filter(
+            (result) =>
+              result.employeesId === employee.employeeId &&
+              (result.question.teamLeadCriteria?.teamLeadEvaluation.name === category.categoryName ||
+                result.question.assignTaskCriteria?.name === category.categoryName)
+          ).length;
+
+          const averageRating = category.totalScore / totalQuestionsInCategory;
+
+          return {
+            ...category,
+            ratingPercentage: ratingPercentage !== null ? parseFloat(ratingPercentage.toFixed(2)) : null,
+            averageRating: parseFloat(averageRating.toFixed(2)),
+          };
+        })
+        .filter((category) => category.categoryName !== 'Uncategorized');
+
+      // Calculate summary rating
+      const summaryRating = employee.rating.reduce((sum, category) => sum + (category.averageRating || 0), 0);
+
+      // Divide the summary rating by the number of categories to get the average
+      const numberOfCategories = employee.rating.length;
+      const averageSummaryRating = summaryRating / numberOfCategories;
+
+      // Map the average summary rating to the adjectiveRating from templateDetail
+      const adjectiveRating = getAdjectiveRatingFromTemplateDetail(averageSummaryRating, allTemplateDetails);
+
+      employee.summaryRating = {
+        rating: parseFloat(averageSummaryRating.toFixed(2)), // Round to 2 decimal places
+        adjectiveRating,
+      };
+
+      // Convert templateDetailCounts to an array and sort by score in ascending order
+      employee.templateDetailCounts = employee.templateDetailCounts;
+
+      return employee;
+    });
 
     return formattedRatings;
   } catch (err) {
     throw err;
   }
+};
+
+const getAdjectiveRatingFromTemplateDetail = (rating: number, templateDetails: any[]): string => {
+  const sortedTemplateDetails = templateDetails.sort((a, b) => b.score - a.score);
+  const templateDetail = sortedTemplateDetails.find((detail) => rating >= detail.score);
+  return templateDetail?.title || 'Unknown';
 };
