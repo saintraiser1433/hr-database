@@ -175,23 +175,22 @@ export interface EvaluateSubmission {
 export interface EmployeeRating {
     employeeId: number;
     name: string;
-
     rating: {
         categoryName: string;
         percentage: number;
         ratingPercentage: number | null;
         totalScore: number;
         totalPossibleScore: number;
-        averageRating?: number; // Add averageRating to the category
+        averageRating?: number;
     }[];
+    categoryCounts: {
+        Category: string; // Explicitly allow `Category` to be a string
+        [key: string]: number | string; // Allow other keys to be numbers or strings
+    }[];
+    comment: string;
+    evaluatedBy: string;
     summaryRating?: {
         rating: number;
         adjectiveRating: string;
-    };
-    templateDetailCounts: { // No longer optional
-        [key: string]: {
-            title: string;
-            count: number;
-        };
     };
 }

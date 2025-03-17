@@ -278,11 +278,18 @@ export const insertTeamLeadEvaluation = async (
 };
 
 
-export const getTeamLeadResults = async (evaluationId: number) => {
+export const getTeamLeadResults = async (evaluationId: number, employeesId: number) => {
   try {
     const results = await prisma.teamLeadEvaluationResult.findMany({
       where: {
-        evaluationId: evaluationId,
+        AND: [
+          {
+            evaluationId: evaluationId,
+          },
+          {
+            employeesId: employeesId,
+          },
+        ],
       },
       include: {
         question: {
@@ -296,6 +303,15 @@ export const getTeamLeadResults = async (evaluationId: number) => {
                         teamLeadTemplate: {
                           include: {
                             templateDetail: true, // Include templateDetail to get the adjectiveRating
+                          },
+                        },
+                        evaluationStatus: {
+                          include: {
+                            commenter: {
+                              include: {
+                                information: true, // Include commenter's information to get their name
+                              },
+                            },
                           },
                         },
                       },
@@ -334,9 +350,12 @@ export const getTeamLeadResults = async (evaluationId: number) => {
 
     // Get all templateDetails for the evaluation
     const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.evaluation ||
-                       results[0]?.question?.assignTaskCriteria?.teamLead?.evaluation;
+      results[0]?.question?.assignTaskCriteria?.teamLead?.evaluation;
 
     const allTemplateDetails = evaluation?.teamLeadTemplate?.templateDetail || [];
+
+    // Extract unique rating types from templateDetails
+    const ratingTypes = Array.from(new Set(allTemplateDetails.map((detail) => detail.title)));
 
     // Group results by employee and then by category
     const employeeRatings = results.reduce<{ [key: number]: EmployeeRating }>((acc, result) => {
@@ -353,10 +372,9 @@ export const getTeamLeadResults = async (evaluationId: number) => {
           employeeId,
           name: employeeName,
           rating: [],
-          templateDetailCounts: allTemplateDetails.reduce((counts, detail) => {
-            counts[detail.title] = { title: detail.title, score: detail.score, count: 0 }; // Include score and initialize count to 0
-            return counts;
-          }, {} as { [key: string]: { title: string; score: number; count: number } }),
+          categoryCounts: [], // Initialize categoryCounts
+          comment: '', // Initialize comment
+          evaluatedBy: '', // Initialize evaluatedBy
         };
       }
 
@@ -367,8 +385,8 @@ export const getTeamLeadResults = async (evaluationId: number) => {
           categoryName,
           percentage: Number(
             result.question.teamLeadCriteria?.teamLeadEvaluation.percentage ||
-              result.question.assignTaskCriteria?.teamLead.percentage ||
-              0
+            result.question.assignTaskCriteria?.teamLead.percentage ||
+            0
           ),
           ratingPercentage: null,
           totalScore: 0,
@@ -401,8 +419,31 @@ export const getTeamLeadResults = async (evaluationId: number) => {
 
       // Update templateDetail counts
       const templateDetailTitle = result.templateDetail.title;
-      if (acc[employeeId].templateDetailCounts![templateDetailTitle]) {
-        acc[employeeId].templateDetailCounts![templateDetailTitle].count += 1;
+      let templateDetailEntry = acc[employeeId].categoryCounts.find((cat) => cat.Category === categoryName);
+
+      if (!templateDetailEntry) {
+        // Initialize the category with default counts for all rating types
+        templateDetailEntry = {
+          Category: categoryName,
+        };
+        // Initialize all rating types to 0
+        ratingTypes.forEach((type) => {
+          templateDetailEntry![type] = 0;
+        });
+        acc[employeeId].categoryCounts.push(templateDetailEntry);
+      }
+
+      // Increment the count for the current rating type
+      if (typeof templateDetailEntry[templateDetailTitle] === 'number') {
+        templateDetailEntry[templateDetailTitle] += 1;
+      }
+
+      // Update comment and evaluatedBy from EvaluationStatus
+      const evaluationStatus = result.question.teamLeadCriteria?.teamLeadEvaluation?.evaluation?.evaluationStatus;
+      if (evaluationStatus && evaluationStatus.length > 0) {
+        const commenterName = `${evaluationStatus[0].commenter.information?.first_name} ${evaluationStatus[0].commenter.information?.last_name}`;
+        acc[employeeId].comment = evaluationStatus[0].description; // Set comment
+        acc[employeeId].evaluatedBy = commenterName; // Set evaluatedBy
       }
 
       return acc;
@@ -450,9 +491,6 @@ export const getTeamLeadResults = async (evaluationId: number) => {
         rating: parseFloat(averageSummaryRating.toFixed(2)), // Round to 2 decimal places
         adjectiveRating,
       };
-
-      // Convert templateDetailCounts to an array and sort by score in ascending order
-      employee.templateDetailCounts = employee.templateDetailCounts;
 
       return employee;
     });

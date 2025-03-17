@@ -45,12 +45,16 @@ export const fetchTeamLeadResults = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const id = parseId(req.params.id);
-  if (!id) {
-    return res.status(400).json({ error: "Invalid ID." });
-}
+  const evaluationId = parseId(req.params.evaluationId);
+  if (!evaluationId) {
+    return res.status(400).json({ error: "Invalid Evaluation ID." });
+  }
+  const employeesId = parseId(req.params.employeesId);
+  if (!employeesId) {
+    return res.status(400).json({ error: "Invalid Employees ID." });
+  }
   try {
-    const response = await getTeamLeadResults(id);
+    const response = await getTeamLeadResults(evaluationId, employeesId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -145,14 +149,14 @@ export const submissionTeamLeadEvaluation = async (
 ): Promise<Response | void> => {
   const { evaluate, headerStatus } = req.body;
   try {
-    const evalData = evaluate.map((item:any) => ({
-        evaluationId:item.evaluationId,
-        teamLeadEvaluationId:item.categoryId,
-        questionId:item.questionId,
-        templateDetailId:item.templateDetailId,
-        employeesId:item.employeesId
+    const evalData = evaluate.map((item: any) => ({
+      evaluationId: item.evaluationId,
+      teamLeadEvaluationId: item.categoryId,
+      questionId: item.questionId,
+      templateDetailId: item.templateDetailId,
+      employeesId: item.employeesId
     }))
-    
+
     const response = await insertTeamLeadEvaluation(evalData, headerStatus);
     return res
       .status(200)
@@ -165,27 +169,4 @@ export const submissionTeamLeadEvaluation = async (
 
 
 
-export const getTeamLeadResult = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<Response | void> => {
-  const { evaluate, headerStatus } = req.body;
-  try {
-    const evalData = evaluate.map((item:any) => ({
-        evaluationId:item.evaluationId,
-        teamLeadEvaluationId:item.categoryId,
-        questionId:item.questionId,
-        templateDetailId:item.templateDetailId,
-        employeesId:item.employeesId
-    }))
-    
-    const response = await insertTeamLeadEvaluation(evalData, headerStatus);
-    return res
-      .status(200)
-      .json({ message: "Successfully Evaluate", data: response });
-  } catch (err) {
-    next(err);
-  }
-};
 

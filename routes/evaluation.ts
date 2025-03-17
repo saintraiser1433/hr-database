@@ -12,7 +12,7 @@ route.post('/submit', submissionTeamLeadEvaluation);
 
 route.put('/:id', updateEvaluation);
 route.delete('/:id', deleteEvaluation);
-route.get('/test/:id', fetchTeamLeadResults);
+route.get('/result/:evaluationId/:employeesId', fetchTeamLeadResults);
 
 
 

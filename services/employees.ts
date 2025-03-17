@@ -504,14 +504,14 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
 };
 
 
-export const getEmployeeAssociateByTeamDept = async (deptId: number,evaluationId:number) => {
+export const getEmployeeAssociateByTeamDept = async (deptId: number, evaluationId: number) => {
     try {
         const employees = await prisma.employees.findMany({
             include: {
                 information: true,
                 evaluatedPerson: {
-                    where:{
-                        evaluationId:evaluationId
+                    where: {
+                        evaluationId: evaluationId
                     }
                 },
             },
@@ -520,12 +520,13 @@ export const getEmployeeAssociateByTeamDept = async (deptId: number,evaluationId
             }
         });
 
-        
+
 
         const result = employees.map((employee) => ({
             id: employee.id,
             photo_path: employee.information?.photo_path,
             fullname: `${employee.information?.first_name} ${employee.information?.last_name}`,
+            role: employee.role,
             status: employee.evaluatedPerson.some((item) => item.type === "TeamLead")
         }));
 
