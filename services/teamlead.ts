@@ -1,19 +1,19 @@
-import { Peer, Question, TeamLeadAssignTaskCriteria, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
+import { PeerCategory, Question, TeamLeadAssignTaskCriteria, TeamLeadCriteria, TeamLeadEvaluation } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import prisma from "../prisma/index.ts";
 
 
 export const createEvaluationTeamLeadCategory = async (body: TeamLeadEvaluation) => {
     try {
-        await checkingTeamLeadPercentage(body.evaluationId, body.percentage);
+        await checkingTeamLeadPercentage(body.academicYearId, body.percentage);
 
         const response = await prisma.teamLeadEvaluation.create({
             data: {
                 name: body.name,
                 percentage: body.percentage,
                 forTeamLead: body.forTeamLead,
-                evaluation: {
-                    connect: { id: body.evaluationId }
+                academicYear: {
+                    connect: { id: body.academicYearId }
                 },
 
             }
@@ -25,11 +25,11 @@ export const createEvaluationTeamLeadCategory = async (body: TeamLeadEvaluation)
     }
 };
 
-const checkingTeamLeadPercentage = async (evaluationId: number, percentage: Decimal) => {
+const checkingTeamLeadPercentage = async (academicYearId: number, percentage: Decimal) => {
     try {
         const existingTeamLead = await prisma.teamLeadEvaluation.findMany({
             select: { percentage: true },
-            where: { evaluationId: evaluationId }
+            where: { academicYearId: academicYearId }
         });
 
         const totalPercentage = existingTeamLead.reduce((sum, peer) => sum + Number(peer.percentage), 0)
@@ -52,10 +52,10 @@ export const getEvaluationTeamLeadCategory = async (id: number) => {
                 percentage: true,
                 forTeamLead: true,
 
-              
+
             },
             where: {
-                evaluationId: id
+                academicYearId: id
             },
             orderBy: {
                 percentage: 'desc'
@@ -77,11 +77,11 @@ export const getFilterCategoryByLead = async (id: number) => {
                 name: true,
                 percentage: true,
                 forTeamLead: true,
-                evaluation:{
-                    select:{
-                        teamLeadTemplate:{
-                            select:{
-                                template_name:true
+                academicYear: {
+                    select: {
+                        teamLeadTemplate: {
+                            select: {
+                                template_name: true
                             }
                         }
                     }
@@ -90,7 +90,7 @@ export const getFilterCategoryByLead = async (id: number) => {
             where: {
                 AND: [
                     {
-                        evaluationId: id
+                        academicYearId: id
                     },
                     {
                         forTeamLead: true
@@ -105,7 +105,7 @@ export const getFilterCategoryByLead = async (id: number) => {
 
         const res = response.map((item) => ({
             ...item,
-            template: item.evaluation?.teamLeadTemplate?.template_name
+            template: item.academicYear?.teamLeadTemplate?.template_name
         }))
         return res;
     } catch (err) {

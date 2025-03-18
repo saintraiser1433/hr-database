@@ -20,12 +20,12 @@ export const fetchEmployeeAssociateByTeamDept = async (req: Request, res: Respon
     if (!deptId) {
         return res.status(400).json({ error: "Invalid departmentId ID." });
     }
-    const evalId = parseId(req.params.evalId);
-    if (!evalId) {
-        return res.status(400).json({ error: "Invalid Evaluation ID." });
+    const acadId = parseId(req.params.acadId);
+    if (!acadId) {
+        return res.status(400).json({ error: "Invalid Academic Year ID." });
     }
     try {
-        const response = await getEmployeeAssociateByTeamDept(deptId,evalId);
+        const response = await getEmployeeAssociateByTeamDept(deptId, acadId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);

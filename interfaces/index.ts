@@ -71,6 +71,12 @@ export interface CommentsModel {
     description: string;
 }
 
+export interface AssignPeerEvaluations {
+    academicYearId: number;
+    departmentId: number;
+    peersToEvaluate: number;
+}
+
 export interface ApplicantModel extends ApplicantInformationModel {
     id: number;
     jobId: number;

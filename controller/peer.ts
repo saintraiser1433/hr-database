@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { getEvaluationPeerCategory, createEvaluationPeerCategory, modifyEvaluationPeerCategory, removeEvaluationPeerCategory } from "../services/peer.ts";
-import { evalCategoryValidation, handleValidationError, questionValidation } from "../utils/validation.ts";
+import { categoryValidation, handleValidationError, questionValidation } from "../utils/validation.ts";
 import { parseId } from "../utils/parseId.ts";
 
 //peer category
 export const fetchEvaluationPeerCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const evaluationId = parseId(req.params.id);
-    if (!evaluationId) {
-        return res.status(400).json({ error: "Invalid Evaluation ID." });
+    const acadId = parseId(req.params.id);
+    if (!acadId) {
+        return res.status(400).json({ error: "Invalid Academic Year ID." });
     }
     try {
-        const response = await getEvaluationPeerCategory(evaluationId);
+        const response = await getEvaluationPeerCategory(acadId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -20,7 +20,7 @@ export const fetchEvaluationPeerCategory = async (req: Request, res: Response, n
 export const insertEvaluationPeerCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
-        const { error } = evalCategoryValidation.validate(body);
+        const { error } = categoryValidation.validate(body);
         if (error) {
             return handleValidationError(error, res);
         }
@@ -38,7 +38,7 @@ export const updateEvaluationPeerCategory = async (req: Request, res: Response, 
         return res.status(400).json({ error: "Invalid Question ID." });
     }
     try {
-        const { error } = evalCategoryValidation.validate(body);
+        const { error } = categoryValidation.validate(body);
         if (error) {
             return handleValidationError(error, res);
         }

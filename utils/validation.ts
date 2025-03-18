@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { Response } from 'express';
 import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
 import { appLogger } from './logger.ts';
-import { EmployeeRequirements, Peer, Question, TeamLeadCriteria, TemplateDetail, TemplateHeader } from '@prisma/client';
+import { EmployeeRequirements, PeerCategory, Question, TeamLeadCriteria, TemplateDetail, TemplateHeader } from '@prisma/client';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {
@@ -393,24 +393,24 @@ export const questionValidation = {
 };
 
 
-export const evalCategoryValidation = {
-    validate: (data: Peer) => {
+export const categoryValidation = {
+    validate: (data: PeerCategory) => {
         const schema = Joi.object({
             id: Joi.number().optional(),
             name: Joi.string().required().messages({
                 "any.required": "The Title field is required",
                 "string.base": "The Title field must be a string",
             }),
-            evaluationId: Joi.number().required().messages({
-                "any.required": "The Evaluation field is required",
-                "number.base": "The Evaluation field must be a number",
+            academicYearId: Joi.number().required().messages({
+                "any.required": "The Academic Year field is required",
+                "number.base": "The Academic Year field must be a number",
             }),
             percentage: Joi.number().required().messages({
                 "any.required": "The Percentage field is required",
                 "number.base": "The Percentage field must be a number",
             }),
             forTeamLead: Joi.boolean().optional(),
-            
+
         })
         return schema.validate(data, { abortEarly: false });
     },

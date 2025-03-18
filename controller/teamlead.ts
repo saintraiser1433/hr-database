@@ -1,17 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import { getColleagueByDept, createCriteriaByColleague, modifyCriteriaByColleague, removeEvaluationCriteriaByColleague, getCriteriaByColleague, getEvaluationTeamLeadCategory, createEvaluationTeamLeadCategory, modifyEvaluationTeamLeadCategory, removeEvaluationTeamLeadCategory, getEvaluationTeamLeadCriteria, createEvaluationTeamLeadCriteria, modifyEvaluationTeamLeadCriteria, removeEvaluationTeamLeadCriteria, getFilterCategoryByLead } from "../services/teamlead.ts";
-import { evalCategoryValidation, handleValidationError, subCategoryValidation } from "../utils/validation.ts";
+import { categoryValidation, handleValidationError, subCategoryValidation } from "../utils/validation.ts";
 import { parseId } from "../utils/parseId.ts";
 
 //peer category
 export const fetchEvaluationTeamLeadCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const evaluationId = parseId(req.params.id);
-    if (!evaluationId) {
+    const academicYearId = parseId(req.params.id);
+    if (!academicYearId) {
         return res.status(400).json({ error: "Invalid ID." });
     }
     try {
 
-        const response = await getEvaluationTeamLeadCategory(evaluationId);
+        const response = await getEvaluationTeamLeadCategory(academicYearId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -21,7 +21,7 @@ export const fetchEvaluationTeamLeadCategory = async (req: Request, res: Respons
 export const insertEvaluationTeamLeadCategory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
-        const { error } = evalCategoryValidation.validate(body);
+        const { error } = categoryValidation.validate(body);
         if (error) {
             return handleValidationError(error, res);
         }
@@ -40,7 +40,7 @@ export const updateEvaluationTeamLeadCategory = async (req: Request, res: Respon
     }
     try {
 
-        const { error } = evalCategoryValidation.validate(body);
+        const { error } = categoryValidation.validate(body);
         if (error) {
             return handleValidationError(error, res);
         }
@@ -135,12 +135,12 @@ export const deleteEvaluationTeamLeadCriteria = async (req: Request, res: Respon
 
 //fetch for data for teamlead module
 export const fetchFilterCategoryByLead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const evaluationId = parseId(req.params.id);
-    if (!evaluationId) {
-        return res.status(400).json({ error: "Invalid Evaluation ID." });
+    const academicYearId = parseId(req.params.id);
+    if (!academicYearId) {
+        return res.status(400).json({ error: "Invalid Academic Year ID." });
     }
     try {
-        const response = await getFilterCategoryByLead(evaluationId);
+        const response = await getFilterCategoryByLead(academicYearId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);
@@ -164,16 +164,16 @@ export const fetchColleagueByDept = async (req: Request, res: Response, next: Ne
 
 //team lead module criteria module
 export const fetchCriteriaByColleague = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const evaluationId = parseId(req.params.evalId);
+    const acadId = parseId(req.params.acadId);
     const employeeId = parseId(req.params.employeeId) ?? 0;
-    if (!evaluationId) {
-        return res.status(400).json({ error: "Invalid Evaluation ID." });
+    if (!acadId) {
+        return res.status(400).json({ error: "Invalid Academic Year ID." });
     }
     if (!employeeId) {
         return res.status(400).json({ error: "Invalid Employee ID." });
     }
     try {
-        const response = await getCriteriaByColleague(evaluationId, employeeId);
+        const response = await getCriteriaByColleague(acadId, employeeId);
         return res.status(200).json(response);
     } catch (err) {
         next(err);

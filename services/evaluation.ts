@@ -1,15 +1,16 @@
-import { getAdjectiveRatingFromTemplateDetail } from "../helpers/adjectiveRating.ts";
-import { EmployeeRating } from "../interfaces/index.ts";
+import { getAdjectiveRatingFromTemplateDetail } from "../utils/adjectiveRating.ts";
+import { AssignPeerEvaluations, EmployeeRating } from "../interfaces/index.ts";
 import prisma from "../prisma/index.ts";
 import {
-  Evaluation,
+  AcademicYear,
   EvaluationStatus,
   TeamLeadEvaluationResult,
 } from "@prisma/client";
+import { shuffleArray } from "../utils/shuffleArray.ts";
 
 export const getEvaluation = async () => {
   try {
-    const response = await prisma.evaluation.findMany({
+    const response = await prisma.academicYear.findMany({
       select: {
         id: true,
         school_year: true,
@@ -49,7 +50,7 @@ export const getEvaluation = async () => {
 
 export const getEvaluationOngoing = async () => {
   try {
-    const response = await prisma.evaluation.findFirst({
+    const response = await prisma.academicYear.findFirst({
       select: {
         id: true,
         school_year: true,
@@ -77,9 +78,9 @@ export const getEvaluationOngoing = async () => {
   }
 };
 
-export const createEvaluation = async (body: Evaluation) => {
+export const createEvaluation = async (body: AcademicYear) => {
   try {
-    const response = await prisma.evaluation.create({
+    const response = await prisma.academicYear.create({
       select: {
         id: true,
         school_year: true,
@@ -107,9 +108,9 @@ export const createEvaluation = async (body: Evaluation) => {
   }
 };
 
-export const modifyEvaluation = async (id: number, data: Evaluation) => {
+export const modifyEvaluation = async (id: number, data: AcademicYear) => {
   try {
-    const checkDuplicateStatus = await prisma.evaluation.findMany({
+    const checkDuplicateStatus = await prisma.academicYear.findMany({
       where: {
         status: "ONGOING",
       },
@@ -120,7 +121,7 @@ export const modifyEvaluation = async (id: number, data: Evaluation) => {
       );
     }
 
-    return await prisma.evaluation.update({
+    return await prisma.academicYear.update({
       select: {
         id: true,
         school_year: true,
@@ -151,7 +152,7 @@ export const modifyEvaluation = async (id: number, data: Evaluation) => {
 };
 
 export const removeEvaluation = async (id: number) => {
-  return await prisma.evaluation.delete({
+  return await prisma.academicYear.delete({
     where: {
       id: id,
     },
@@ -166,7 +167,7 @@ export const getEvaluationEmployeeCriteria = async (
     // Get all TeamLeadEvaluation related to the department
     const teamLeadEvaluations = await prisma.teamLeadEvaluation.findMany({
       where: {
-        evaluation: {
+        academicYear: {
           id: deptId,
         },
       },
@@ -174,7 +175,7 @@ export const getEvaluationEmployeeCriteria = async (
         forTeamLead: "desc",
       },
       include: {
-        evaluation: {
+        academicYear: {
           include: {
             teamLeadTemplate: {
               include: {
@@ -212,10 +213,10 @@ export const getEvaluationEmployeeCriteria = async (
         name: data.name,
         percentage: data.percentage,
       },
-      template: data.evaluation?.teamLeadTemplate
+      template: data.academicYear?.teamLeadTemplate
         ? {
-          name: data.evaluation?.teamLeadTemplate.template_name, // Example: "Team Lead Legend"
-          details: data.evaluation?.teamLeadTemplate.templateDetail
+          name: data.academicYear?.teamLeadTemplate.template_name, // Example: "Team Lead Legend"
+          details: data.academicYear?.teamLeadTemplate.templateDetail
             .map((d) => ({
               id: d.id,
               title: d.title,
@@ -285,7 +286,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
       where: {
         AND: [
           {
-            evaluationId: evaluationId,
+            academicYearId: evaluationId,
           },
           {
             employeesId: employeesId,
@@ -299,7 +300,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
               include: {
                 teamLeadEvaluation: {
                   include: {
-                    evaluation: {
+                    academicYear: {
                       include: {
                         teamLeadTemplate: {
                           include: {
@@ -325,7 +326,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
               include: {
                 teamLead: {
                   include: {
-                    evaluation: {
+                    academicYear: {
                       include: {
                         teamLeadTemplate: {
                           include: {
@@ -350,8 +351,8 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
     });
 
     // Get all templateDetails for the evaluation
-    const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.evaluation ||
-      results[0]?.question?.assignTaskCriteria?.teamLead?.evaluation;
+    const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.academicYear ||
+      results[0]?.question?.assignTaskCriteria?.teamLead?.academicYear;
 
     const allTemplateDetails = evaluation?.teamLeadTemplate?.templateDetail || [];
 
@@ -401,10 +402,10 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
 
       // Calculate total possible score: maxScoreInTemplateDetail * totalQuestionsInCategory
       const maxScoreInTemplateDetail = Math.max(
-        ...(result.question.teamLeadCriteria?.teamLeadEvaluation.evaluation?.teamLeadTemplate?.templateDetail.map(
+        ...(result.question.teamLeadCriteria?.teamLeadEvaluation.academicYear?.teamLeadTemplate?.templateDetail.map(
           (detail) => detail.score
         ) ||
-          result.question.assignTaskCriteria?.teamLead.evaluation?.teamLeadTemplate?.templateDetail.map(
+          result.question.assignTaskCriteria?.teamLead.academicYear?.teamLeadTemplate?.templateDetail.map(
             (detail) => detail.score
           ) || [0])
       );
@@ -440,7 +441,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
       }
 
       // Update comment and evaluatedBy from EvaluationStatus
-      const evaluationStatus = result.question.teamLeadCriteria?.teamLeadEvaluation?.evaluation?.evaluationStatus;
+      const evaluationStatus = result.question.teamLeadCriteria?.teamLeadEvaluation?.academicYear?.evaluationStatus;
       if (evaluationStatus && evaluationStatus.length > 0) {
         const commenterName = `${evaluationStatus[0].commenter.information?.first_name} ${evaluationStatus[0].commenter.information?.last_name}`;
         acc[employeeId].comment = evaluationStatus[0].description; // Set comment
@@ -504,27 +505,26 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
 
 
 
-export const viewEvaluateQuestion = async(employeeId:number,evaluationId:number) => {
-    try{
-      const response = await prisma.teamLeadEvaluationResult.findMany({
-        select:{
-          evaluationId:true,
-          teamLeadEvaluationId:true,
-          questionId:true,
-          employeesId:true,
-          templateDetailId:true,
-          evaluation:{
-            select:{
-              evaluationStatus:{
-                select:{
-                  description:true,
-                  commenter:{
-                    select:{
-                      information:{
-                        select:{
-                          first_name: true,
-                          last_name:true,
-                        }
+export const viewEvaluateQuestion = async (employeeId: number, evaluationId: number) => {
+  try {
+    const response = await prisma.teamLeadEvaluationResult.findMany({
+      select: {
+        academicYearId: true,
+        teamLeadEvaluationId: true,
+        questionId: true,
+        employeesId: true,
+        templateDetailId: true,
+        academicYear: {
+          select: {
+            evaluationStatus: {
+              select: {
+                description: true,
+                commenter: {
+                  select: {
+                    information: {
+                      select: {
+                        first_name: true,
+                        last_name: true,
                       }
                     }
                   }
@@ -532,38 +532,94 @@ export const viewEvaluateQuestion = async(employeeId:number,evaluationId:number)
               }
             }
           }
-        },
-        
-        where:{
-            
-            AND:[
-              { evaluationId:evaluationId },
-              { employeesId:employeeId },
-            ]
-            
-          }
-      })
-
-      const transformData = response.map((item) => ({
-        evaluationId:item.evaluationId,
-        teamLeadEvaluationId:item.teamLeadEvaluationId,
-        questionId:item.questionId,
-        employeesId:item.employeesId,
-        templateDetailId:item.templateDetailId,
-      }))
-      const commenter = response[0].evaluation.evaluationStatus[0].commenter.information;
-      const comment = response[0].evaluation.evaluationStatus[0].description;
-      const finalData = {
-        transformData,
-        commentsDetail: {
-          comment,
-          evaluatedBy: `${commenter?.first_name} ${commenter?.last_name}`
         }
+      },
 
-      } 
+      where: {
 
-      return finalData;
-    }catch(err){
-      throw err;
+        AND: [
+          { academicYearId: evaluationId },
+          { employeesId: employeeId },
+        ]
+
+      }
+    })
+
+    const transformData = response.map((item) => ({
+      evaluationId: item.academicYearId,
+      teamLeadEvaluationId: item.teamLeadEvaluationId,
+      questionId: item.questionId,
+      employeesId: item.employeesId,
+      templateDetailId: item.templateDetailId,
+    }))
+    const commenter = response[0].academicYear.evaluationStatus[0].commenter.information;
+    const comment = response[0].academicYear.evaluationStatus[0].description;
+    const finalData = {
+      transformData,
+      commentsDetail: {
+        comment,
+        evaluatedBy: `${commenter?.first_name} ${commenter?.last_name}`
+      }
+
     }
+
+    return finalData;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
+  try {
+    const departments = await prisma.departments.findMany({
+      where: {
+        id: body.departmentId,
+      },
+      include: {
+        employees: true,
+      },
+    });
+
+
+    const evaluatedPairs = new Set<string>();
+
+    for (const department of departments) {
+      const employees = department.employees;
+
+      for (const evaluator of employees) {
+        // Get all peers except the evaluator
+        const peers = employees.filter((emp) => emp.id !== evaluator.id);
+
+        // Filter out peers that have already been evaluated by this evaluator in this academic year
+        const availablePeers = peers.filter((peer) => {
+          const pairKey = `${body.academicYearId}-${evaluator.id}-${peer.id}`;
+          return !evaluatedPairs.has(pairKey);
+        });
+
+        // Randomly select peers
+        const selectedPeers =
+          availablePeers.length <= body.peersToEvaluate
+            ? availablePeers // Evaluate all available peers if there are not enough
+            : shuffleArray(availablePeers).slice(0, body.peersToEvaluate); // Randomly select peers
+
+        // Create evaluation records
+        for (const peer of selectedPeers) {
+          await prisma.evaluation.create({
+            data: {
+              academicYearId: body.academicYearId,
+              evaluatorId: evaluator.id,
+              evaluateeId: peer.id,
+            },
+          });
+
+          // Mark this pair as evaluated for this academic year
+          const pairKey = `${body.academicYearId}-${evaluator.id}-${peer.id}`;
+          evaluatedPairs.add(pairKey);
+        }
+      }
+    }
+  } catch (err) {
+    throw err;
+  }
+
 }

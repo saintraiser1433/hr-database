@@ -35,7 +35,7 @@ export const getCriteriaWithQuestion = async (id: number) => {
             },
           },
         },
-        evaluation: {
+        academicYear: {
           select: {
             teamLeadTemplate: {
               select: {
@@ -64,7 +64,7 @@ export const getCriteriaWithQuestion = async (id: number) => {
         item.teamLeadCriteria.flatMap((criteria) => criteria.question)
       ),
       legends: criteriaWithQuestion.flatMap(
-        (item) => item.evaluation?.teamLeadTemplate?.templateDetail || []
+        (item) => item.academicYear?.teamLeadTemplate?.templateDetail || []
       ),
     };
   } catch (err) {
@@ -106,7 +106,7 @@ export const getCustomCriteriaWithQuestion = async (id: number) => {
             },
           },
         },
-        evaluation: {
+        academicYear: {
           select: {
             teamLeadTemplate: {
               select: {
@@ -135,7 +135,7 @@ export const getCustomCriteriaWithQuestion = async (id: number) => {
         item.assignTaskCriteria.flatMap((criteria) => criteria.question)
       ),
       legends: criteriaWithQuestion.flatMap(
-        (item) => item.evaluation?.teamLeadTemplate?.templateDetail || []
+        (item) => item.academicYear?.teamLeadTemplate?.templateDetail || []
       ),
     };
   } catch (err) {
@@ -146,7 +146,7 @@ export const getCustomCriteriaWithQuestion = async (id: number) => {
 
 export const getPeerCriteriaQuestion = async (id: number) => {
   try {
-    const peerWithQuestions = await prisma.peer.findUnique({
+    const peerWithQuestions = await prisma.peerCategory.findUnique({
       where: { id },
       select: {
         question: {
@@ -159,7 +159,7 @@ export const getPeerCriteriaQuestion = async (id: number) => {
             id: "asc",
           },
         },
-        evaluation: {
+        academicYear: {
           select: {
             peerTemplate: {
               select: {
@@ -185,7 +185,7 @@ export const getPeerCriteriaQuestion = async (id: number) => {
 
     return {
       questions: peerWithQuestions.question,
-      legends: peerWithQuestions.evaluation?.peerTemplate?.templateDetail || [],
+      legends: peerWithQuestions.academicYear?.peerTemplate?.templateDetail || [],
     };
   } catch (err) {
     console.error(`Error fetching evaluation peer question for id ${id}:`, err);

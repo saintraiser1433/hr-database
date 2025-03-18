@@ -1,19 +1,19 @@
-import { Peer, Question } from "@prisma/client";
+import { PeerCategory, Question } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import prisma from "../prisma/index.ts";
 
 //creation of peer to peer category
-export const createEvaluationPeerCategory = async (body: Peer) => {
+export const createEvaluationPeerCategory = async (body: PeerCategory) => {
     try {
         // Check before inserting
-        await checkingPeerPercentage(body.evaluationId, body.percentage);
+        await checkingPeerPercentage(body.academicYearId, body.percentage);
 
-        const response = await prisma.peer.create({
+        const response = await prisma.peerCategory.create({
             data: {
                 name: body.name,
                 percentage: body.percentage,
-                evaluation: {
-                    connect: { id: body.evaluationId }
+                academicYear: {
+                    connect: { id: body.academicYearId }
                 }
             }
         });
@@ -24,11 +24,11 @@ export const createEvaluationPeerCategory = async (body: Peer) => {
     }
 };
 
-const checkingPeerPercentage = async (evaluationId: number, percentage: Decimal) => {
+const checkingPeerPercentage = async (academicYearId: number, percentage: Decimal) => {
     try {
-        const existingPeers = await prisma.peer.findMany({
+        const existingPeers = await prisma.peerCategory.findMany({
             select: { percentage: true },
-            where: { evaluationId: evaluationId }
+            where: { academicYearId: academicYearId }
         });
 
         const totalPercentage = existingPeers.reduce((sum, peer) => sum + Number(peer.percentage), 0)
@@ -44,7 +44,7 @@ const checkingPeerPercentage = async (evaluationId: number, percentage: Decimal)
 
 export const getEvaluationPeerCategory = async (id: number) => {
     try {
-        const response = await prisma.peer.findMany({
+        const response = await prisma.peerCategory.findMany({
             select: {
                 id: true,
                 name: true,
@@ -55,19 +55,19 @@ export const getEvaluationPeerCategory = async (id: number) => {
                         question: true
                     }
                 },
-                evaluation:{
-                    select:{
-                        teamLeadTemplate:{
-                            select:{
-                                template_name:true
+                academicYear: {
+                    select: {
+                        teamLeadTemplate: {
+                            select: {
+                                template_name: true
                             }
                         }
                     }
                 }
-                
+
             },
             where: {
-                evaluationId: id
+                academicYearId: id
             },
             orderBy: {
                 percentage: 'desc'
@@ -76,7 +76,7 @@ export const getEvaluationPeerCategory = async (id: number) => {
 
         const res = response.map((item) => ({
             ...item,
-            template: item.evaluation?.teamLeadTemplate?.template_name
+            template: item.academicYear?.teamLeadTemplate?.template_name
         }))
         return res;
     } catch (err) {
@@ -84,10 +84,10 @@ export const getEvaluationPeerCategory = async (id: number) => {
     }
 }
 
-export const modifyEvaluationPeerCategory = async (id: number, body: Peer) => {
+export const modifyEvaluationPeerCategory = async (id: number, body: PeerCategory) => {
     try {
-        await checkingPeerPercentage(body.evaluationId, body.percentage);
-        const response = await prisma.peer.update({
+        await checkingPeerPercentage(body.academicYearId, body.percentage);
+        const response = await prisma.peerCategory.update({
             data: {
                 name: body.name,
                 percentage: body.percentage
@@ -104,7 +104,7 @@ export const modifyEvaluationPeerCategory = async (id: number, body: Peer) => {
 }
 
 export const removeEvaluationPeerCategory = async (id: number) => {
-    return await prisma.peer.delete({
+    return await prisma.peerCategory.delete({
         where: {
             id: id
         }

@@ -122,7 +122,7 @@ model Departments {
   title     String      @unique @db.VarChar(250)
   status    Boolean?    @default(true) @db.Boolean
   Job       Job[]
-  Employees Employees[]
+  employees Employees[]
 }
 
 model Employees {
@@ -146,6 +146,8 @@ model Employees {
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
   evaluatedPerson          EvaluationStatus[]           @relation(name: "EvaluatedEmployee")
   commenterPerson          EvaluationStatus[]           @relation(name: "CommenterPerson")
+  evaluatee                Evaluation[]                 @relation(name: "Evaluatee")
+  evaluator                Evaluation[]                 @relation(name: "Evaluator")
 
   @@unique([username])
 }
@@ -272,14 +274,14 @@ model References {
   @@unique([applicantInformationId, name_of_person])
 }
 
-model Evaluation {
+model AcademicYear {
   id                       Int                        @id @default(autoincrement())
   school_year              String                     @db.VarChar(100)
   semester                 Int
   status                   ModeStatus                 @default(NOT_SET)
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
-  Peer                     Peer[]
+  Peer                     PeerCategory[]
   TeamLeadEvaluation       TeamLeadEvaluation[]
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
   evaluationStatus         EvaluationStatus[]
@@ -288,39 +290,50 @@ model Evaluation {
 
   peerTemplateId     Int?
   teamLeadTemplateId Int?
+  Evaluation         Evaluation[]
 
   @@unique([school_year, semester])
 }
 
-model Peer {
-  id           Int         @id @default(autoincrement())
-  name         String      @unique
-  evaluation   Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId Int
-  question     Question[]
-  percentage   Decimal     @db.Decimal(10, 2)
+model Evaluation {
+  id             Int          @id @default(autoincrement())
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  evaluatorId    Int
+  evaluator      Employees    @relation("Evaluator", fields: [evaluatorId], references: [id])
+  evaluateeId    Int
+  evaluatee      Employees    @relation("Evaluatee", fields: [evaluateeId], references: [id])
+  academicYearId Int
+}
+
+model PeerCategory {
+  id             Int           @id @default(autoincrement())
+  name           String        @unique
+  academicYear   AcademicYear? @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYearId Int
+  question       Question[]
+  percentage     Decimal       @db.Decimal(10, 2)
 }
 
 model EvaluationStatus {
-  id           Int            @id @default(autoincrement())
-  evaluation   Evaluation     @relation(fields: [evaluationId], references: [id])
-  evaluationId Int
-  employee     Employees      @relation(name: "EvaluatedEmployee", fields: [employeesId], references: [id])
-  employeesId  Int
-  type         EvaluatePerson
-  commenter    Employees      @relation(name: "CommenterPerson", fields: [commenterId], references: [id])
-  commenterId  Int
-  description  String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id             Int            @id @default(autoincrement())
+  academicYear   AcademicYear   @relation(fields: [academicYearId], references: [id])
+  academicYearId Int
+  employee       Employees      @relation(name: "EvaluatedEmployee", fields: [employeesId], references: [id])
+  employeesId    Int
+  type           EvaluatePerson
+  commenter      Employees      @relation(name: "CommenterPerson", fields: [commenterId], references: [id])
+  commenterId    Int
+  description    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model TeamLeadEvaluation {
   id                       Int                          @id @default(autoincrement())
   name                     String                       @unique
   percentage               Decimal                      @db.Decimal(10, 2)
-  evaluation               Evaluation?                  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  evaluationId             Int
+  academicYear             AcademicYear?                @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYearId           Int
   teamLeadCriteria         TeamLeadCriteria[]
   forTeamLead              Boolean                      @default(false)
   assignTaskCriteria       TeamLeadAssignTaskCriteria[]
@@ -339,8 +352,8 @@ model TeamLeadAssignTaskCriteria {
 
 model TeamLeadEvaluationResult {
   id                   Int                @id @default(autoincrement()) // Add a unique ID for easier management
-  evaluation           Evaluation         @relation(fields: [evaluationId], references: [id])
-  evaluationId         Int
+  academicYear         AcademicYear       @relation(fields: [academicYearId], references: [id])
+  academicYearId       Int
   teamLeadEvaluation   TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
   teamLeadEvaluationId Int
   question             Question           @relation(fields: [questionId], references: [id])
@@ -350,7 +363,7 @@ model TeamLeadEvaluationResult {
   templateDetail       TemplateDetail     @relation(fields: [templateDetailId], references: [id])
   templateDetailId     Int
 
-  @@unique([evaluationId, questionId, teamLeadEvaluationId, employeesId, templateDetailId])
+  @@unique([academicYearId, questionId, teamLeadEvaluationId, employeesId, templateDetailId])
 }
 
 model TeamLeadCriteria {
@@ -364,7 +377,7 @@ model TeamLeadCriteria {
 model Question {
   id                       Int                         @id @default(autoincrement())
   question                 String
-  peer                     Peer?                       @relation(fields: [peerId], references: [id], onDelete: Cascade)
+  peer                     PeerCategory?               @relation(fields: [peerId], references: [id], onDelete: Cascade)
   peerId                   Int?
   teamLeadCriteria         TeamLeadCriteria?           @relation(fields: [teamLeadCriteriaId], references: [id], onDelete: Cascade)
   teamLeadCriteriaId       Int?
@@ -378,8 +391,8 @@ model TemplateHeader {
   template_name    String           @db.VarChar(100)
   description      String
   templateDetail   TemplateDetail[]
-  peerTemplate     Evaluation[]     @relation(name: "PeerTemplate")
-  teamLeadTemplate Evaluation[]     @relation(name: "TeamLeadTemplate")
+  peerTemplate     AcademicYear[]   @relation(name: "PeerTemplate")
+  teamLeadTemplate AcademicYear[]   @relation(name: "TeamLeadTemplate")
 }
 
 model TemplateDetail {
@@ -387,7 +400,7 @@ model TemplateDetail {
   title                    String                     @db.VarChar(100)
   description              String
   score                    Int
-  template                 TemplateHeader             @relation(fields: [templateId], references: [id])
+  template                 TemplateHeader             @relation(fields: [templateId], references: [id], onDelete: Cascade)
   templateId               Int
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
 }

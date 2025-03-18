@@ -504,14 +504,14 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
 };
 
 
-export const getEmployeeAssociateByTeamDept = async (deptId: number, evaluationId: number) => {
+export const getEmployeeAssociateByTeamDept = async (deptId: number, academicYearId: number) => {
     try {
         const employees = await prisma.employees.findMany({
             include: {
                 information: true,
                 evaluatedPerson: {
                     where: {
-                        evaluationId: evaluationId
+                        academicYearId: academicYearId
                     }
                 },
             },

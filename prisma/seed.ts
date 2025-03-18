@@ -14,9 +14,9 @@ async function main() {
   //   const middleName = faker.person.firstName() // Using firstName generator for middle name
   //   const username = faker.internet.username({ firstName, lastName })
 
-  // Generate a simple password (in production, you'd want stronger passwords)
-  // const plainPassword = 'Password123!'
-  // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+  //   // Generate a simple password (in production, you'd want stronger passwords)
+  //   const plainPassword = 'Password123!'
+  //   // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
 
   //   await prisma.requirements.upsert({
   //     where: {
@@ -87,19 +87,19 @@ async function main() {
 
 const peerCategories = [
   {
-    evaluationId: 1,
+    academicYearId: 1,
     percentage: 0.40,
-    name:'Professional Behavior and Job Performance Factors'
+    name: 'Professional Behavior and Job Performance Factors'
   },
   {
-    evaluationId: 1,
+    academicYearId: 1,
     percentage: 0.30,
-    name:'Communication Skills'
+    name: 'Communication Skills'
   },
   {
-    evaluationId: 1,
+    academicYearId: 1,
     percentage: 0.30,
-    name:'Core Values'
+    name: 'Core Values'
   },
 ]
 
@@ -179,24 +179,28 @@ const evaluationList = [
     school_year: "2020-2021",
     semester: 1,
     status: ModeStatus.ONGOING,
+    peerTemplateId: 1,
     teamLeadTemplateId: 2,
   },
   {
     school_year: "2020-2021",
     semester: 2,
     status: ModeStatus.NOT_SET,
+    peerTemplateId: 1,
     teamLeadTemplateId: 2,
   },
   {
     school_year: "2021-2022",
     semester: 1,
     status: ModeStatus.NOT_SET,
+    peerTemplateId: 1,
     teamLeadTemplateId: 2,
   },
   {
     school_year: "2021-2022",
     semester: 2,
     status: ModeStatus.NOT_SET,
+    peerTemplateId: 1,
     teamLeadTemplateId: 2,
   },
 ];
@@ -205,19 +209,19 @@ const teamLeadEvaluationList = [
   {
     name: "Percentage",
     percentage: 0.4,
-    evaluationId: 1,
+    academicYearId: 1,
     forTeamLead: true,
   },
   {
     name: "Performance Mode",
     percentage: 0.3,
-    evaluationId: 1,
+    academicYearId: 1,
     forTeamLead: false,
   },
   {
     name: "Employee Soft Skills",
     percentage: 0.3,
-    evaluationId: 1,
+    academicYearId: 1,
     forTeamLead: false,
   },
 ];
@@ -244,101 +248,101 @@ const teamLeadCriteria = [
 const question = [
   {
     question: 'Works Thoroughly & Accurately',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
   {
     question: 'Follows Instructions',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
   {
     question: 'Shows Initiative',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
   {
     question: 'Works with Minimal Supervision',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
   {
     question: 'Finishes Assigned Tasks as Scheduled',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
   {
     question: 'Willing to Perform Extra Assignments',
-    teamLeadCriteriaId:1,
+    teamLeadCriteriaId: 1,
   },
 
-  
+
   {
     question: 'Reports to Work on Time',
-    teamLeadCriteriaId:2,
+    teamLeadCriteriaId: 2,
   },
   {
     question: 'Seldom Incur Tardiness',
-    teamLeadCriteriaId:2,
+    teamLeadCriteriaId: 2,
   },
   {
     question: 'Seldom Incur Absences',
-    teamLeadCriteriaId:2,
+    teamLeadCriteriaId: 2,
   },
   {
     question: 'Attends Company Activities',
-    teamLeadCriteriaId:2,
+    teamLeadCriteriaId: 2,
   },
 
   {
     question: 'Maintains Harmonious Relationship with Colleagues',
-    teamLeadCriteriaId:3,
+    teamLeadCriteriaId: 3,
   },
   {
     question: 'Tolerates Individual Differences',
-    teamLeadCriteriaId:3,
+    teamLeadCriteriaId: 3,
   },
   {
     question: 'Relates well with Colleagues',
-    teamLeadCriteriaId:3,
+    teamLeadCriteriaId: 3,
   },
 
 
   {
     question: 'Maintains Healthy Disposition While doing Office Duties',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
   {
     question: 'Shows Loyalty to the Company',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
   {
     question: 'Shows Dedication to the Job',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
   {
     question: 'Reports to Work in Appropriate Attire',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
   {
     question: 'Speaks and Behaves According to Disciplined Standards of Propriety',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
   {
     question: 'Maintains Composure at All Times',
-    teamLeadCriteriaId:4,
+    teamLeadCriteriaId: 4,
   },
 
-  
+
 
 
 
   {
     question: 'How did you meet your spouse/partner?',
-    assignTaskCriteriaId:1,
+    assignTaskCriteriaId: 1,
   },
   {
     question: 'How did you know they were “the one”?',
-    assignTaskCriteriaId:1,
+    assignTaskCriteriaId: 1,
   },
   {
     question: 'How did you propose?',
-    assignTaskCriteriaId:1,
+    assignTaskCriteriaId: 1,
   },
 
 
@@ -354,37 +358,41 @@ const assignTaskCriteria = [
 
 ]
 
-//CREATE PEER
-await prisma.peer.createMany({
-  data: peerCategories,
-});
-await prisma.question.createMany({
-  data: peerQuestion,
-}); 
+
 
 //END
 
 
 //CREATE EVALUATION
-await prisma.evaluation.createMany({
-  data: evaluationList,
+// await prisma.academicYear.createMany({
+//   data: evaluationList,
+// });
+
+// //CREATE PEER
+
+
+// await prisma.teamLeadEvaluation.createMany({
+//   data: teamLeadEvaluationList,
+// });
+
+// await prisma.teamLeadCriteria.createMany({
+//   data: teamLeadCriteria,
+// });
+
+// await prisma.teamLeadAssignTaskCriteria.createMany({
+//   data: assignTaskCriteria
+// })
+
+// await prisma.question.createMany({
+//   data: question
+// })
+
+await prisma.peerCategory.createMany({
+  data: peerCategories,
 });
-
-await prisma.teamLeadEvaluation.createMany({
-  data: teamLeadEvaluationList,
-});
-
-await prisma.teamLeadCriteria.createMany({
-  data: teamLeadCriteria,
-});
-
-await prisma.teamLeadAssignTaskCriteria.createMany({
-  data: assignTaskCriteria
-})
-
-await prisma.question.createMany({
-  data:question
-})
+// await prisma.question.createMany({
+//   data: peerQuestion,
+// });
 
 
 main()

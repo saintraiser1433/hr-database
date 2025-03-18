@@ -13,6 +13,7 @@ import {
   insertTeamLeadEvaluation,
   getTeamLeadResults,
   viewEvaluateQuestion,
+  assignPeerEvaluations,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -46,8 +47,8 @@ export const fetchTeamLeadResults = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const evaluationId = parseId(req.params.evaluationId);
-  if (!evaluationId) {
+  const acadId = parseId(req.params.acadId);
+  if (!acadId) {
     return res.status(400).json({ error: "Invalid Evaluation ID." });
   }
   const employeesId = parseId(req.params.employeesId);
@@ -55,7 +56,7 @@ export const fetchTeamLeadResults = async (
     return res.status(400).json({ error: "Invalid Employees ID." });
   }
   try {
-    const response = await getTeamLeadResults(evaluationId, employeesId);
+    const response = await getTeamLeadResults(acadId, employeesId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -68,15 +69,15 @@ export const fetchEvaluationEmployeeCriteria = async (
   next: NextFunction
 ): Promise<Response | void> => {
   const employeeId = parseId(req.params.employeeId);
-  const evalId = parseId(req.params.evalId);
+  const acadId = parseId(req.params.acadId);
   if (!employeeId) {
     return res.status(400).json({ error: "Invalid Question ID." });
   }
-  if (!evalId) {
-    return res.status(400).json({ error: "Invalid Evaluation ID." });
+  if (!acadId) {
+    return res.status(400).json({ error: "Invalid Academic Year ID." });
   }
   try {
-    const response = await getEvaluationEmployeeCriteria(employeeId, evalId);
+    const response = await getEvaluationEmployeeCriteria(employeeId, acadId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -89,15 +90,15 @@ export const fetchEvaluateQuestion = async (
   next: NextFunction
 ): Promise<Response | void> => {
   const employeeId = parseId(req.params.employeeId);
-  const evalId = parseId(req.params.evalId);
+  const acadId = parseId(req.params.acadId);
   if (!employeeId) {
     return res.status(400).json({ error: "Invalid Question ID." });
   }
-  if (!evalId) {
+  if (!acadId) {
     return res.status(400).json({ error: "Invalid Evaluation ID." });
   }
   try {
-    const response = await viewEvaluateQuestion(employeeId, evalId);
+    const response = await viewEvaluateQuestion(employeeId, acadId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -133,14 +134,14 @@ export const updateEvaluation = async (
   const body = req.body;
   const id = req.params.id;
   try {
-    const evaluationId = parseInt(id, 10);
-    if (isNaN(evaluationId)) throw new Error("Invalid Evaluation ID.");
+    const academicYear = parseInt(id, 10);
+    if (isNaN(academicYear)) throw new Error("Invalid Evaluation ID.");
 
     const { error } = evaluationValidation.update(body);
     if (error) {
       return handleValidationError(error, res);
     }
-    const response = await modifyEvaluation(evaluationId, body);
+    const response = await modifyEvaluation(academicYear, body);
     return res
       .status(200)
       .json({ message: "Evaluation updated successfully", data: response });
@@ -156,9 +157,9 @@ export const deleteEvaluation = async (
 ): Promise<Response | void> => {
   const id = req.params.id;
   try {
-    const evaluationId = parseInt(id, 10);
-    if (isNaN(evaluationId)) throw new Error("Invalid Evaluation ID.");
-    await removeEvaluation(evaluationId);
+    const academicYearId = parseInt(id, 10);
+    if (isNaN(academicYearId)) throw new Error("Invalid Evaluation ID.");
+    await removeEvaluation(academicYearId);
     return res.status(200).json({ message: "Evaluation removed successfully" });
   } catch (err) {
     next(err);
@@ -173,7 +174,7 @@ export const submissionTeamLeadEvaluation = async (
   const { evaluate, headerStatus } = req.body;
   try {
     const evalData = evaluate.map((item: any) => ({
-      evaluationId: item.evaluationId,
+      academicYearId: item.academicYearId,
       teamLeadEvaluationId: item.categoryId,
       questionId: item.questionId,
       templateDetailId: item.templateDetailId,
@@ -188,6 +189,23 @@ export const submissionTeamLeadEvaluation = async (
     next(err);
   }
 };
+
+
+export const assigningPeerEvaluations = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const body = req.body;
+
+  try {
+    const response = await assignPeerEvaluations(body);
+    return res.status(200).json({ message: "Successfully assigning peers", data: response })
+  } catch (err) {
+    next(err);
+  }
+
+}
 
 
 

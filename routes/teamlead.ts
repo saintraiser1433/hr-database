@@ -28,7 +28,7 @@ route.get('/main/:id', fetchFilterCategoryByLead);
 route.get('/main/emp/:deptId', fetchColleagueByDept)
 
 //teamlead module criteria
-route.get('/main/criteria/:evalId/:employeeId', fetchCriteriaByColleague);
+route.get('/main/criteria/:acadId/:employeeId', fetchCriteriaByColleague);
 route.post('/main/criteria', insertCriteriaByColleague);
 route.put('/main/criteria/:id', updateCriteriaByColleague);
 route.delete('/main/criteria/:id', deleteCriteriaByColleague);
