@@ -161,7 +161,7 @@ export const getPeerCriteriaQuestion = async (id: number) => {
         },
         evaluation: {
           select: {
-            teamLeadTemplate: {
+            peerTemplate: {
               select: {
                 templateDetail: {
                   select: {
@@ -185,7 +185,7 @@ export const getPeerCriteriaQuestion = async (id: number) => {
 
     return {
       questions: peerWithQuestions.question,
-      legends: peerWithQuestions.evaluation?.teamLeadTemplate?.templateDetail || [],
+      legends: peerWithQuestions.evaluation?.peerTemplate?.templateDetail || [],
     };
   } catch (err) {
     console.error(`Error fetching evaluation peer question for id ${id}:`, err);

@@ -85,6 +85,95 @@ async function main() {
   }
 }
 
+const peerCategories = [
+  {
+    evaluationId: 1,
+    percentage: 0.40,
+    name:'Professional Behavior and Job Performance Factors'
+  },
+  {
+    evaluationId: 1,
+    percentage: 0.30,
+    name:'Communication Skills'
+  },
+  {
+    evaluationId: 1,
+    percentage: 0.30,
+    name:'Core Values'
+  },
+]
+
+const peerQuestion = [
+  {
+    peerId: 1,
+    question: 'Demonstrates the values and behavior enshrined in the Philippines Professional Standards for Teachers.'
+  },
+  {
+    peerId: 1,
+    question: 'Possesses required skills, knowledge, and abilities to competently perform the job.'
+  },
+  {
+    peerId: 1,
+    question: 'Exhibits character and integrity consistent with the institution’s core values.'
+  },
+  {
+    peerId: 1,
+    question: 'Exhibits tact and sincerity when working with others to achieve objectives.'
+  },
+  {
+    peerId: 1,
+    question: 'Conscientious effort in performing work in a productive and timely manner, with high commitment to work time frames/schedules.'
+  },
+  {
+    peerId: 1,
+    question: 'Written and oral communications are clear, organized, and effective; listens and comprehends well.'
+  },
+  {
+    peerId: 1,
+    question: 'Makes thoughtful, well-reasoned decisions; exercises good judgment, resourcefulness, and creativity in problem-solving.'
+  },
+  {
+    peerId: 1,
+    question: 'Shows confidence, respect, and firmness in decision-making; open to suggestions and recommendations from subordinates.'
+  },
+  {
+    peerId: 2,
+    question: 'Interacts with other departments/units to achieve company goals.'
+  },
+  {
+    peerId: 2,
+    question: 'Verbalizes clear ideas, facts, problems, and solutions.'
+  },
+  {
+    peerId: 2,
+    question: 'Maintains a positive relationship with all students and shows sensitivity toward individual students.'
+  },
+  {
+    peerId: 2,
+    question: 'Instructor’s spoken and written language is clear and accurate. Displays good listening skills.'
+  },
+  {
+    peerId: 2,
+    question: 'Models respect for diversity within the school community.'
+  },
+  {
+    peerId: 3,
+    question: 'Reports for work on time, provides advance notice of need for absence.'
+  },
+  {
+    peerId: 3,
+    question: 'Upholds character traits and work ethics including sound judgment, honesty, dependability, and loyalty to the corporation’s mission.'
+  },
+  {
+    peerId: 3,
+    question: 'Accepts work responsibilities easily and positively. Accepts constructive criticism and suggestions.'
+  },
+  {
+    peerId: 3,
+    question: 'Displays appropriate hygiene/attire; displays a positive attitude; accepts constructive criticism and recommendations and implements suggestions.'
+  },
+]
+
 const evaluationList = [
   {
     school_year: "2020-2021",
@@ -264,6 +353,16 @@ const assignTaskCriteria = [
   },
 
 ]
+
+//CREATE PEER
+await prisma.peer.createMany({
+  data: peerCategories,
+});
+await prisma.question.createMany({
+  data: peerQuestion,
+}); 
+
+//END
 
 
 //CREATE EVALUATION

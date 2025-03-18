@@ -701,6 +701,9 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
                     }
                 }
             })
+            if(!employeesResponse.job){
+                throw new Error("Error during insertion of employees");
+            }
             await tx.employeeRequirements.createMany({
                 data: employeesResponse.job.requirements.map(requirement => ({
                     employeeId: employeesResponse.id,

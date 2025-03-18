@@ -1,3 +1,4 @@
+import { getAdjectiveRatingFromTemplateDetail } from "../helpers/adjectiveRating.ts";
 import { EmployeeRating } from "../interfaces/index.ts";
 import prisma from "../prisma/index.ts";
 import {
@@ -501,8 +502,68 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
   }
 };
 
-const getAdjectiveRatingFromTemplateDetail = (rating: number, templateDetails: any[]): string => {
-  const sortedTemplateDetails = templateDetails.sort((a, b) => b.score - a.score);
-  const templateDetail = sortedTemplateDetails.find((detail) => rating >= detail.score);
-  return templateDetail?.title || 'Unknown';
-};
+
+
+export const viewEvaluateQuestion = async(employeeId:number,evaluationId:number) => {
+    try{
+      const response = await prisma.teamLeadEvaluationResult.findMany({
+        select:{
+          evaluationId:true,
+          teamLeadEvaluationId:true,
+          questionId:true,
+          employeesId:true,
+          templateDetailId:true,
+          evaluation:{
+            select:{
+              evaluationStatus:{
+                select:{
+                  description:true,
+                  commenter:{
+                    select:{
+                      information:{
+                        select:{
+                          first_name: true,
+                          last_name:true,
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        
+        where:{
+            
+            AND:[
+              { evaluationId:evaluationId },
+              { employeesId:employeeId },
+            ]
+            
+          }
+      })
+
+      const transformData = response.map((item) => ({
+        evaluationId:item.evaluationId,
+        teamLeadEvaluationId:item.teamLeadEvaluationId,
+        questionId:item.questionId,
+        employeesId:item.employeesId,
+        templateDetailId:item.templateDetailId,
+      }))
+      const commenter = response[0].evaluation.evaluationStatus[0].commenter.information;
+      const comment = response[0].evaluation.evaluationStatus[0].description;
+      const finalData = {
+        transformData,
+        commentsDetail: {
+          comment,
+          evaluatedBy: `${commenter?.first_name} ${commenter?.last_name}`
+        }
+
+      } 
+
+      return finalData;
+    }catch(err){
+      throw err;
+    }
+}

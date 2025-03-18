@@ -12,6 +12,7 @@ import {
   removeEvaluation,
   insertTeamLeadEvaluation,
   getTeamLeadResults,
+  viewEvaluateQuestion,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -67,20 +68,42 @@ export const fetchEvaluationEmployeeCriteria = async (
   next: NextFunction
 ): Promise<Response | void> => {
   const employeeId = parseId(req.params.employeeId);
-  const deptId = parseId(req.params.deptId);
+  const evalId = parseId(req.params.evalId);
   if (!employeeId) {
     return res.status(400).json({ error: "Invalid Question ID." });
   }
-  if (!deptId) {
-    return res.status(400).json({ error: "Invalid Department ID." });
+  if (!evalId) {
+    return res.status(400).json({ error: "Invalid Evaluation ID." });
   }
   try {
-    const response = await getEvaluationEmployeeCriteria(employeeId, deptId);
+    const response = await getEvaluationEmployeeCriteria(employeeId, evalId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
   }
 };
+
+export const fetchEvaluateQuestion = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const employeeId = parseId(req.params.employeeId);
+  const evalId = parseId(req.params.evalId);
+  if (!employeeId) {
+    return res.status(400).json({ error: "Invalid Question ID." });
+  }
+  if (!evalId) {
+    return res.status(400).json({ error: "Invalid Evaluation ID." });
+  }
+  try {
+    const response = await viewEvaluateQuestion(employeeId, evalId);
+    return res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 export const insertEvaluation = async (
   req: Request,
