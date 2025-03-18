@@ -362,8 +362,8 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
       const employeeId = result.employeesId;
       const employeeName = `${result.employee.information?.first_name} ${result.employee.information?.last_name}`;
       const categoryName =
-        result.question.teamLeadCriteria?.teamLeadEvaluation.name ||
-        result.question.assignTaskCriteria?.name ||
+        result.question.teamLeadCriteria?.teamLeadEvaluation.name || // Use teamLeadEvaluation category
+        result.question.assignTaskCriteria?.teamLead.name || // Use its corresponding teamLeadEvaluation category
         'Uncategorized';
 
       // Initialize employee entry if it doesn't exist
@@ -412,7 +412,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
         (result) =>
           result.employeesId === employeeId &&
           (result.question.teamLeadCriteria?.teamLeadEvaluation.name === categoryName ||
-            result.question.assignTaskCriteria?.name === categoryName)
+            result.question.assignTaskCriteria?.teamLead.name === categoryName)
       ).length;
 
       category.totalPossibleScore = maxScoreInTemplateDetail * totalQuestionsInCategory;
@@ -464,7 +464,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
             (result) =>
               result.employeesId === employee.employeeId &&
               (result.question.teamLeadCriteria?.teamLeadEvaluation.name === category.categoryName ||
-                result.question.assignTaskCriteria?.name === category.categoryName)
+                result.question.assignTaskCriteria?.teamLead.name === category.categoryName)
           ).length;
 
           const averageRating = category.totalScore / totalQuestionsInCategory;
