@@ -17,6 +17,7 @@ import {
   viewPeerEvaluations,
   insertPeerEvaluationResult,
   getPeerEvaluateeByEmpId,
+  getPeerCategoryQuestion,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -54,10 +55,10 @@ export const fetchPeerEvaluateeByEmpId = async (
   if (!empId) {
     return res.status(400).json({ error: "Invalid Employee ID." });
   }
-  try{
+  try {
     const response = await getPeerEvaluateeByEmpId(empId);
     return res.status(200).json(response);
-  }catch(err){
+  } catch (err) {
     next(err);
   }
 }
@@ -104,6 +105,23 @@ export const fetchEvaluationEmployeeCriteria = async (
   }
 };
 
+
+export const fetchPeerCategoryQuestion = async (req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const acadId = parseId(req.params.acadId);
+  if (!acadId) {
+    return res.status(400).json({ error: "Invalid Academic Year ID." });
+  }
+  try {
+    const response = await getPeerCategoryQuestion(acadId);
+    return res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export const fetchEvaluateQuestion = async (
   req: Request,
   res: Response,
@@ -115,7 +133,7 @@ export const fetchEvaluateQuestion = async (
     return res.status(400).json({ error: "Invalid Question ID." });
   }
   if (!acadId) {
-    return res.status(400).json({ error: "Invalid Evaluation ID." });
+    return res.status(400).json({ error: "Invalid Academic Year ID." });
   }
   try {
     const response = await viewEvaluateQuestion(employeeId, acadId);
@@ -226,7 +244,7 @@ export const submissionPeerEvaluation = async (
       employeesId: item.employeesId
     }))
 
-    const response = await insertPeerEvaluationResult(evalData);
+    const response = await insertPeerEvaluationResult(evalData, body[0].peerEvalId);
     return res
       .status(200)
       .json({ message: "Successfully Evaluate", data: response });

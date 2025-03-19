@@ -209,7 +209,7 @@ export const getEvaluationEmployeeCriteria = async (
 
     // Format the result
     const groupedResult = teamLeadEvaluations.map((data) => ({
-      teamLeadEvaluation: {
+      evaluation: {
         id: data.id,
         name: data.name,
         percentage: data.percentage,
@@ -227,26 +227,27 @@ export const getEvaluationEmployeeCriteria = async (
             .sort((a, b) => a.score - b.score),
         }
         : null,
-      criteria: [
-        ...data.teamLeadCriteria.map((criteria) => ({
-          questions: criteria.question.map((q) => ({
+      questions: [
+        ...data.teamLeadCriteria.flatMap((criteria) =>
+          criteria.question.map((q) => ({
             categoryId: data.id,
             criteriaId: q.teamLeadCriteriaId,
             name: criteria.name,
             id: q.id,
             question: q.question,
-          })),
-        })),
-        ...data.assignTaskCriteria.map((criteria) => ({
-          questions: criteria.question.map((q) => ({
+          }))
+        ),
+        ...data.assignTaskCriteria.flatMap((criteria) =>
+          criteria.question.map((q) => ({
             categoryId: data.id,
             criteriaId: q.assignTaskCriteriaId,
             name: criteria.name,
             id: q.id,
             question: q.question,
-          })),
-        })),
+          }))
+        ),
       ],
+
     }));
 
     return groupedResult;
@@ -730,6 +731,7 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
         id: true,
         evaluatee: {
           select: {
+            id: true,
             information: {
               select: {
                 first_name: true,
@@ -750,6 +752,7 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
       const evaluatee = `${item.evaluatee.information?.first_name} ${item.evaluatee.information?.last_name}`;
       return {
         id: item.id,
+        employeeId: item.evaluatee.id,
         evaluatee,
         photo_path: item.evaluatee.information?.photo_path,
         status: item.status
@@ -764,31 +767,87 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
 
 
 export const insertPeerEvaluationResult = async (
-  body: Omit<PeerEvaluationResult, "id">
+  body: Omit<PeerEvaluationResult, "id">,
+  peerEvalId: number
 ) => {
   try {
-    // Validate input data (example using a hypothetical validation function)
-    if (!body) {
-      throw new Error("Invalid input data");
-    }
     const result = await prisma.$transaction(async (tx) => {
       const evaluationResults = await tx.peerEvaluationResult.createMany({
         data: body,
       });
 
-      const peerStatus = await tx.peerEvaluation.update({
-        where: {
-          id: 1,
-        },
-        data: {
-          status: true
-        }
-      })
+      // const peerStatus = await tx.peerEvaluation.update({
+      //   where: {
+      //     id: peerEvalId,
+      //   },
+      //   data: {
+      //     status: true
+      //   }
+      // })
 
-      return { evaluationResults, peerStatus };
+      return { evaluationResults };
     });
 
     return result;
+  } catch (err) {
+    throw err;
+  }
+};
+
+
+export const getPeerCategoryQuestion = async (academicYearId: number) => {
+  try {
+    const academicYearData = await prisma.academicYear.findUnique({
+      where: {
+        id: academicYearId,
+      },
+      include: {
+        peer: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                question: true
+              }
+            }, // Include all questions for each peer category
+          },
+        },
+        peerTemplate: {
+          include: {
+            templateDetail: true, // Include all template details for the template header
+          },
+        },
+      },
+    });
+
+    if (!academicYearData) {
+      throw new Error("Academic year not found");
+    }
+
+    // Transform the data into the desired structure
+    return academicYearData.peer.map((category) => ({
+      evaluation: {
+        id: category.id,
+        name: category.name,
+        percentage: category.percentage,
+      },
+      template: {
+        name: academicYearData.peerTemplate?.template_name || "",
+        details: academicYearData.peerTemplate?.templateDetail || [],
+      },
+
+      questions: category.question.map((item) => ({
+        id: item.id,
+        categoryId: category.id,
+        name: category.name,
+        question: item.question,
+      })),
+
+
+    }))
+
+
+
   } catch (err) {
     throw err;
   }

@@ -26,13 +26,13 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
             case "P2025":
                 return res.status(404).json({ message: "Record not found" });
             case "P2002":
-                return res.status(409).json({ message: "A record with this data already exists" });
+                return res.status(409).json({ message: err.message });
             case "P2003":
-                return res.status(400).json({ message: "Error! Please remove first connected data before deleting the parent" });
+                return res.status(400).json({ message: err.message });
             case "P2000":
-                return res.status(400).json({ message: "The provided data is too long for one or more fields" });
+                return res.status(400).json({ message: err.message });
             case "P2001":
-                return res.status(404).json({ message: "The requested record does not exist" });
+                return res.status(404).json({ message: err.message });
             default:
                 return res.status(500).json({ message: "An unexpected database error occurred", details: err.message });
         }

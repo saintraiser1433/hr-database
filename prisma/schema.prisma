@@ -283,7 +283,7 @@ model AcademicYear {
   status                   ModeStatus                 @default(NOT_SET)
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
-  Peer                     PeerCategory[]
+  peer                     PeerCategory[]
   TeamLeadEvaluation       TeamLeadEvaluation[]
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
   evaluationStatus         EvaluationStatus[]
@@ -308,7 +308,7 @@ model PeerEvaluation {
   academicYearId Int
   department     Departments  @relation(fields: [departmentId], references: [id])
   departmentId   Int
-  status         Boolean?      @default(false)
+  status         Boolean?     @default(false)
 }
 
 model PeerEvaluationResult {
