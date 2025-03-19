@@ -4,6 +4,7 @@ import prisma from "../prisma/index.ts";
 import {
   AcademicYear,
   EvaluationStatus,
+  PeerEvaluationResult,
   TeamLeadEvaluationResult,
 } from "@prisma/client";
 import { shuffleArray } from "../utils/shuffleArray.ts";
@@ -576,15 +577,35 @@ export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
         id: body.departmentId,
       },
       include: {
-        employees: true,
+        employees: {
+          where: {
+            role: 'Employee',
+          },
+        },
       },
     });
 
-
-    const evaluatedPairs = new Set<string>();
-
     for (const department of departments) {
       const employees = department.employees;
+
+      // Calculate the maximum allowed peersToEvaluate
+      const maxPeersToEvaluate = employees.length - 1; // An employee cannot evaluate themselves
+
+      // Check if the provided peersToEvaluate is valid
+      if (body.peersToEvaluate > maxPeersToEvaluate) {
+        throw new Error(
+          `Invalid peers to evaluate: ${body.peersToEvaluate}. ` +
+          `The maximum allowed value for this department is ${maxPeersToEvaluate}.`
+        );
+      }
+
+      const evaluatedPairs = new Set<string>(); // Track evaluator-evaluatee pairs
+      const evaluationCountMap = new Map<number, number>(); // Track how many times each employee has been evaluated
+
+      // Initialize evaluation count for each employee
+      for (const emp of employees) {
+        evaluationCountMap.set(emp.id, 0);
+      }
 
       for (const evaluator of employees) {
         // Get all peers except the evaluator
@@ -596,30 +617,179 @@ export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
           return !evaluatedPairs.has(pairKey);
         });
 
+        // Sort peers by evaluation count (to balance the distribution)
+        const sortedPeers = availablePeers.sort((a, b) => {
+          const countA = evaluationCountMap.get(a.id)!;
+          const countB = evaluationCountMap.get(b.id)!;
+          return countA - countB; // Prefer peers with fewer evaluations
+        });
+
         // Randomly select peers
         const selectedPeers =
-          availablePeers.length <= body.peersToEvaluate
-            ? availablePeers // Evaluate all available peers if there are not enough
-            : shuffleArray(availablePeers).slice(0, body.peersToEvaluate); // Randomly select peers
+          sortedPeers.length <= body.peersToEvaluate
+            ? sortedPeers // Evaluate all available peers if there are not enough
+            : shuffleArray(sortedPeers).slice(0, body.peersToEvaluate); // Randomly select peers
 
         // Create evaluation records
         for (const peer of selectedPeers) {
-          await prisma.evaluation.create({
+          await prisma.peerEvaluation.create({
             data: {
               academicYearId: body.academicYearId,
               evaluatorId: evaluator.id,
               evaluateeId: peer.id,
+              departmentId: body.departmentId,
             },
           });
 
           // Mark this pair as evaluated for this academic year
           const pairKey = `${body.academicYearId}-${evaluator.id}-${peer.id}`;
           evaluatedPairs.add(pairKey);
+
+          // Update the evaluation count for the peer
+          evaluationCountMap.set(peer.id, evaluationCountMap.get(peer.id)! + 1);
         }
       }
     }
+    return viewPeerEvaluations(body.academicYearId, body.departmentId)
   } catch (err) {
     throw err;
   }
+};
 
+
+
+
+
+
+
+export const viewPeerEvaluations = async (academicYearId: number, departmentId: number) => {
+  try {
+    const response = await prisma.peerEvaluation.findMany({
+      select: {
+        evaluator: {
+          select: {
+            information: {
+              select: {
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
+        evaluatee: {
+          select: {
+            information: {
+              select: {
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
+      },
+      where: {
+        AND: [
+          { academicYearId: academicYearId },
+          { departmentId: departmentId },
+        ],
+      },
+    });
+
+    // Group evaluations by evaluator
+    const groupedData = response.reduce((acc, item) => {
+      const evaluator = `${item.evaluator.information?.first_name} ${item.evaluator.information?.last_name}`;
+      const evaluate = `${item.evaluatee.information?.first_name} ${item.evaluatee.information?.last_name}`;
+
+      if (!acc[evaluator]) {
+        acc[evaluator] = [];
+      }
+      acc[evaluator].push(evaluate);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    // Transform grouped data into the desired format
+    const transformData = Object.entries(groupedData).map(([evaluator, evaluatees]) => {
+      const result: Record<string, string> = { evaluator };
+      evaluatees.forEach((evaluate, index) => {
+        result[`evaluate${index + 1}`] = evaluate;
+      });
+      return result;
+    });
+
+    return transformData;
+  } catch (err) {
+    throw err;
+  }
+};
+
+
+export const getPeerEvaluateeByEmpId = async (id: number) => {
+  try {
+    const result = await prisma.peerEvaluation.findMany({
+      select: {
+        id: true,
+        evaluatee: {
+          select: {
+            information: {
+              select: {
+                first_name: true,
+                last_name: true,
+                photo_path: true,
+              }
+            }
+          }
+        },
+        status: true,
+      },
+      where: {
+        evaluatorId: id,
+      }
+    })
+
+    const transformData = result.map((item) => {
+      const evaluatee = `${item.evaluatee.information?.first_name} ${item.evaluatee.information?.last_name}`;
+      return {
+        id: item.id,
+        evaluatee,
+        photo_path: item.evaluatee.information?.photo_path,
+        status: item.status
+
+      }
+    })
+    return transformData;
+  } catch (err) {
+    throw err;
+  }
 }
+
+
+export const insertPeerEvaluationResult = async (
+  body: Omit<PeerEvaluationResult, "id">
+) => {
+  try {
+    // Validate input data (example using a hypothetical validation function)
+    if (!body) {
+      throw new Error("Invalid input data");
+    }
+    const result = await prisma.$transaction(async (tx) => {
+      const evaluationResults = await tx.peerEvaluationResult.createMany({
+        data: body,
+      });
+
+      const peerStatus = await tx.peerEvaluation.update({
+        where: {
+          id: 1,
+        },
+        data: {
+          status: true
+        }
+      })
+
+      return { evaluationResults, peerStatus };
+    });
+
+    return result;
+  } catch (err) {
+    throw err;
+  }
+};

@@ -42,6 +42,7 @@ async function assignPeerEvaluations(academicYearId: number, departmentId: numbe
                         academicYearId,
                         evaluatorId: evaluator.id,
                         evaluateeId: peer.id,
+                        departmentsId: departmentId,
                     },
                 });
 

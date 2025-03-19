@@ -164,16 +164,9 @@ export const fetchColleagueByDept = async (req: Request, res: Response, next: Ne
 
 //team lead module criteria module
 export const fetchCriteriaByColleague = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const acadId = parseId(req.params.acadId);
-    const employeeId = parseId(req.params.employeeId) ?? 0;
-    if (!acadId) {
-        return res.status(400).json({ error: "Invalid Academic Year ID." });
-    }
-    if (!employeeId) {
-        return res.status(400).json({ error: "Invalid Employee ID." });
-    }
+    const { acadId, empId } = req.query;
     try {
-        const response = await getCriteriaByColleague(acadId, employeeId);
+        const response = await getCriteriaByColleague(Number(acadId), Number(empId));
         return res.status(200).json(response);
     } catch (err) {
         next(err);

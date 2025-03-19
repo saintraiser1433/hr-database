@@ -6,7 +6,7 @@ import prisma from '../prisma/index.ts';
 export const getAllEmployees = async (id: string) => {
     try {
         const departmentId = parseInt(id, 10);
-        if (isNaN(departmentId)) throw new Error("Invalid department ID.");
+        // if (isNaN(departmentId)) throw new Error("Invalid department ID.");
         const response = await prisma.employees.findMany({
             select: {
                 id: true,
@@ -525,7 +525,7 @@ export const getEmployeeAssociateByTeamDept = async (deptId: number, academicYea
         const result = employees.map((employee) => ({
             id: employee.id,
             photo_path: employee.information?.photo_path,
-            fullname: `${employee.information?.first_name} ${employee.information?.last_name}`,
+            evaluatee: `${employee.information?.first_name} ${employee.information?.last_name}`,
             role: employee.role,
             status: employee.evaluatedPerson.some((item) => item.type === "TeamLead")
         }));

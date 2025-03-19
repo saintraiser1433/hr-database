@@ -23,12 +23,12 @@ route.put('/criteria/:id', updateEvaluationTeamLeadCriteria);
 route.delete('/criteria/:id', deleteEvaluationTeamLeadCriteria);
 
 //teamlead module
-
+route.get('/main/criteria', fetchCriteriaByColleague);
 route.get('/main/:id', fetchFilterCategoryByLead);
 route.get('/main/emp/:deptId', fetchColleagueByDept)
 
 //teamlead module criteria
-route.get('/main/criteria/:acadId/:employeeId', fetchCriteriaByColleague);
+
 route.post('/main/criteria', insertCriteriaByColleague);
 route.put('/main/criteria/:id', updateCriteriaByColleague);
 route.delete('/main/criteria/:id', deleteCriteriaByColleague);

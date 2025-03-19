@@ -14,6 +14,9 @@ import {
   getTeamLeadResults,
   viewEvaluateQuestion,
   assignPeerEvaluations,
+  viewPeerEvaluations,
+  insertPeerEvaluationResult,
+  getPeerEvaluateeByEmpId,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -41,6 +44,23 @@ export const fetchEvaluationByOngoing = async (
     next(err);
   }
 };
+
+export const fetchPeerEvaluateeByEmpId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const empId = parseId(req.params.empId);
+  if (!empId) {
+    return res.status(400).json({ error: "Invalid Employee ID." });
+  }
+  try{
+    const response = await getPeerEvaluateeByEmpId(empId);
+    return res.status(200).json(response);
+  }catch(err){
+    next(err);
+  }
+}
 
 export const fetchTeamLeadResults = async (
   req: Request,
@@ -191,6 +211,32 @@ export const submissionTeamLeadEvaluation = async (
 };
 
 
+export const submissionPeerEvaluation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const body = req.body;
+  try {
+    const evalData = body.map((item: any) => ({
+      academicYearId: item.academicYearId,
+      peerCategoryId: item.categoryId,
+      questionId: item.questionId,
+      templateDetailId: item.templateDetailId,
+      employeesId: item.employeesId
+    }))
+
+    const response = await insertPeerEvaluationResult(evalData);
+    return res
+      .status(200)
+      .json({ message: "Successfully Evaluate", data: response });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
 export const assigningPeerEvaluations = async (
   req: Request,
   res: Response,
@@ -206,6 +252,24 @@ export const assigningPeerEvaluations = async (
   }
 
 }
+
+export const fetchPeerEvaluation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const { acadId, deptId } = req.query;
+
+  try {
+    const response = await viewPeerEvaluations(Number(acadId), Number(deptId));
+    return res.status(200).json(response)
+  } catch (err) {
+    next(err);
+  }
+
+}
+
+
 
 
 
