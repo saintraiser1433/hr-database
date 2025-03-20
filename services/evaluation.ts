@@ -505,7 +505,13 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
   }
 };
 
+export const getPeerResult = async (academicYearId: number, evaluateeId: number) => {
+  try {
 
+  } catch (err) {
+    throw err;
+  }
+}
 
 export const viewEvaluateQuestion = async (employeeId: number, evaluationId: number) => {
   try {
@@ -776,16 +782,16 @@ export const insertPeerEvaluationResult = async (
         data: body,
       });
 
-      // const peerStatus = await tx.peerEvaluation.update({
-      //   where: {
-      //     id: peerEvalId,
-      //   },
-      //   data: {
-      //     status: true
-      //   }
-      // })
+      const peerStatus = await tx.peerEvaluation.update({
+        where: {
+          id: peerEvalId,
+        },
+        data: {
+          status: true
+        }
+      })
 
-      return { evaluationResults };
+      return { evaluationResults, peerStatus };
     });
 
     return result;

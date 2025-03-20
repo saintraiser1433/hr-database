@@ -308,6 +308,7 @@ model PeerEvaluation {
   academicYearId Int
   department     Departments  @relation(fields: [departmentId], references: [id])
   departmentId   Int
+  description    String?
   status         Boolean?     @default(false)
 }
 
