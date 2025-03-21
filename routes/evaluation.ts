@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion } from '../controller/evaluation.ts';
+import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion, fetchPeerResult } from '../controller/evaluation.ts';
 const route = Router();
 
 //evaluation
-
+route.get('/result/:acadId/:employeesId', fetchTeamLeadResults);
+route.get('/peerResult', fetchPeerResult);
 route.get('/ongoing', fetchEvaluationByOngoing);
 //viewing peer after assigning random
 route.get('/viewPeer', fetchPeerEvaluation);
@@ -16,6 +17,8 @@ route.get('/view/:employeeId/:acadId', fetchEvaluateQuestion)
 //get evaluation criteria with question with assign task criteria combine
 route.get('/criteria/:employeeId/:acadId', fetchEvaluationEmployeeCriteria);
 
+
+
 route.get('/', fetchEvaluation);
 route.post('/', insertEvaluation);
 route.post('/submit', submissionTeamLeadEvaluation);
@@ -23,7 +26,7 @@ route.post('/submitPeer', submissionPeerEvaluation);
 route.post('/assign', assigningPeerEvaluations);
 route.put('/:id', updateEvaluation);
 route.delete('/:id', deleteEvaluation);
-route.get('/result/:acadId/:employeesId', fetchTeamLeadResults);
+
 
 
 

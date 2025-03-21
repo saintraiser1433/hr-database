@@ -505,13 +505,187 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
   }
 };
 
+
+// Main service to get peer evaluation results
 export const getPeerResult = async (academicYearId: number, evaluateeId: number) => {
   try {
+    // Fetch peer evaluation data
+    const results = await prisma.peerEvaluationResult.findMany({
+      where: {
+        academicYearId,
+        peerEvaluation: {
+          evaluateeId, // Filter by evaluateeId
+        },
+      },
+      include: {
+        peerEvaluation: {
+          include: {
+            evaluator: {
+              include: {
+                information: true, // Include evaluator details (first_name, last_name)
+              },
+            },
+            evaluatee: {
+              include: {
+                information: true, // Include evaluatee details (first_name, last_name)
+              },
+            },
+          },
+        },
+        peerCategory: true, // Include peer category details
+        question: true, // Include question details
+        templateDetail: true, // Include template detail (title and score)
+        academicYear: {
+          include: {
+            peerTemplate: {
+              include: {
+                templateDetail: true, // Include template details for adjective rating
+              },
+            },
+          },
+        },
+      },
+    });
 
+    // Group results by peerEvaluationId
+    const groupedResults = results.reduce<{ [key: number]: typeof results }>((acc, result) => {
+      const peerEvaluationId = result.peerEvaluationId;
+      if (!acc[peerEvaluationId]) {
+        acc[peerEvaluationId] = [];
+      }
+      acc[peerEvaluationId].push(result);
+      return acc;
+    }, {});
+
+    // Process each group separately
+    const formattedRatings = Object.values(groupedResults).map((group) => {
+      // Initialize employee ratings for this group
+      const employeeRatings = group.reduce<{ [key: number]: EmployeeRating }>((acc, result) => {
+        const employeeId = result.peerEvaluation.evaluateeId;
+        const employeeName = `${result.peerEvaluation.evaluatee.information?.first_name} ${result.peerEvaluation.evaluatee.information?.last_name}`;
+        const categoryName = result.peerCategory.name || 'Uncategorized';
+
+        // Initialize employee entry if it doesn't exist
+        if (!acc[employeeId]) {
+          acc[employeeId] = {
+            employeeId,
+            name: employeeName,
+            rating: [],
+            categoryCounts: [], // Initialize categoryCounts
+            comment: result.peerEvaluation.description || '', // Set comment from PeerEvaluation
+            evaluatedBy: `${result.peerEvaluation.evaluator.information?.first_name} ${result.peerEvaluation.evaluator.information?.last_name}`, // Set evaluatedBy
+          };
+        }
+
+        // Find or create the category entry
+        let category = acc[employeeId].rating.find((cat) => cat.categoryName === categoryName);
+        if (!category) {
+          category = {
+            categoryName,
+            percentage: Number(result.peerCategory.percentage || 0),
+            ratingPercentage: null,
+            totalScore: 0,
+            totalPossibleScore: 0,
+          };
+          acc[employeeId].rating.push(category);
+        }
+
+        // Update scores for the category
+        category.totalScore += result.templateDetail.score;
+
+        // Calculate total possible score: maxScoreInTemplateDetail * totalQuestionsInCategory
+        const maxScoreInTemplateDetail = Math.max(
+          ...(result.academicYear.peerTemplate?.templateDetail.map((detail) => detail.score) || [0]
+        ));
+
+        const totalQuestionsInCategory = group.filter(
+          (result) =>
+            result.peerEvaluation.evaluateeId === employeeId && result.peerCategory.name === categoryName
+        ).length;
+
+        category.totalPossibleScore = maxScoreInTemplateDetail * totalQuestionsInCategory;
+
+        // Update templateDetail counts
+        const templateDetailTitle = result.templateDetail.title;
+        let templateDetailEntry = acc[employeeId].categoryCounts.find((cat) => cat.Category === categoryName);
+
+        if (!templateDetailEntry) {
+          // Initialize the category with default counts for all rating types
+          templateDetailEntry = {
+            Category: categoryName,
+          };
+          // Initialize all rating types to 0
+          const ratingTypes = result.academicYear.peerTemplate?.templateDetail.map((detail) => detail.title) || [];
+          ratingTypes.forEach((type) => {
+            templateDetailEntry![type] = 0;
+          });
+          acc[employeeId].categoryCounts.push(templateDetailEntry);
+        }
+
+        // Increment the count for the current rating type
+        if (typeof templateDetailEntry[templateDetailTitle] === 'number') {
+          templateDetailEntry[templateDetailTitle] += 1;
+        }
+
+        return acc;
+      }, {});
+
+      // Calculate total possible score and rating percentage for each category for each employee
+      const employeeResults = Object.values(employeeRatings).map((employee) => {
+        employee.rating = employee.rating
+          .map((category) => {
+            // Calculate rating percentage
+            const ratingPercentage =
+              category.totalPossibleScore > 0
+                ? ((category.totalScore / category.totalPossibleScore) * 100) * category.percentage
+                : null;
+
+            // Calculate average rating for the category
+            const totalQuestionsInCategory = group.filter(
+              (result) =>
+                result.peerEvaluation.evaluateeId === employee.employeeId && result.peerCategory.name === category.categoryName
+            ).length;
+
+            const averageRating = category.totalScore / totalQuestionsInCategory;
+
+            return {
+              ...category,
+              ratingPercentage: ratingPercentage !== null ? parseFloat(ratingPercentage.toFixed(2)) : null,
+              averageRating: parseFloat(averageRating.toFixed(2)),
+            };
+          })
+          .filter((category) => category.categoryName !== 'Uncategorized');
+
+        // Calculate summary rating
+        const summaryRating = employee.rating.reduce((sum, category) => sum + (category.averageRating || 0), 0);
+
+        // Divide the summary rating by the number of categories to get the average
+        const numberOfCategories = employee.rating.length;
+        const averageSummaryRating = summaryRating / numberOfCategories;
+
+        // Map the average summary rating to the adjectiveRating from templateDetail
+        const allTemplateDetails = group[0]?.academicYear?.peerTemplate?.templateDetail || [];
+        const adjectiveRating = getAdjectiveRatingFromTemplateDetail(averageSummaryRating, allTemplateDetails);
+
+        employee.summaryRating = {
+          rating: parseFloat(averageSummaryRating.toFixed(2)), // Round to 2 decimal places
+          adjectiveRating,
+        };
+
+        return employee;
+      });
+
+      return employeeResults;
+    });
+
+    // Flatten the grouped results into a single array
+    return formattedRatings.flat();
   } catch (err) {
     throw err;
+  } finally {
+    await prisma.$disconnect();
   }
-}
+};
 
 export const viewEvaluateQuestion = async (employeeId: number, evaluationId: number) => {
   try {

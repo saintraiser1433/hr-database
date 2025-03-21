@@ -18,6 +18,7 @@ import {
   insertPeerEvaluationResult,
   getPeerEvaluateeByEmpId,
   getPeerCategoryQuestion,
+  getPeerResult,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -241,7 +242,7 @@ export const submissionPeerEvaluation = async (
       peerCategoryId: item.categoryId,
       questionId: item.questionId,
       templateDetailId: item.templateDetailId,
-      employeesId: item.employeesId
+      peerEvaluationId: item.peerEvalId
     }))
 
     const response = await insertPeerEvaluationResult(evalData, body[0].peerEvalId);
@@ -286,6 +287,26 @@ export const fetchPeerEvaluation = async (
   }
 
 }
+
+
+
+export const fetchPeerResult = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const { acadId, empId } = req.query;
+
+  try {
+    const response = await getPeerResult(Number(acadId), Number(empId));
+    return res.status(200).json(response)
+  } catch (err) {
+    next(err);
+  }
+
+}
+
+
 
 
 

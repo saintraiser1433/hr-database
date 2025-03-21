@@ -149,7 +149,6 @@ model Employees {
   commenterPerson          EvaluationStatus[]           @relation(name: "CommenterPerson")
   evaluatee                PeerEvaluation[]             @relation(name: "Evaluatee")
   evaluator                PeerEvaluation[]             @relation(name: "Evaluator")
-  PeerEvaluationResult     PeerEvaluationResult[]
 
   @@unique([username])
 }
@@ -299,17 +298,18 @@ model AcademicYear {
 }
 
 model PeerEvaluation {
-  id             Int          @id @default(autoincrement())
-  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  evaluatorId    Int
-  evaluator      Employees    @relation("Evaluator", fields: [evaluatorId], references: [id])
-  evaluateeId    Int
-  evaluatee      Employees    @relation("Evaluatee", fields: [evaluateeId], references: [id])
-  academicYearId Int
-  department     Departments  @relation(fields: [departmentId], references: [id])
-  departmentId   Int
-  description    String?
-  status         Boolean?     @default(false)
+  id                   Int                    @id @default(autoincrement())
+  academicYear         AcademicYear           @relation(fields: [academicYearId], references: [id])
+  evaluatorId          Int
+  evaluator            Employees              @relation("Evaluator", fields: [evaluatorId], references: [id])
+  evaluateeId          Int
+  evaluatee            Employees              @relation("Evaluatee", fields: [evaluateeId], references: [id])
+  academicYearId       Int
+  department           Departments            @relation(fields: [departmentId], references: [id])
+  departmentId         Int
+  description          String?
+  status               Boolean?               @default(false)
+  PeerEvaluationResult PeerEvaluationResult[]
 }
 
 model PeerEvaluationResult {
@@ -320,12 +320,12 @@ model PeerEvaluationResult {
   peerCategoryId   Int
   question         Question       @relation(fields: [questionId], references: [id])
   questionId       Int
-  employee         Employees      @relation(fields: [employeesId], references: [id])
-  employeesId      Int
   templateDetail   TemplateDetail @relation(fields: [templateDetailId], references: [id])
   templateDetailId Int
+  peerEvaluation   PeerEvaluation @relation(fields: [peerEvaluationId], references: [id])
+  peerEvaluationId Int
 
-  @@unique([academicYearId, questionId, peerCategoryId, employeesId, templateDetailId])
+  // @@unique([academicYearId, questionId, peerCategoryId, templateDetailId])
 }
 
 model PeerCategory {
