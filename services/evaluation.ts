@@ -257,7 +257,7 @@ export const getEvaluationEmployeeCriteria = async (
 };
 
 export const insertTeamLeadEvaluation = async (
-  body: Omit<TeamLeadEvaluationResult, "id">,
+  body: Omit<TeamLeadEvaluationResult[], "id">,
   header: Omit<EvaluationStatus, "id">
 ) => {
   try {
@@ -266,13 +266,25 @@ export const insertTeamLeadEvaluation = async (
       throw new Error("Invalid input data");
     }
     const result = await prisma.$transaction(async (tx) => {
-      const evaluationResults = await tx.teamLeadEvaluationResult.createMany({
-        data: body,
-      });
       const headerStatus = await tx.evaluationStatus.create({
         data: header,
+        select: {
+          id: true,
+        }
       });
-      return { evaluationResults, headerStatus };
+
+      const evalData = body.map((item: any) => ({
+        teamLeadEvaluationId: item.categoryId,
+        questionId: item.questionId,
+        templateDetailId: item.templateDetailId,
+        teamLeadEvaluationStatusId: headerStatus.id
+      }))
+
+      const evaluationResults = await tx.teamLeadEvaluationResult.createMany({
+        data: evalData,
+      });
+
+      return { evaluationResults };
     });
 
     return result;
@@ -282,20 +294,41 @@ export const insertTeamLeadEvaluation = async (
 };
 
 
-export const getTeamLeadResults = async (evaluationId: number, employeesId: number) => {
+export const getTeamLeadResults = async (acadId: number, employeesId: number) => {
   try {
     const results = await prisma.teamLeadEvaluationResult.findMany({
       where: {
         AND: [
           {
-            academicYearId: evaluationId,
+            teamLeadEvaluationStatus: {
+              academicYearId: acadId
+            },
           },
           {
-            employeesId: employeesId,
+            teamLeadEvaluationStatus: {
+              evaluateeId: employeesId
+            },
           },
         ],
       },
       include: {
+        teamLeadEvaluationStatus: {
+          select: {
+            description: true,
+            evaluateeId: true,
+            evaluator: {
+              include: {
+                information: true, // Include commenter's information to get their name
+              },
+            },
+            evaluatee: {
+              include: {
+                information: true, // Include commenter's information to get their name
+              },
+            },
+            evaluatorId: true,
+          }
+        },
         question: {
           include: {
             teamLeadCriteria: {
@@ -309,15 +342,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
                             templateDetail: true, // Include templateDetail to get the adjectiveRating
                           },
                         },
-                        evaluationStatus: {
-                          include: {
-                            commenter: {
-                              include: {
-                                information: true, // Include commenter's information to get their name
-                              },
-                            },
-                          },
-                        },
+
                       },
                     },
                   },
@@ -344,11 +369,6 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
           },
         },
         templateDetail: true,
-        employee: {
-          include: {
-            information: true,
-          },
-        },
       },
     });
 
@@ -363,8 +383,8 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
 
     // Group results by employee and then by category
     const employeeRatings = results.reduce<{ [key: number]: EmployeeRating }>((acc, result) => {
-      const employeeId = result.employeesId;
-      const employeeName = `${result.employee.information?.first_name} ${result.employee.information?.last_name}`;
+      const employeeId = result.teamLeadEvaluationStatus.evaluateeId;
+      const employeeName = `${result.teamLeadEvaluationStatus.evaluatee.information?.first_name} ${result.teamLeadEvaluationStatus.evaluatee.information?.last_name}`;
       const categoryName =
         result.question.teamLeadCriteria?.teamLeadEvaluation.name || // Use teamLeadEvaluation category
         result.question.assignTaskCriteria?.teamLead.name || // Use its corresponding teamLeadEvaluation category
@@ -414,7 +434,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
 
       const totalQuestionsInCategory = results.filter(
         (result) =>
-          result.employeesId === employeeId &&
+          result.teamLeadEvaluationStatus.evaluateeId === employeeId &&
           (result.question.teamLeadCriteria?.teamLeadEvaluation.name === categoryName ||
             result.question.assignTaskCriteria?.teamLead.name === categoryName)
       ).length;
@@ -443,10 +463,10 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
       }
 
       // Update comment and evaluatedBy from EvaluationStatus
-      const evaluationStatus = result.question.teamLeadCriteria?.teamLeadEvaluation?.academicYear?.evaluationStatus;
-      if (evaluationStatus && evaluationStatus.length > 0) {
-        const commenterName = `${evaluationStatus[0].commenter.information?.first_name} ${evaluationStatus[0].commenter.information?.last_name}`;
-        acc[employeeId].comment = evaluationStatus[0].description; // Set comment
+      const evaluationStatus = result.teamLeadEvaluationStatus;
+      if (evaluationStatus) {
+        const commenterName = `${evaluationStatus.evaluator.information?.first_name} ${evaluationStatus.evaluator.information?.last_name}`;
+        acc[employeeId].comment = evaluationStatus.description; // Set comment
         acc[employeeId].evaluatedBy = commenterName; // Set evaluatedBy
       }
 
@@ -466,7 +486,7 @@ export const getTeamLeadResults = async (evaluationId: number, employeesId: numb
           // Calculate average rating for the category
           const totalQuestionsInCategory = results.filter(
             (result) =>
-              result.employeesId === employee.employeeId &&
+              result.teamLeadEvaluationStatus.evaluateeId === employee.employeeId &&
               (result.question.teamLeadCriteria?.teamLeadEvaluation.name === category.categoryName ||
                 result.question.assignTaskCriteria?.teamLead.name === category.categoryName)
           ).length;
@@ -512,9 +532,10 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
     // Fetch peer evaluation data
     const results = await prisma.peerEvaluationResult.findMany({
       where: {
-        academicYearId,
+
         peerEvaluation: {
           evaluateeId, // Filter by evaluateeId
+          academicYearId
         },
       },
       include: {
@@ -530,20 +551,22 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
                 information: true, // Include evaluatee details (first_name, last_name)
               },
             },
+            academicYear: {
+              include: {
+                peerTemplate: {
+                  include: {
+                    templateDetail: true, // Include template details for adjective rating
+                  },
+                },
+              },
+            }
+
           },
         },
         peerCategory: true, // Include peer category details
         question: true, // Include question details
         templateDetail: true, // Include template detail (title and score)
-        academicYear: {
-          include: {
-            peerTemplate: {
-              include: {
-                templateDetail: true, // Include template details for adjective rating
-              },
-            },
-          },
-        },
+
       },
     });
 
@@ -595,8 +618,8 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
 
         // Calculate total possible score: maxScoreInTemplateDetail * totalQuestionsInCategory
         const maxScoreInTemplateDetail = Math.max(
-          ...(result.academicYear.peerTemplate?.templateDetail.map((detail) => detail.score) || [0]
-        ));
+          ...(result.peerEvaluation.academicYear.peerTemplate?.templateDetail.map((detail) => detail.score) || [0]
+          ));
 
         const totalQuestionsInCategory = group.filter(
           (result) =>
@@ -615,7 +638,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
             Category: categoryName,
           };
           // Initialize all rating types to 0
-          const ratingTypes = result.academicYear.peerTemplate?.templateDetail.map((detail) => detail.title) || [];
+          const ratingTypes = result.peerEvaluation.academicYear.peerTemplate?.templateDetail.map((detail) => detail.title) || [];
           ratingTypes.forEach((type) => {
             templateDetailEntry![type] = 0;
           });
@@ -664,7 +687,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
         const averageSummaryRating = summaryRating / numberOfCategories;
 
         // Map the average summary rating to the adjectiveRating from templateDetail
-        const allTemplateDetails = group[0]?.academicYear?.peerTemplate?.templateDetail || [];
+        const allTemplateDetails = group[0]?.peerEvaluation.academicYear?.peerTemplate?.templateDetail || [];
         const adjectiveRating = getAdjectiveRatingFromTemplateDetail(averageSummaryRating, allTemplateDetails);
 
         employee.summaryRating = {
@@ -687,55 +710,65 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
   }
 };
 
-export const viewEvaluateQuestion = async (employeeId: number, evaluationId: number) => {
+export const viewEvaluateQuestion = async (employeeId: number, acadId: number) => {
   try {
     const response = await prisma.teamLeadEvaluationResult.findMany({
       select: {
-        academicYearId: true,
         teamLeadEvaluationId: true,
         questionId: true,
-        employeesId: true,
         templateDetailId: true,
-        academicYear: {
-          select: {
-            evaluationStatus: {
-              select: {
-                description: true,
-                commenter: {
+        teamLeadEvaluationStatus: {
+          include: {
+            evaluatee: {
+              include: {
+                information: {
                   select: {
-                    information: {
-                      select: {
-                        first_name: true,
-                        last_name: true,
-                      }
-                    }
+                    first_name: true,
+                    last_name: true,
+                  }
+                }
+              }
+            },
+            evaluator: {
+              include: {
+                information: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
                   }
                 }
               }
             }
           }
-        }
+        },
       },
 
       where: {
-
         AND: [
-          { academicYearId: evaluationId },
-          { employeesId: employeeId },
+          {
+            teamLeadEvaluationStatus: {
+              academicYearId: acadId
+            }
+          },
+          {
+            teamLeadEvaluationStatus: {
+              evaluateeId: employeeId
+            }
+          },
         ]
 
       }
     })
 
     const transformData = response.map((item) => ({
-      evaluationId: item.academicYearId,
+      evaluationId: item.teamLeadEvaluationStatus.academicYearId,
       teamLeadEvaluationId: item.teamLeadEvaluationId,
       questionId: item.questionId,
-      employeesId: item.employeesId,
+      employeesId: item.teamLeadEvaluationStatus.evaluateeId,
       templateDetailId: item.templateDetailId,
     }))
-    const commenter = response[0].academicYear.evaluationStatus[0].commenter.information;
-    const comment = response[0].academicYear.evaluationStatus[0].description;
+    const commenter = response[0].teamLeadEvaluationStatus.evaluator.information;
+    const comment = response[0].teamLeadEvaluationStatus.description;
     const finalData = {
       transformData,
       commentsDetail: {
@@ -948,7 +981,8 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
 
 export const insertPeerEvaluationResult = async (
   body: Omit<PeerEvaluationResult, "id">,
-  peerEvalId: number
+  peerEvalId: number,
+  description: string,
 ) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -961,7 +995,8 @@ export const insertPeerEvaluationResult = async (
           id: peerEvalId,
         },
         data: {
-          status: true
+          status: true,
+          description: description
         }
       })
 

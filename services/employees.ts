@@ -506,29 +506,58 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
 
 export const getEmployeeAssociateByTeamDept = async (deptId: number, academicYearId: number) => {
     try {
-        const employees = await prisma.employees.findMany({
-            include: {
-                information: true,
-                evaluatedPerson: {
+        const teamLeadEmployees = await prisma.employees.findMany({
+            select: {
+                id: true,
+                role: true,
+                information: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                        photo_path: true,
+                    },
+                },
+                evaluatee: {
                     where: {
-                        academicYearId: academicYearId
-                    }
+                        academicYearId: academicYearId,
+                    },
+                    select: {
+                        status: true, // Include status to check if evaluation is completed
+                    },
+                },
+                teamLeadEvaluatee: {
+                    where: {
+                        academicYearId: academicYearId,
+                    },
                 },
             },
             where: {
-                departmentId: deptId
-            }
+                departmentId: deptId,
+            },
         });
 
+        const result = teamLeadEmployees.map((employee) => {
+            // Calculate peer evaluation progress
+            const totalPeerEvaluations = employee.evaluatee.length; // Total evaluations
+            const completedPeerEvaluations = employee.evaluatee.filter((evaluation) => evaluation.status).length; // Completed evaluations
 
+            // Format peerToEvaluate
+            const peerToEvaluate =
+                totalPeerEvaluations === 0 ? false : `${completedPeerEvaluations}/${totalPeerEvaluations}`;
 
-        const result = employees.map((employee) => ({
-            id: employee.id,
-            photo_path: employee.information?.photo_path,
-            evaluatee: `${employee.information?.first_name} ${employee.information?.last_name}`,
-            role: employee.role,
-            status: employee.evaluatedPerson.some((item) => item.type === "TeamLead")
-        }));
+            // Determine if all peer evaluations are completed
+            const isFinishedPeerEvaluate = totalPeerEvaluations > 0 && completedPeerEvaluations === totalPeerEvaluations;
+
+            return {
+                id: employee.id,
+                photo_path: employee.information?.photo_path,
+                evaluatee: `${employee.information?.first_name} ${employee.information?.last_name}`,
+                role: employee.role,
+                peerToEvaluate, // Format: "completed/total" or false if 0/0
+                isFinishedPeerEvaluate, // True if all evaluations are completed
+                isEvaluatedByTeamLead: employee.teamLeadEvaluatee.some((item) => item.type === "TeamLead"),
+            };
+        });
 
         return result;
     } catch (err) {

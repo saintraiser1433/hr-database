@@ -118,37 +118,37 @@ model JobScreening {
 }
 
 model Departments {
-  id             Int              @id @default(autoincrement())
-  title          String           @unique @db.VarChar(250)
-  status         Boolean?         @default(true) @db.Boolean
-  Job            Job[]
-  employees      Employees[]
-  peerEvaluation PeerEvaluation[]
+  id               Int                @id @default(autoincrement())
+  title            String             @unique @db.VarChar(250)
+  status           Boolean?           @default(true) @db.Boolean
+  Job              Job[]
+  employees        Employees[]
+  peerEvaluation   PeerEvaluation[]
+  EvaluationStatus EvaluationStatus[]
 }
 
 model Employees {
-  id                       Int                          @id @default(autoincrement())
-  status                   Boolean                      @default(true)
-  job                      Job?                         @relation(fields: [jobId], references: [id])
-  department               Departments?                 @relation(fields: [departmentId], references: [id])
-  information              ApplicantInformation?        @relation(fields: [informationId], references: [id])
-  username                 String                       @db.VarChar(100)
-  password                 String                       @db.VarChar(100)
-  informationId            Int?
-  jobId                    Int?
-  departmentId             Int?
-  accessToken              String?
-  refreshToken             String?
-  role                     RoleStatus                   @default(Employee)
-  createdAt                DateTime                     @default(now())
-  updatedAt                DateTime                     @updatedAt
-  employeeRequirements     EmployeeRequirements[]
-  assignTaskCriteria       TeamLeadAssignTaskCriteria[]
-  teamLeadEvaluationResult TeamLeadEvaluationResult[]
-  evaluatedPerson          EvaluationStatus[]           @relation(name: "EvaluatedEmployee")
-  commenterPerson          EvaluationStatus[]           @relation(name: "CommenterPerson")
-  evaluatee                PeerEvaluation[]             @relation(name: "Evaluatee")
-  evaluator                PeerEvaluation[]             @relation(name: "Evaluator")
+  id                   Int                          @id @default(autoincrement())
+  status               Boolean                      @default(true)
+  job                  Job?                         @relation(fields: [jobId], references: [id])
+  department           Departments?                 @relation(fields: [departmentId], references: [id])
+  information          ApplicantInformation?        @relation(fields: [informationId], references: [id])
+  username             String                       @db.VarChar(100)
+  password             String                       @db.VarChar(100)
+  informationId        Int?
+  jobId                Int?
+  departmentId         Int?
+  accessToken          String?
+  refreshToken         String?
+  role                 RoleStatus                   @default(Employee)
+  createdAt            DateTime                     @default(now())
+  updatedAt            DateTime                     @updatedAt
+  employeeRequirements EmployeeRequirements[]
+  assignTaskCriteria   TeamLeadAssignTaskCriteria[]
+  teamLeadEvaluatee    EvaluationStatus[]           @relation(name: "TeamLeadEvaluatee")
+  teamLeadEvaluator    EvaluationStatus[]           @relation(name: "TeamLeadEvaluator")
+  evaluatee            PeerEvaluation[]             @relation(name: "Evaluatee")
+  evaluator            PeerEvaluation[]             @relation(name: "Evaluator")
 
   @@unique([username])
 }
@@ -276,23 +276,21 @@ model References {
 }
 
 model AcademicYear {
-  id                       Int                        @id @default(autoincrement())
-  school_year              String                     @db.VarChar(100)
-  semester                 Int
-  status                   ModeStatus                 @default(NOT_SET)
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
-  peer                     PeerCategory[]
-  TeamLeadEvaluation       TeamLeadEvaluation[]
-  teamLeadEvaluationResult TeamLeadEvaluationResult[]
-  evaluationStatus         EvaluationStatus[]
-  peerTemplate             TemplateHeader?            @relation(name: "PeerTemplate", fields: [peerTemplateId], references: [id])
-  teamLeadTemplate         TemplateHeader?            @relation(name: "TeamLeadTemplate", fields: [teamLeadTemplateId], references: [id])
+  id                 Int                  @id @default(autoincrement())
+  school_year        String               @db.VarChar(100)
+  semester           Int
+  status             ModeStatus           @default(NOT_SET)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  peer               PeerCategory[]
+  TeamLeadEvaluation TeamLeadEvaluation[]
+  evaluationStatus   EvaluationStatus[]
+  peerTemplate       TemplateHeader?      @relation(name: "PeerTemplate", fields: [peerTemplateId], references: [id])
+  teamLeadTemplate   TemplateHeader?      @relation(name: "TeamLeadTemplate", fields: [teamLeadTemplateId], references: [id])
 
-  peerTemplateId       Int?
-  teamLeadTemplateId   Int?
-  peerEvaluation       PeerEvaluation[]
-  PeerEvaluationResult PeerEvaluationResult[]
+  peerTemplateId     Int?
+  teamLeadTemplateId Int?
+  peerEvaluation     PeerEvaluation[]
 
   @@unique([school_year, semester])
 }
@@ -314,8 +312,6 @@ model PeerEvaluation {
 
 model PeerEvaluationResult {
   id               Int            @id @default(autoincrement()) // Add a unique ID for easier management
-  academicYear     AcademicYear   @relation(fields: [academicYearId], references: [id])
-  academicYearId   Int
   peerCategory     PeerCategory   @relation(fields: [peerCategoryId], references: [id])
   peerCategoryId   Int
   question         Question       @relation(fields: [questionId], references: [id])
@@ -339,24 +335,27 @@ model PeerCategory {
 }
 
 model EvaluationStatus {
-  id             Int            @id @default(autoincrement())
-  academicYear   AcademicYear   @relation(fields: [academicYearId], references: [id])
-  academicYearId Int
-  employee       Employees      @relation(name: "EvaluatedEmployee", fields: [employeesId], references: [id])
-  employeesId    Int
-  type           EvaluatePerson
-  commenter      Employees      @relation(name: "CommenterPerson", fields: [commenterId], references: [id])
-  commenterId    Int
-  description    String
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                       Int                        @id @default(autoincrement())
+  academicYear             AcademicYear               @relation(fields: [academicYearId], references: [id])
+  academicYearId           Int
+  department               Departments                @relation(fields: [departmentsId], references: [id])
+  evaluatee                Employees                  @relation(name: "TeamLeadEvaluatee", fields: [evaluateeId], references: [id])
+  evaluateeId              Int
+  type                     EvaluatePerson
+  evaluator                Employees                  @relation(name: "TeamLeadEvaluator", fields: [evaluatorId], references: [id])
+  evaluatorId              Int
+  description              String
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  TeamLeadEvaluationResult TeamLeadEvaluationResult[]
+  departmentsId            Int
 }
 
 model TeamLeadEvaluation {
   id                       Int                          @id @default(autoincrement())
   name                     String                       @unique
   percentage               Decimal                      @db.Decimal(10, 2)
-  academicYear             AcademicYear?                @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYear             AcademicYear                 @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
   academicYearId           Int
   teamLeadCriteria         TeamLeadCriteria[]
   forTeamLead              Boolean                      @default(false)
@@ -375,19 +374,15 @@ model TeamLeadAssignTaskCriteria {
 }
 
 model TeamLeadEvaluationResult {
-  id                   Int                @id @default(autoincrement()) // Add a unique ID for easier management
-  academicYear         AcademicYear       @relation(fields: [academicYearId], references: [id])
-  academicYearId       Int
-  teamLeadEvaluation   TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
-  teamLeadEvaluationId Int
-  question             Question           @relation(fields: [questionId], references: [id])
-  questionId           Int
-  employee             Employees          @relation(fields: [employeesId], references: [id])
-  employeesId          Int
-  templateDetail       TemplateDetail     @relation(fields: [templateDetailId], references: [id])
-  templateDetailId     Int
-
-  @@unique([academicYearId, questionId, teamLeadEvaluationId, employeesId, templateDetailId])
+  id                         Int                @id @default(autoincrement()) // Add a unique ID for easier management
+  teamLeadEvaluation         TeamLeadEvaluation @relation(fields: [teamLeadEvaluationId], references: [id])
+  teamLeadEvaluationId       Int
+  question                   Question           @relation(fields: [questionId], references: [id])
+  questionId                 Int
+  templateDetail             TemplateDetail     @relation(fields: [templateDetailId], references: [id])
+  templateDetailId           Int
+  teamLeadEvaluationStatus   EvaluationStatus   @relation(fields: [teamLeadEvaluationStatusId], references: [id])
+  teamLeadEvaluationStatusId Int
 }
 
 model TeamLeadCriteria {

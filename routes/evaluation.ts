@@ -3,7 +3,7 @@ import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, 
 const route = Router();
 
 //evaluation
-route.get('/result/:acadId/:employeesId', fetchTeamLeadResults);
+route.get('/teamResult', fetchTeamLeadResults);
 route.get('/peerResult', fetchPeerResult);
 route.get('/ongoing', fetchEvaluationByOngoing);
 //viewing peer after assigning random

@@ -69,16 +69,10 @@ export const fetchTeamLeadResults = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const acadId = parseId(req.params.acadId);
-  if (!acadId) {
-    return res.status(400).json({ error: "Invalid Evaluation ID." });
-  }
-  const employeesId = parseId(req.params.employeesId);
-  if (!employeesId) {
-    return res.status(400).json({ error: "Invalid Employees ID." });
-  }
+  const { acadId, empId } = req.query;
+
   try {
-    const response = await getTeamLeadResults(acadId, employeesId);
+    const response = await getTeamLeadResults(Number(acadId), Number(empId));
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -212,15 +206,7 @@ export const submissionTeamLeadEvaluation = async (
 ): Promise<Response | void> => {
   const { evaluate, headerStatus } = req.body;
   try {
-    const evalData = evaluate.map((item: any) => ({
-      academicYearId: item.academicYearId,
-      teamLeadEvaluationId: item.categoryId,
-      questionId: item.questionId,
-      templateDetailId: item.templateDetailId,
-      employeesId: item.employeesId
-    }))
-
-    const response = await insertTeamLeadEvaluation(evalData, headerStatus);
+    const response = await insertTeamLeadEvaluation(evaluate, headerStatus);
     return res
       .status(200)
       .json({ message: "Successfully Evaluate", data: response });
@@ -235,17 +221,16 @@ export const submissionPeerEvaluation = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const body = req.body;
+  const { result, comment } = req.body;
   try {
-    const evalData = body.map((item: any) => ({
-      academicYearId: item.academicYearId,
+    const evalData = result.map((item: any) => ({
       peerCategoryId: item.categoryId,
       questionId: item.questionId,
       templateDetailId: item.templateDetailId,
-      peerEvaluationId: item.peerEvalId
+      peerEvaluationId: item.evaluationId
     }))
 
-    const response = await insertPeerEvaluationResult(evalData, body[0].peerEvalId);
+    const response = await insertPeerEvaluationResult(evalData, result[0].peerEvalId, comment);
     return res
       .status(200)
       .json({ message: "Successfully Evaluate", data: response });

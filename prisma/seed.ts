@@ -371,9 +371,9 @@ const assignTaskCriteria = [
 // // //CREATE PEER
 
 
-// await prisma.teamLeadEvaluation.createMany({
-//   data: teamLeadEvaluationList,
-// });
+await prisma.teamLeadEvaluation.createMany({
+  data: teamLeadEvaluationList,
+});
 
 await prisma.teamLeadCriteria.createMany({
   data: teamLeadCriteria,
