@@ -51,6 +51,11 @@ enum EvaluatePerson {
   Employee
 }
 
+enum FetchType {
+  Single
+  Many
+}
+
 //END OF ENUMS
 model User {
   id           String   @id @default(cuid())

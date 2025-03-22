@@ -19,6 +19,7 @@ import {
   getPeerEvaluateeByEmpId,
   getPeerCategoryQuestion,
   getPeerResult,
+  getEmployeeEvaluateeStatus,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -62,6 +63,17 @@ export const fetchPeerEvaluateeByEmpId = async (
   } catch (err) {
     next(err);
   }
+}
+
+export const fetchEmployeeEvaluateeStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const { acadId, deptId } = req.query;
+ 
+    try {
+        const response = await getEmployeeEvaluateeStatus(Number(deptId), Number(acadId));
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
 }
 
 export const fetchTeamLeadResults = async (
@@ -230,7 +242,7 @@ export const submissionPeerEvaluation = async (
       peerEvaluationId: item.evaluationId
     }))
 
-    const response = await insertPeerEvaluationResult(evalData, result[0].peerEvalId, comment);
+    const response = await insertPeerEvaluationResult(evalData, result[0].evaluationId, comment);
     return res
       .status(200)
       .json({ message: "Successfully Evaluate", data: response });
@@ -280,16 +292,18 @@ export const fetchPeerResult = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const { acadId, empId } = req.query;
+  const { acadId, empId,peerEvaluationId } = req.query;
 
   try {
-    const response = await getPeerResult(Number(acadId), Number(empId));
+    const response = await getPeerResult(Number(acadId), Number(empId),Number(peerEvaluationId));
     return res.status(200).json(response)
   } catch (err) {
     next(err);
   }
 
 }
+
+
 
 
 

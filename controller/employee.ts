@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeAssociateByTeamDept, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 
@@ -15,17 +15,7 @@ export const fetchAllEmployeesByDeptID = async (req: Request, res: Response, nex
     }
 }
 
-export const fetchEmployeeAssociateByTeamDept = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const { acadId, deptId } = req.query;
- 
 
-    try {
-        const response = await getEmployeeAssociateByTeamDept(Number(deptId), Number(acadId));
-        return res.status(200).json(response);
-    } catch (err) {
-        next(err);
-    }
-}
 
 
 export const fetchRequirementByEmpID = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

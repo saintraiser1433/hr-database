@@ -1,11 +1,14 @@
 import { Router } from 'express';
-import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion, fetchPeerResult } from '../controller/evaluation.ts';
+import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion, fetchPeerResult, fetchEmployeeEvaluateeStatus } from '../controller/evaluation.ts';
 const route = Router();
 
 //evaluation
 route.get('/teamResult', fetchTeamLeadResults);
 route.get('/peerResult', fetchPeerResult);
+route.get('/status', fetchEmployeeEvaluateeStatus);
 route.get('/ongoing', fetchEvaluationByOngoing);
+// route.get('/peerResultById', fetchPeerResultById);
+
 //viewing peer after assigning random
 route.get('/viewPeer', fetchPeerEvaluation);
 //fetch category question by academic year
@@ -16,11 +19,10 @@ route.get('/peer/:empId', fetchPeerEvaluateeByEmpId);
 route.get('/view/:employeeId/:acadId', fetchEvaluateQuestion)
 //get evaluation criteria with question with assign task criteria combine
 route.get('/criteria/:employeeId/:acadId', fetchEvaluationEmployeeCriteria);
-
-
-
 route.get('/', fetchEvaluation);
 route.post('/', insertEvaluation);
+
+
 route.post('/submit', submissionTeamLeadEvaluation);
 route.post('/submitPeer', submissionPeerEvaluation);
 route.post('/assign', assigningPeerEvaluations);

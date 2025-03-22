@@ -4,6 +4,7 @@ import prisma from "../prisma/index.ts";
 import {
   AcademicYear,
   EvaluationStatus,
+  FetchType,
   PeerEvaluationResult,
   TeamLeadEvaluationResult,
 } from "@prisma/client";
@@ -527,17 +528,25 @@ export const getTeamLeadResults = async (acadId: number, employeesId: number) =>
 
 
 // Main service to get peer evaluation results
-export const getPeerResult = async (academicYearId: number, evaluateeId: number) => {
+export const getPeerResult = async (academicYearId: number, evaluateeId: number, peerEvaluationId: number) => {
   try {
     // Fetch peer evaluation data
-    const results = await prisma.peerEvaluationResult.findMany({
-      where: {
+    const whereCondition: any = {};
 
-        peerEvaluation: {
-          evaluateeId, // Filter by evaluateeId
-          academicYearId
-        },
-      },
+
+    if (peerEvaluationId) {
+      whereCondition.peerEvaluation = { id: peerEvaluationId };
+    } 
+   
+    else if (evaluateeId || academicYearId) {
+      whereCondition.peerEvaluation = {
+        ...(evaluateeId && { evaluateeId }), 
+        ...(academicYearId && { academicYearId }),
+      };
+    }
+
+    const results = await prisma.peerEvaluationResult.findMany({
+      where: whereCondition,
       include: {
         peerEvaluation: {
           include: {
@@ -709,6 +718,9 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number)
     await prisma.$disconnect();
   }
 };
+
+
+
 
 export const viewEvaluateQuestion = async (employeeId: number, acadId: number) => {
   try {
@@ -968,8 +980,7 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
         employeeId: item.evaluatee.id,
         evaluatee,
         photo_path: item.evaluatee.information?.photo_path,
-        status: item.status
-
+        isFinishedPeerEvaluate: item.status
       }
     })
     return transformData;
@@ -1067,3 +1078,70 @@ export const getPeerCategoryQuestion = async (academicYearId: number) => {
     throw err;
   }
 };
+
+
+export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId: number) => {
+  try {
+    const teamLeadEmployees = await prisma.employees.findMany({
+      select: {
+        id: true,
+        role: true,
+        information: {
+          select: {
+            first_name: true,
+            last_name: true,
+            photo_path: true,
+          },
+        },
+        evaluatee: {
+          where: {
+            academicYearId: academicYearId,
+          },
+          select: {
+            status: true, // Include status to check if evaluation is completed
+          },
+        },
+        teamLeadEvaluatee: {
+          where: {
+            academicYearId: academicYearId,
+          },
+        },
+      },
+      where: {
+        AND: [
+          { departmentId: deptId },
+          { role: 'Employee' },
+        ]
+
+      },
+    });
+
+    const result = teamLeadEmployees.map((employee) => {
+      // Calculate peer evaluation progress
+      const totalPeerEvaluations = employee.evaluatee.length; // Total evaluations
+      const completedPeerEvaluations = employee.evaluatee.filter((evaluation) => evaluation.status).length; // Completed evaluations
+
+      // Format peerToEvaluate
+      const peerToEvaluate =
+        totalPeerEvaluations === 0 ? false : `${completedPeerEvaluations}/${totalPeerEvaluations}`;
+
+      // Determine if all peer evaluations are completed
+      const isFinishedPeerEvaluate = totalPeerEvaluations > 0 && completedPeerEvaluations === totalPeerEvaluations;
+
+      return {
+        id: employee.id,
+        photo_path: employee.information?.photo_path,
+        evaluatee: `${employee.information?.first_name} ${employee.information?.last_name}`,
+        role: employee.role,
+        peerToEvaluate, // Format: "completed/total" or false if 0/0
+        isFinishedPeerEvaluate, // True if all evaluations are completed
+        isEvaluatedByTeamLead: employee.teamLeadEvaluatee.some((item) => item.type === "TeamLead"),
+      };
+    });
+
+    return result;
+  } catch (err) {
+    throw err
+  }
+
+}
