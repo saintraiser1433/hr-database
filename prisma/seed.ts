@@ -371,28 +371,28 @@ const assignTaskCriteria = [
 // // //CREATE PEER
 
 
-await prisma.teamLeadEvaluation.createMany({
-  data: teamLeadEvaluationList,
-});
+// await prisma.teamLeadEvaluation.createMany({
+//   data: teamLeadEvaluationList,
+// });
 
-await prisma.teamLeadCriteria.createMany({
-  data: teamLeadCriteria,
-});
+// await prisma.teamLeadCriteria.createMany({
+//   data: teamLeadCriteria,
+// });
 
-await prisma.teamLeadAssignTaskCriteria.createMany({
-  data: assignTaskCriteria
-})
+// await prisma.teamLeadAssignTaskCriteria.createMany({
+//   data: assignTaskCriteria
+// })
 
-await prisma.question.createMany({
-  data: question
-})
+// await prisma.question.createMany({
+//   data: question
+// })
 
 // await prisma.peerCategory.createMany({
 //   data: peerCategories,
 // });
-// await prisma.question.createMany({
-//   data: peerQuestion,
-// });
+await prisma.question.createMany({
+  data: peerQuestion,
+});
 
 
 main()

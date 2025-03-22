@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion, fetchPeerResult, fetchEmployeeEvaluateeStatus } from '../controller/evaluation.ts';
+import { fetchEvaluation, insertEvaluation, updateEvaluation, deleteEvaluation, fetchEvaluationByOngoing, fetchEvaluationEmployeeCriteria, submissionTeamLeadEvaluation, fetchTeamLeadResults, fetchEvaluateQuestion, assigningPeerEvaluations, fetchPeerEvaluation, submissionPeerEvaluation, fetchPeerEvaluateeByEmpId, fetchPeerCategoryQuestion, fetchPeerResult, fetchEmployeeEvaluateeStatus, fetchPeerEvaluateQuestion } from '../controller/evaluation.ts';
 const route = Router();
 
 //evaluation
@@ -15,8 +15,11 @@ route.get('/viewPeer', fetchPeerEvaluation);
 route.get('/peer/category/:acadId', fetchPeerCategoryQuestion);
 //list to evaluate by employee id
 route.get('/peer/:empId', fetchPeerEvaluateeByEmpId);
-//fetching answers for question
+//fetching answers teamlead for question
 route.get('/view/:employeeId/:acadId', fetchEvaluateQuestion)
+//fetch answer peer question
+route.get('/viewPeerResult/:peerEvalId', fetchPeerEvaluateQuestion)
+
 //get evaluation criteria with question with assign task criteria combine
 route.get('/criteria/:employeeId/:acadId', fetchEvaluationEmployeeCriteria);
 route.get('/', fetchEvaluation);

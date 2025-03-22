@@ -20,6 +20,7 @@ import {
   getPeerCategoryQuestion,
   getPeerResult,
   getEmployeeEvaluateeStatus,
+  viewPeerEvaluateQuestion,
 } from "../services/evaluation.ts";
 import { parseId } from "../utils/parseId.ts";
 
@@ -66,14 +67,14 @@ export const fetchPeerEvaluateeByEmpId = async (
 }
 
 export const fetchEmployeeEvaluateeStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const { acadId, deptId } = req.query;
- 
-    try {
-        const response = await getEmployeeEvaluateeStatus(Number(deptId), Number(acadId));
-        return res.status(200).json(response);
-    } catch (err) {
-        next(err);
-    }
+  const { acadId, deptId } = req.query;
+
+  try {
+    const response = await getEmployeeEvaluateeStatus(Number(deptId), Number(acadId));
+    return res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
 }
 
 export const fetchTeamLeadResults = async (
@@ -144,6 +145,24 @@ export const fetchEvaluateQuestion = async (
   }
   try {
     const response = await viewEvaluateQuestion(employeeId, acadId);
+    return res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const fetchPeerEvaluateQuestion = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  const peerEvalId = parseId(req.params.peerEvalId);
+  if (!peerEvalId) {
+    return res.status(400).json({ error: "Invalid Peer Evaluation ID." });
+  }
+
+  try {
+    const response = await viewPeerEvaluateQuestion(peerEvalId);
     return res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -292,10 +311,10 @@ export const fetchPeerResult = async (
   res: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const { acadId, empId,peerEvaluationId } = req.query;
+  const { acadId, empId, peerEvaluationId } = req.query;
 
   try {
-    const response = await getPeerResult(Number(acadId), Number(empId),Number(peerEvaluationId));
+    const response = await getPeerResult(Number(acadId), Number(empId), Number(peerEvaluationId));
     return res.status(200).json(response)
   } catch (err) {
     next(err);

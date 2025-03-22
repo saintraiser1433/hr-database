@@ -180,6 +180,7 @@ export interface EvaluateSubmission {
 
 
 export interface EmployeeRating {
+    peerEvalId?: number;
     employeeId: number;
     name: string;
     rating: {

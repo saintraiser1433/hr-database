@@ -536,11 +536,11 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
 
     if (peerEvaluationId) {
       whereCondition.peerEvaluation = { id: peerEvaluationId };
-    } 
-   
+    }
+
     else if (evaluateeId || academicYearId) {
       whereCondition.peerEvaluation = {
-        ...(evaluateeId && { evaluateeId }), 
+        ...(evaluateeId && { evaluateeId }),
         ...(academicYearId && { academicYearId }),
       };
     }
@@ -549,6 +549,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
       where: whereCondition,
       include: {
         peerEvaluation: {
+
           include: {
             evaluator: {
               include: {
@@ -600,6 +601,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
         // Initialize employee entry if it doesn't exist
         if (!acc[employeeId]) {
           acc[employeeId] = {
+            peerEvalId: result.peerEvaluation.id,
             employeeId,
             name: employeeName,
             rating: [],
@@ -796,6 +798,78 @@ export const viewEvaluateQuestion = async (employeeId: number, acadId: number) =
   }
 }
 
+
+export const viewPeerEvaluateQuestion = async (peerEvalId: number) => {
+  try {
+    const response = await prisma.peerEvaluationResult.findMany({
+      where: {
+        peerEvaluationId: peerEvalId
+      },
+      select: {
+        questionId: true,
+        templateDetailId: true,
+        peerEvaluation: {
+          select: {
+            academicYearId: true,
+            evaluateeId: true,
+            evaluatorId: true,
+            evaluatee: {
+              include: {
+                information: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
+                  }
+                }
+              }
+            },
+            evaluator: {
+              include: {
+                information: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
+                  }
+                }
+              }
+            },
+            description: true,
+
+          },
+        },
+        peerCategoryId: true,
+      },
+
+    })
+
+
+    const transformData = response.map((item) => ({
+      evaluationId: item.peerEvaluation.academicYearId,
+      teamLeadEvaluationId: item.peerCategoryId,
+      questionId: item.questionId,
+      employeesId: item.peerEvaluation.evaluateeId,
+      templateDetailId: item.templateDetailId,
+    }))
+    const commenter = response[0].peerEvaluation.evaluator.information;
+    const comment = response[0].peerEvaluation.description;
+    const finalData = {
+      transformData,
+      commentsDetail: {
+        comment,
+        evaluatedBy: `${commenter?.first_name} ${commenter?.last_name}`
+      }
+
+    }
+
+    return finalData;
+  } catch (err) {
+    throw err;
+  }
+}
+
+
+
+
 export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
   try {
     const departments = await prisma.departments.findMany({
@@ -957,13 +1031,26 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
         evaluatee: {
           select: {
             id: true,
+
             information: {
               select: {
                 first_name: true,
                 last_name: true,
                 photo_path: true,
               }
-            }
+            },
+            department: {
+              select: {
+                title: true,
+              }
+            },
+            createdAt: true,
+            job: {
+              select: {
+                title: true
+              }
+            },
+
           }
         },
         status: true,
@@ -978,6 +1065,9 @@ export const getPeerEvaluateeByEmpId = async (id: number) => {
       return {
         id: item.id,
         employeeId: item.evaluatee.id,
+        department: item.evaluatee.department?.title,
+        hiredDate: item.evaluatee.createdAt,
+        job: item.evaluatee.job?.title,
         evaluatee,
         photo_path: item.evaluatee.information?.photo_path,
         isFinishedPeerEvaluate: item.status
@@ -1086,6 +1176,14 @@ export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId:
       select: {
         id: true,
         role: true,
+        department: true,
+        createdAt: true,
+        job: {
+          select: {
+            title: true,
+          }
+        },
+
         information: {
           select: {
             first_name: true,
@@ -1129,7 +1227,10 @@ export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId:
       const isFinishedPeerEvaluate = totalPeerEvaluations > 0 && completedPeerEvaluations === totalPeerEvaluations;
 
       return {
-        id: employee.id,
+        employeeId: employee.id,
+        department: employee.department?.title,
+        hiredDate: employee.createdAt,
+        job: employee.job?.title,
         photo_path: employee.information?.photo_path,
         evaluatee: `${employee.information?.first_name} ${employee.information?.last_name}`,
         role: employee.role,

@@ -3,10 +3,9 @@ import { EmployeeRequirements, RequirementStatus, RoleStatus } from '@prisma/cli
 import { CombinedData, EmployeeModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
-export const getAllEmployees = async (id: string) => {
+export const getAllEmployees = async (id: number) => {
     try {
-        const departmentId = parseInt(id, 10);
-        // if (isNaN(departmentId)) throw new Error("Invalid department ID.");
+
         const response = await prisma.employees.findMany({
             select: {
                 id: true,
@@ -16,6 +15,7 @@ export const getAllEmployees = async (id: string) => {
                         title: true,
                     },
                 },
+
 
                 information: {
                     select: {
@@ -31,18 +31,25 @@ export const getAllEmployees = async (id: string) => {
                 createdAt: true,
             },
             where: {
-                AND:[
+                AND: [
+                    {
+                        departmentId: id
+                    },
+
+                ],
+                OR: [
                     {
                         role: 'Employee',
                     },
                     {
                         role: 'TeamLead',
                     },
-                    {
-                        departmentId: departmentId
-                    }
-                ]
-       
+
+
+                ],
+
+
+
             },
             orderBy: [
                 { role: 'desc' },
