@@ -16,6 +16,27 @@ export const getJobService = async () => {
     }
 }
 
+export const getFirstJob = async (id:number) => {
+    try {
+        const response = await prisma.job.findFirst({
+           select:{
+            id:true,
+            headerImage:true,
+            title:true,
+            description:true,
+
+           },
+           where:{
+            id:id
+           }
+        })
+
+        return response;
+    } catch (err) {
+        throw err
+    }
+}
+
 
 
 export const createJobService = async (body: Omit<JobModel, "id" | "JobScreening">, file: any) => {
