@@ -71,11 +71,14 @@ export const fetchApplicantsByRejected = async (req: Request, res: Response, nex
 export const insertApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
-        const { error } = applicantsValidation.insert(body);
-        if (error) {
-            return handleValidationError(error, res);
-        }
-        const response = await createApplicants(body);
+        // const { error } = applicantsValidation.insert(body);
+        // if (error) {
+        //     return handleValidationError(error, res);
+        // }
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const resume = files?.resume_path?.[0]?.filename || '';
+        const photo = files?.photo_path?.[0]?.filename || '';
+        const response = await createApplicants(body,resume,photo);
         return res.status(200).json({ message: "Successfully Submitted", data: response });
     } catch (err) {
         next(err);

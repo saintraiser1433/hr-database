@@ -450,7 +450,7 @@ export const getApplicantsRejected = async () => {
 
 
 
-export const createApplicants = async (data: Omit<ApplicantModel, 'id'>) => {
+export const createApplicants = async (data: Omit<ApplicantModel, 'id'>,resume:string,photo:string) => {
     try {
         const response = await prisma.applicant.create({
             data: {
@@ -462,8 +462,8 @@ export const createApplicants = async (data: Omit<ApplicantModel, 'id'>) => {
                         last_name: data.last_name,
                         email: data.email,
                         contact_number: data.contact_number,
-                        resume_path: data.resume_path,
-                        photo_path: data.photo_path,
+                        resume_path: resume ,
+                        photo_path: photo,
                     }
                 }
             },

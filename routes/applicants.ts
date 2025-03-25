@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { fetchApplicantsByFailed, fetchApplicantsByOngoing, fetchApplicantsByPassed, fetchApplicantsByPending, fetchApplicantsByRejected, fetchFailApproveByApplicant, fetchOngoingByApplicant, insertApplicants, modifyFinailizedAppStatus, proceedApplicant, rejectApplicants } from '../controller/applicants.ts';
-
+import { resumeUpload,avatarUpload } from '../config/multer.ts';
 const route = Router();
 
 route.get('/pending', fetchApplicantsByPending);
@@ -11,7 +11,7 @@ route.get('/passed', fetchApplicantsByPassed);
 route.get('/ongoing/:id', fetchOngoingByApplicant);
 route.get('/failapprv/:id', fetchFailApproveByApplicant);
 
-route.post('/', insertApplicants);
+route.post('/', resumeUpload.single('resume_path'),avatarUpload.single('photo_path'),insertApplicants);
 route.put('/proceed/:id', proceedApplicant);
 route.put('/reject/:id', rejectApplicants);
 route.put('/finalize/:id', modifyFinailizedAppStatus);
