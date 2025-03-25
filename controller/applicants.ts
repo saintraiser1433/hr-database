@@ -70,15 +70,17 @@ export const fetchApplicantsByRejected = async (req: Request, res: Response, nex
 
 export const insertApplicants = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
+    const files = req.files as Record<string, Express.Multer.File[]>;
+    const resumeFilename = files['resume_path'][0].filename;
+    const photoFilename = files['photo_path'][0].filename;
     try {
-        // const { error } = applicantsValidation.insert(body);
-        // if (error) {
-        //     return handleValidationError(error, res);
-        // }
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        const resume = files?.resume_path?.[0]?.filename || '';
-        const photo = files?.photo_path?.[0]?.filename || '';
-        const response = await createApplicants(body,resume,photo);
+        const { error } = applicantsValidation.insert({ ...body, resume_path: resumeFilename, photo_path: photoFilename });
+        if (error) {
+            return handleValidationError(error, res);
+        }
+
+
+        const response = await createApplicants(body, resumeFilename, photoFilename);
         return res.status(200).json({ message: "Successfully Submitted", data: response });
     } catch (err) {
         next(err);

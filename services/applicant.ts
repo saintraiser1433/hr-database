@@ -3,6 +3,7 @@ import { ApplicantModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 import { insertEmployee } from './employees.ts';
 import { customAlphabet } from "nanoid";
+import { parseId } from '../utils/parseId.ts';
 export const getApplicantsPending = async () => {
     try {
         const response = await prisma.applicant.findMany({
@@ -450,33 +451,110 @@ export const getApplicantsRejected = async () => {
 
 
 
-export const createApplicants = async (data: Omit<ApplicantModel, 'id'>,resume:string,photo:string) => {
+import fs from 'fs';
+import path from 'path';
+
+export const createApplicants = async (
+    data: Omit<ApplicantModel, 'id'>,
+    resume: string,
+    photo: string
+) => {
+    // Validate required fields
+    if (!data.jobId || !resume || !photo) {
+        throw new Error('Missing required fields or files.');
+    }
+
     try {
-        const response = await prisma.applicant.create({
-            data: {
-                jobApply: { connect: { id: data.jobId } },
-                information: {
-                    create: {
-                        first_name: data.first_name,
-                        middle_name: data.middle_name,
-                        last_name: data.last_name,
-                        email: data.email,
-                        contact_number: data.contact_number,
-                        resume_path: resume ,
-                        photo_path: photo,
-                    }
-                }
-            },
-            include: {
-                jobApply: true,
-                information: true
+
+        const response = await prisma.$transaction(async (prisma) => {
+            const exists = await checkingIfApplicantExist(data.first_name, data.last_name);
+            if (!exists) {
+                const applicant = await prisma.applicant.create({
+                    data: {
+                        jobApply: { connect: { id: Number(data.jobId) } },
+                        information: {
+                            create: {
+                                first_name: data.first_name,
+                                middle_name: data.middle_name,
+                                last_name: data.last_name,
+                                email: data.email,
+                                contact_number: data.contact_number,
+                                resume_path: resume,
+                                photo_path: photo,
+                            },
+                        },
+                    },
+                    include: {
+                        jobApply: true,
+                        information: true,
+                    },
+                });
+
+                return applicant;
             }
-        })
+
+        });
+
         return response;
     } catch (err) {
-        throw err
+        if (resume) {
+            fs.unlink(path.join('public/resume', resume), () => { });
+        }
+        if (photo) {
+            fs.unlink(path.join('public/avatar', photo), () => { });
+        }
+        throw err;
+    }
+};
+
+
+const checkingIfApplicantExist = async (first_name: string, last_name: string) => {
+    try {
+        const response = await prisma.applicantInformation.findFirst({
+            where: {
+                AND: [
+                    {
+                        first_name: {
+                            equals: first_name,
+                            mode: 'insensitive' // Case-insensitive comparison
+                        }
+                    },
+                    {
+                        last_name: {
+                            equals: last_name,
+                            mode: 'insensitive' // Case-insensitive comparison
+                        }
+                    },
+                ]
+            },
+            select: {
+                Applicant: {
+                    select: {
+                        createdAt: true
+                    }
+                }
+            }
+        });
+
+        if (response && response.Applicant) { // Added null check for Applicant
+            const createdAt = response.Applicant[0].createdAt;
+            const now = new Date();
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            if (createdAt > sevenDaysAgo) {
+                const nextAvailableDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+                const daysLeft = Math.ceil((nextAvailableDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                throw new Error(`You've already applied recently. Please try again after ${daysLeft} day(s).`);
+            }
+        }
+
+        return false;
+    } catch (err) {
+        throw err;
     }
 }
+
 
 
 export const ongoingApplicants = async (id: string) => {
@@ -701,7 +779,7 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
                     }
                 }
             })
-            if(!employeesResponse.job){
+            if (!employeesResponse.job) {
                 throw new Error("Error during insertion of employees");
             }
             await tx.employeeRequirements.createMany({

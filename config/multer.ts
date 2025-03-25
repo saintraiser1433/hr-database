@@ -1,9 +1,24 @@
 import multer from 'multer';
 import path from 'path';
 
-const storage = multer.diskStorage({
+// Dynamic storage that routes files based on field name
+const dynamicStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/job-offer-uploads/'); 
+        let folder = 'public/';
+        switch (file.fieldname) {
+            case 'resume_path':
+                folder += 'resume/';       // PDFs go here
+                break;
+            case 'photo_path':
+                folder += 'avatar/';       // Images go here
+                break;
+            case 'file':      // Example for job-offer uploads
+                folder += 'job-offer-uploads/';
+                break;
+            default:
+                folder += 'others/';      // Fallback (optional)
+        }
+        cb(null, folder);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -12,68 +27,19 @@ const storage = multer.diskStorage({
     },
 });
 
-const resumeStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/resume/'); 
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const ext = path.extname(file.originalname);
-        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    },
-});
-
-const avatarStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/avatar/'); 
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const ext = path.extname(file.originalname);
-        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    },
-});
-
-export const avatarUpload = multer({
-    storage:avatarStorage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, 
-    },
+// Single Multer instance with combined validation
+export const unifiedUpload = multer({
+    storage: dynamicStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit for all files
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true); // Accept images only
+        if (
+            (file.fieldname === 'resume_path' && file.mimetype === 'application/pdf') ||
+            (file.fieldname === 'photo_path' && file.mimetype.startsWith('image/')) ||
+            (file.fieldname === 'file' && file.mimetype.startsWith('image/')) // Adjust as needed
+        ) {
+            cb(null, true); // Accept based on field + type
         } else {
-            cb(new Error('Only image files are allowed!'));
+            cb(new Error(`Invalid file type for ${file.fieldname}`));
         }
     },
 });
-
-export const resumeUpload = multer({
-    storage: resumeStorage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, 
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/pdf') {
-            cb(null, true); // Accept only PDFs
-        } else {
-            cb(new Error('Only PDF files are allowed for resume!'));
-        }
-    },
-});
-
-export const upload = multer({
-    storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, 
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true); // Accept images only
-        } else {
-            cb(new Error('Only image files are allowed!'));
-        }
-    },
-});
-
-

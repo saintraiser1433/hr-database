@@ -273,7 +273,10 @@ export const applicantsValidation = {
                 "number.base": "The Contact Number must be a number"
             }),
             resume_path: Joi.string().required().messages({
-                "any.required": "The Resume Path field is required"
+                "any.required": "The Resume is required"
+            }),
+            photo_path: Joi.string().required().messages({
+                "any.required": "The Photo field is required"
             }),
 
             gender: Joi.string().optional(),
