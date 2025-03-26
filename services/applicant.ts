@@ -707,22 +707,48 @@ export const rejectApplicant = async (id: string) => {
 
 
 
-export const updateFinalizedApplicantStatus = async (id: string, status: ApplicationStatus) => {
+export const updateFinalizedApplicantStatus = async (
+    applicantId: number,
+    jobId: number,
+    status: ApplicationStatus
+) => {
+    // Move these outside the transaction if possible
+    const { customAlphabet } = await import("nanoid");
+    const nanoid = customAlphabet("1234567890abcdef", 5);
+    const random5DigitNumber = Math.floor(10000 + Math.random() * 90000);
+
     const transaction = await prisma.$transaction(async (tx) => {
-        const apResultId = parseInt(id, 10);
-        if (isNaN(apResultId)) throw new Error("Invalid applicant ID.");
+        // Validate status
+        if (!["PASSED", "FAILED"].includes(status)) {
+            throw new Error('Invalid application status');
+        }
 
-        const { customAlphabet } = await import("nanoid");
-        const nanoid = customAlphabet("1234567890abcdef", 5);
-        const random5DigitNumber = Math.floor(10000 + Math.random() * 90000);
+        // Check job availability first if status is PASSED
+        if (status === "PASSED") {
+            const job = await tx.job.findUnique({
+                where: { id: jobId },
+                select: { totalAvailable: true }
+            });
 
-        const updateData: Record<string, any> = { status };
-        if (status === "PASSED") updateData.approvedAt = new Date();
-        if (status === "FAILED") updateData.failedAt = new Date();
+            if (!job || job.totalAvailable <= 0) {
+                throw new Error('This job has no available positions');
+            }
+
+            await tx.job.update({
+                where: { id: jobId },
+                data: { totalAvailable: { decrement: 1 } }
+            });
+        }
 
         // Update applicant status
+        const updateData = { 
+            status,
+            ...(status === "PASSED" && { approvedAt: new Date() }),
+            ...(status === "FAILED" && { failedAt: new Date() })
+        };
+
         const response = await tx.applicant.update({
-            where: { id: apResultId },
+            where: { id: applicantId },
             data: updateData,
             select: {
                 id: true,
@@ -732,7 +758,6 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
                 jobApply: {
                     select: {
                         departmentsId: true,
-
                     },
                 },
                 information: {
@@ -749,17 +774,12 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
             const lastName = response.information.last_name.toLowerCase();
             const shortFirstName = firstName.slice(-3);
             const username = `${shortFirstName}_${lastName}_${random5DigitNumber}`;
+
             const employeesResponse = await tx.employees.create({
                 data: {
-                    job: {
-                        connect: { id: response.jobId }
-                    },
-                    information: {
-                        connect: { id: response.informationId }
-                    },
-                    department: {
-                        connect: { id: response.jobApply.departmentsId }
-                    },
+                    job: { connect: { id: response.jobId } },
+                    information: { connect: { id: response.informationId } },
+                    department: { connect: { id: response.jobApply.departmentsId } },
                     username: username,
                     password: nanoid(),
                 },
@@ -768,26 +788,25 @@ export const updateFinalizedApplicantStatus = async (id: string, status: Applica
                     job: {
                         select: {
                             requirements: {
-                                select: {
-                                    id: true
-                                },
-                                where: {
-                                    status: true
-                                }
+                                select: { id: true },
+                                where: { status: true }
                             }
                         }
                     }
                 }
-            })
+            });
+
             if (!employeesResponse.job) {
                 throw new Error("Error during insertion of employees");
             }
-            await tx.employeeRequirements.createMany({
-                data: employeesResponse.job.requirements.map(requirement => ({
-                    employeeId: employeesResponse.id,
-                    requirementsId: requirement.id
-                }))
-            })
+            if (employeesResponse?.job.requirements.length > 0) {
+                await tx.employeeRequirements.createMany({
+                    data: employeesResponse.job.requirements.map(requirement => ({
+                        employeeId: employeesResponse.id,
+                        requirementsId: requirement.id
+                    }))
+                });
+            }
         }
 
         return {

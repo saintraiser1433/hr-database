@@ -15,6 +15,9 @@ const dynamicStorage = multer.diskStorage({
             case 'file':      // Example for job-offer uploads
                 folder += 'job-offer-uploads/';
                 break;
+            case 'requirements':      // Example for job-offer uploads
+                folder += 'requirements/';
+                break;
             default:
                 folder += 'others/';      // Fallback (optional)
         }
@@ -35,7 +38,8 @@ export const unifiedUpload = multer({
         if (
             (file.fieldname === 'resume_path' && file.mimetype === 'application/pdf') ||
             (file.fieldname === 'photo_path' && file.mimetype.startsWith('image/')) ||
-            (file.fieldname === 'file' && file.mimetype.startsWith('image/')) // Adjust as needed
+            (file.fieldname === 'file' && file.mimetype.startsWith('image/')) ||
+            (file.fieldname === 'requirements' && file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf')
         ) {
             cb(null, true); // Accept based on field + type
         } else {

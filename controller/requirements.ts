@@ -1,7 +1,8 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { createRequirementService, getRequirementService, removeRequirementService, updateRequirementService } from '../services/requirements.ts';
+import { createRequirementService, getRequirementService, passRequirement, removeRequirementService, updateRequirementService } from '../services/requirements.ts';
 import { handleValidationError, requirementValidation } from '../utils/validation.ts';
+import { parseId } from '../utils/parseId.ts';
 
 
 export const getRequirements = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -48,6 +49,21 @@ export const deleteRequirements = async (req: Request, res: Response, next: Next
     try {
         await removeRequirementService(id);
         return res.status(200).json({ message: "Requirement deleted successfully" });
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const submitRequirements = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const assignReqId = parseId(req.params.id);
+    const body = req.body;
+    if (!assignReqId) {
+        return res.status(400).json({ error: "Invalid Requirements ID." });
+    }
+    try {
+        const data = await passRequirement(assignReqId,body,req.file);
+        return res.status(200).json({ message: "Requirement successfully submitted",data });
     } catch (err) {
         next(err)
     }

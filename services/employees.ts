@@ -86,6 +86,7 @@ export const getRequirementsByEmployeeId = async (id: string) => {
                         submittedAt: true,
                         expiryDate: true,
                         requirementsId: true,
+                        fileName:true,
                         requirements: {
                             select: {
                                 title: true,
@@ -293,7 +294,9 @@ export const getEmployeeInformationById = async (id: number) => {
                 middle_name: response.information?.middle_name ?? null,
                 last_name: response.information?.last_name ?? null,
                 gender: response.information?.gender ?? null,
-                date_of_birth: response.information?.date_of_birth ?? null,
+                date_of_birth: response.information?.date_of_birth 
+                ? new Date(response.information.date_of_birth).toISOString().split('T')[0] 
+                : null,
                 email: response.information?.email ?? null,
                 contact_number: response.information?.contact_number ?? null,
                 telephone_number: response.information?.telephone_number ?? null,
@@ -383,8 +386,15 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
     const { educData, workData, skillsData, referencesData, applicantInfo, status } = data;
 
     try {
-        await prisma.$transaction(async (tx) => {
+
+        const result = await prisma.$transaction(async (tx) => {
             // Step 1: Update Applicant Information
+            const employee = await tx.employees.findUnique({
+                where: { id: employeeId },
+                select: { informationId: true }
+            });
+
+            if (!employee) throw new Error("Employee not found");
             await tx.employees.update({
                 where: { id: employeeId },
                 data: {
@@ -392,8 +402,10 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
                 }
             })
 
+            const applicantInformationId = employee.informationId ?? 0;
+
             await tx.applicantInformation.update({
-                where: { id: employeeId },
+                where: { id: applicantInformationId },
                 data: {
                     first_name: applicantInfo.first_name,
                     middle_name: applicantInfo.middle_name,
@@ -419,107 +431,136 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
                 },
             });
 
-            // Step 2: Upsert Education Background
-            for (const edu of educData) {
-                if (!edu.school_name) continue;
-                await tx.educationBackground.upsert({
-                    where: {
-                        applicantInformationId_school_name: {
-                            applicantInformationId: employeeId,
-                            school_name: edu.school_name,
-                        },
-                    },
-                    update: {
-                        degree: edu.degree,
-                        year_started: edu.year_started,
-                        year_ended: edu.year_ended,
-                        description: edu.description,
-                    },
-                    create: {
-                        school_name: edu.school_name,
-                        degree: edu.degree,
-                        year_started: edu.year_started,
-                        year_ended: edu.year_ended,
-                        description: edu.description,
-                        applicantInformationId: employeeId,
-                    },
-                });
-            }
+            // Step 3: Process Education Data
+            await processEducationData(tx, applicantInformationId, educData);
 
-            // Step 3: Upsert Work Experience
-            for (const work of workData) {
-                if (!work.company_name) continue;
-                await tx.workExperience.upsert({
-                    where: {
-                        applicantInformationId_company_name: {
-                            applicantInformationId: employeeId,
-                            company_name: work.company_name,
-                        },
-                    },
-                    update: {
-                        job_title: work.job_title,
-                        work_year_started: work.work_year_started,
-                        work_year_ended: work.work_year_ended,
-                    },
-                    create: {
-                        company_name: work.company_name,
-                        job_title: work.job_title,
-                        work_year_started: work.work_year_started,
-                        work_year_ended: work.work_year_ended,
-                        applicantInformationId: employeeId,
-                    },
-                });
-            }
+            // Step 4: Process Work Experience
+            await processWorkData(tx, applicantInformationId, workData);
 
-            // Step 4: Upsert Skills Expertise
-            for (const skill of skillsData) {
-                if (!skill.skills_name) continue;
-                await tx.skillsExpertise.upsert({
-                    where: {
-                        applicantInformationId_skills_name: {
-                            applicantInformationId: employeeId,
-                            skills_name: skill.skills_name,
-                        },
-                    },
-                    update: {},
-                    create: {
-                        skills_name: skill.skills_name,
-                        applicantInformationId: employeeId,
-                    },
-                });
-            }
+            // Step 5: Process Skills
+            await processSkillsData(tx, applicantInformationId, skillsData);
 
-            // Step 5: Upsert References
-            for (const ref of referencesData) {
-                if (!ref.name_of_person) continue;
-                await tx.references.upsert({
-                    where: {
-                        applicantInformationId_name_of_person: {
-                            applicantInformationId: employeeId,
-                            name_of_person: ref.name_of_person,
-                        },
-                    },
-                    update: {
-                        position: ref.position,
-                        ref_contact_number: ref.ref_contact_number,
-                    },
-                    create: {
-                        name_of_person: ref.name_of_person,
-                        position: ref.position,
-                        ref_contact_number: ref.ref_contact_number,
-                        applicantInformationId: employeeId,
-                    },
-                });
-            }
+            // Step 6: Process References
+            await processReferencesData(tx, applicantInformationId, referencesData);
+
+            return { success: true };
         });
-
-        console.log("Transaction completed successfully.");
+        return result;
+        // console.log("Transaction completed successfully.");
     } catch (error) {
         console.error("Transaction failed:", error);
     } finally {
         await prisma.$disconnect();
     }
 };
+
+
+async function processEducationData(tx: any, applicantId: number, educData: any[]) {
+    for (const edu of educData) {
+        if (!edu.school_name) continue;
+        await tx.educationBackground.upsert({
+            where: {
+                applicantInformationId_school_name: {
+                    applicantInformationId: applicantId,
+                    school_name: edu.school_name,
+                },
+            },
+            update: {
+                degree: edu.degree,
+                year_started: edu.year_started,
+                year_ended: edu.year_ended,
+                description: edu.description,
+            },
+            create: {
+                school_name: edu.school_name,
+                degree: edu.degree,
+                year_started: edu.year_started,
+                year_ended: edu.year_ended,
+                description: edu.description,
+                applicantInformationId: applicantId,
+            },
+        });
+    }
+}
+
+async function processWorkData(tx: any, applicantId: number, workData: any[]) {
+    for (const work of workData) {
+        if (!work.company_name) continue;
+        await tx.workExperience.upsert({
+            where: {
+                applicantInformationId_company_name: {
+                    applicantInformationId: applicantId,
+                    company_name: work.company_name,
+                },
+            },
+            update: {
+                job_title: work.job_title,
+                work_year_started: work.work_year_started,
+                work_year_ended: work.work_year_ended,
+            },
+            create: {
+                company_name: work.company_name,
+                job_title: work.job_title,
+                work_year_started: work.work_year_started,
+                work_year_ended: work.work_year_ended,
+                applicantInformationId: applicantId,
+            },
+        });
+    }
+}
+
+async function processReferencesData(tx: any, applicantId: number, referencesData: any[]) {
+    try {
+        for (const ref of referencesData) {
+            if (!ref.name_of_person) continue;
+            await tx.references.upsert({
+                where: {
+                    applicantInformationId_name_of_person: {
+                        applicantInformationId: applicantId,
+                        name_of_person: ref.name_of_person,
+                    },
+                },
+                update: {
+                    position: ref.position,
+                    ref_contact_number: ref.ref_contact_number,
+                },
+                create: {
+                    name_of_person: ref.name_of_person,
+                    position: ref.position,
+                    ref_contact_number: ref.ref_contact_number,
+                    applicantInformationId: applicantId,
+                },
+            });
+        }
+    } catch (err) {
+        throw err;
+    }
+
+
+}
+
+async function processSkillsData(tx: any, applicantId: number, skillsData: any[]) {
+    try {
+        for (const skill of skillsData) {
+            if (!skill.skills_name) continue;
+            await tx.skillsExpertise.upsert({
+                where: {
+                    applicantInformationId_skills_name: {
+                        applicantInformationId: applicantId,
+                        skills_name: skill.skills_name,
+                    },
+                },
+                update: {},
+                create: {
+                    skills_name: skill.skills_name,
+                    applicantInformationId: applicantId,
+                },
+            });
+        }
+    } catch (err) {
+        throw err;
+    }
+}
 
 
 

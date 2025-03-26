@@ -2,6 +2,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, applicantsValidation } from '../utils/validation.ts';
 import { createApplicants, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getFailApprvStatusByApplicant, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant.ts';
+import { parseId } from '../utils/parseId.ts';
 
 export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -111,10 +112,17 @@ export const rejectApplicants = async (req: Request, res: Response, next: NextFu
 }
 
 export const modifyFinailizedAppStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const id = req.params.id;
-    const { status } = req.body;
+    const { status, jobId } = req.body;
+    const applicantId = parseId(req.params.id);
+    if (!applicantId) {
+        return res.status(400).json({ error: "Invalid Applicant ID." });
+    }
+    const jobIds = parseId(jobId);
+    if (!jobIds) {
+        return res.status(400).json({ error: "Invalid Job ID." });
+    }
     try {
-        const response = await updateFinalizedApplicantStatus(id, status);
+        const response = await updateFinalizedApplicantStatus(applicantId, jobIds, status);
 
         return res.status(200).json({ message: "Application successfully updated", data: response });
     } catch (err) {

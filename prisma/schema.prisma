@@ -41,7 +41,9 @@ enum RoleStatus {
 }
 
 enum RequirementStatus {
+  NOT_SUBMITTED
   PENDING
+  REJECTED
   SUBMITTED
   EXPIRED
 }
@@ -164,9 +166,10 @@ model EmployeeRequirements {
   employeeId     Int
   requirements   Requirements      @relation(fields: [requirementsId], references: [id])
   requirementsId Int
+  fileName       String?
   submittedAt    DateTime?
   expiryDate     DateTime?
-  status         RequirementStatus @default(PENDING)
+  status         RequirementStatus @default(NOT_SUBMITTED)
 }
 
 model Applicant {
