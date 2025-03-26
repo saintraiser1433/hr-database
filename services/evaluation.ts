@@ -872,90 +872,67 @@ export const viewPeerEvaluateQuestion = async (peerEvalId: number) => {
 
 export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
   try {
-    const departments = await prisma.departments.findMany({
-      where: {
-        id: body.departmentId,
-      },
+    const department = await prisma.departments.findUnique({
+      where: { id: body.departmentId },
       include: {
         employees: {
-          where: {
-            role: 'Employee',
-          },
+          where: { role: 'Employee' },
+          orderBy: { id: 'asc' } // Consistent ordering
         },
       },
     });
 
-    for (const department of departments) {
-      const employees = department.employees;
+    if (!department) throw new Error('Department not found');
 
-      // Calculate the maximum allowed peersToEvaluate
-      const maxPeersToEvaluate = employees.length - 1; // An employee cannot evaluate themselves
+    const { employees } = department;
+    const employeeCount = employees.length;
 
-      // Check if the provided peersToEvaluate is valid
-      if (body.peersToEvaluate > maxPeersToEvaluate) {
-        throw new Error(
-          `Invalid peers to evaluate: ${body.peersToEvaluate}. ` +
-          `The maximum allowed value for this department is ${maxPeersToEvaluate}.`
-        );
+    // Validate peersToEvaluate
+    const peersToEvaluate = Math.max(1, Math.min(body.peersToEvaluate, employeeCount - 1));
+    if (body.peersToEvaluate !== peersToEvaluate) {
+      console.warn(`Adjusted peersToEvaluate from ${body.peersToEvaluate} to ${peersToEvaluate} for department size`);
+    }
+
+    // Clear existing evaluations for idempotency
+    await prisma.peerEvaluation.deleteMany({
+      where: {
+        academicYearId: body.academicYearId,
+        departmentId: body.departmentId
       }
+    });
 
-      const evaluatedPairs = new Set<string>(); // Track evaluator-evaluatee pairs
-      const evaluationCountMap = new Map<number, number>(); // Track how many times each employee has been evaluated
+    // Prepare evaluation data for batch create
+    const evaluationData = [];
 
-      // Initialize evaluation count for each employee
-      for (const emp of employees) {
-        evaluationCountMap.set(emp.id, 0);
-      }
+    for (let i = 0; i < employeeCount; i++) {
+      const evaluator = employees[i];
 
-      for (const evaluator of employees) {
-        // Get all peers except the evaluator
-        const peers = employees.filter((emp) => emp.id !== evaluator.id);
-
-        // Filter out peers that have already been evaluated by this evaluator in this academic year
-        const availablePeers = peers.filter((peer) => {
-          const pairKey = `${body.academicYearId}-${evaluator.id}-${peer.id}`;
-          return !evaluatedPairs.has(pairKey);
-        });
-
-        // Sort peers by evaluation count (to balance the distribution)
-        const sortedPeers = availablePeers.sort((a, b) => {
-          const countA = evaluationCountMap.get(a.id)!;
-          const countB = evaluationCountMap.get(b.id)!;
-          return countA - countB; // Prefer peers with fewer evaluations
-        });
-
-        // Randomly select peers
-        const selectedPeers =
-          sortedPeers.length <= body.peersToEvaluate
-            ? sortedPeers // Evaluate all available peers if there are not enough
-            : shuffleArray(sortedPeers).slice(0, body.peersToEvaluate); // Randomly select peers
-
-        // Create evaluation records
-        for (const peer of selectedPeers) {
-          await prisma.peerEvaluation.create({
-            data: {
-              academicYearId: body.academicYearId,
-              evaluatorId: evaluator.id,
-              evaluateeId: peer.id,
-              departmentId: body.departmentId,
-            },
+      // Select next N peers in circular manner
+      for (let j = 1; j <= peersToEvaluate; j++) {
+        const peerIndex = (i + j) % employeeCount;
+        if (peerIndex !== i) { // Skip self-evaluation
+          evaluationData.push({
+            academicYearId: body.academicYearId,
+            evaluatorId: evaluator.id,
+            evaluateeId: employees[peerIndex].id,
+            departmentId: body.departmentId,
           });
-
-          // Mark this pair as evaluated for this academic year
-          const pairKey = `${body.academicYearId}-${evaluator.id}-${peer.id}`;
-          evaluatedPairs.add(pairKey);
-
-          // Update the evaluation count for the peer
-          evaluationCountMap.set(peer.id, evaluationCountMap.get(peer.id)! + 1);
         }
       }
     }
-    return viewPeerEvaluations(body.academicYearId, body.departmentId)
+
+    // Batch create all evaluations at once
+    await prisma.peerEvaluation.createMany({
+      data: evaluationData,
+      skipDuplicates: true
+    });
+
+    return viewPeerEvaluations(body.academicYearId, body.departmentId);
   } catch (err) {
+    console.error('Error in assignPeerEvaluations:', err);
     throw err;
   }
 };
-
 
 
 
