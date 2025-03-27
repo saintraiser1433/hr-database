@@ -295,83 +295,99 @@ export const insertTeamLeadEvaluation = async (
 };
 
 
-export const getTeamLeadResults = async (acadId: number, employeesId: number) => {
-  try {
-    const results = await prisma.teamLeadEvaluationResult.findMany({
-      where: {
-        AND: [
-          {
-            teamLeadEvaluationStatus: {
-              academicYearId: acadId
-            },
-          },
-          {
-            teamLeadEvaluationStatus: {
-              evaluateeId: employeesId
-            },
-          },
-        ],
-      },
-      include: {
-        teamLeadEvaluationStatus: {
-          select: {
-            description: true,
-            evaluateeId: true,
-            evaluator: {
-              include: {
-                information: true, // Include commenter's information to get their name
-              },
-            },
-            evaluatee: {
-              include: {
-                information: true, // Include commenter's information to get their name
-              },
-            },
-            evaluatorId: true,
-          }
-        },
-        question: {
-          include: {
-            teamLeadCriteria: {
-              include: {
-                teamLeadEvaluation: {
-                  include: {
-                    academicYear: {
-                      include: {
-                        teamLeadTemplate: {
-                          include: {
-                            templateDetail: true, // Include templateDetail to get the adjectiveRating
-                          },
-                        },
-
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            assignTaskCriteria: {
-              include: {
-                teamLead: {
-                  include: {
-                    academicYear: {
-                      include: {
-                        teamLeadTemplate: {
-                          include: {
-                            templateDetail: true, // Include templateDetail to get the adjectiveRating
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        templateDetail: true,
-      },
+export const getTeamLeadResults = async (  filters: {
+  acadId?: number;
+  employeesId?: number;
+} = {} // Make the whole parameter optional
+) => {
+try {
+  // Build the where clause dynamically
+  const whereConditions = [];
+  
+  if (filters.acadId !== undefined) {
+    whereConditions.push({
+      teamLeadEvaluationStatus: {
+        academicYearId: filters.acadId
+      }
     });
+  }
+  
+  if (filters.employeesId !== undefined) {
+    whereConditions.push({
+      teamLeadEvaluationStatus: {
+        evaluateeId: filters.employeesId
+      }
+    });
+  }
+
+  const results = await prisma.teamLeadEvaluationResult.findMany({
+    where: {
+      AND: whereConditions.length > 0 ? whereConditions : undefined
+    },
+    include: {
+      teamLeadEvaluationStatus: {
+        select: {
+          description: true,
+          evaluateeId: true,
+          evaluator: {
+            include: {
+              information: true,
+            },
+          },
+          evaluatee: {
+            include: {
+              department:{
+                select:{
+                  title:true,
+                }
+              },
+              information: true,
+            },
+          },
+          evaluatorId: true,
+        }
+      },
+      question: {
+        include: {
+          teamLeadCriteria: {
+            include: {
+              teamLeadEvaluation: {
+                include: {
+                  academicYear: {
+                    include: {
+                      teamLeadTemplate: {
+                        include: {
+                          templateDetail: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          assignTaskCriteria: {
+            include: {
+              teamLead: {
+                include: {
+                  academicYear: {
+                    include: {
+                      teamLeadTemplate: {
+                        include: {
+                          templateDetail: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      templateDetail: true,
+    },
+  });
 
     // Get all templateDetails for the evaluation
     const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.academicYear ||
@@ -396,6 +412,9 @@ export const getTeamLeadResults = async (acadId: number, employeesId: number) =>
         acc[employeeId] = {
           employeeId,
           name: employeeName,
+          departmentId:Number(result.teamLeadEvaluationStatus.evaluatee.departmentId),
+          departmentName: result.teamLeadEvaluationStatus.evaluatee.department?.title,
+          photo_path:result.teamLeadEvaluationStatus.evaluatee.information?.photo_path,
           rating: [],
           categoryCounts: [], // Initialize categoryCounts
           comment: '', // Initialize comment
@@ -553,19 +572,25 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
           include: {
             evaluator: {
               include: {
-                information: true, // Include evaluator details (first_name, last_name)
+                information: true,
               },
             },
             evaluatee: {
+              
               include: {
-                information: true, // Include evaluatee details (first_name, last_name)
+                department:{
+                  select:{
+                    title:true
+                  }
+                },
+                information: true,
               },
             },
             academicYear: {
               include: {
                 peerTemplate: {
                   include: {
-                    templateDetail: true, // Include template details for adjective rating
+                    templateDetail: true,
                   },
                 },
               },
@@ -597,7 +622,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
         const employeeId = result.peerEvaluation.evaluateeId;
         const employeeName = `${result.peerEvaluation.evaluatee.information?.first_name} ${result.peerEvaluation.evaluatee.information?.last_name}`;
         const categoryName = result.peerCategory.name || 'Uncategorized';
-
+        
         // Initialize employee entry if it doesn't exist
         if (!acc[employeeId]) {
           acc[employeeId] = {
@@ -605,6 +630,9 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
             employeeId,
             name: employeeName,
             rating: [],
+            departmentId:Number(result.peerEvaluation.evaluatee.departmentId),
+            departmentName: result.peerEvaluation.evaluatee.department?.title,
+            photo_path: result.peerEvaluation.evaluatee.information?.photo_path,
             categoryCounts: [], // Initialize categoryCounts
             comment: result.peerEvaluation.description || '', // Set comment from PeerEvaluation
             evaluatedBy: `${result.peerEvaluation.evaluator.information?.first_name} ${result.peerEvaluation.evaluator.information?.last_name}`, // Set evaluatedBy

@@ -1,9 +1,7 @@
 import { ApplicationStatus } from '@prisma/client';
 import { ApplicantModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
-import { insertEmployee } from './employees.ts';
-import { customAlphabet } from "nanoid";
-import { parseId } from '../utils/parseId.ts';
+
 export const getApplicantsPending = async () => {
     try {
         const response = await prisma.applicant.findMany({
@@ -817,6 +815,55 @@ export const updateFinalizedApplicantStatus = async (
 
     return transaction;
 };
+
+
+export const getApplicantCountByJob = async() => {
+    try{
+        const result = await prisma.$queryRaw`
+        SELECT 
+          j.title as Job,
+          SUM(CASE WHEN a.status = 'PENDING' THEN 1 ELSE 0 END)::integer as Pending,
+          SUM(CASE WHEN a.status = 'ONGOING' THEN 1 ELSE 0 END)::integer as Ongoing,
+          SUM(CASE WHEN a.status = 'PASSED' THEN 1 ELSE 0 END)::integer as Passed,
+          SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END)::integer as Rejected,
+          SUM(CASE WHEN a.status = 'FAILED' THEN 1 ELSE 0 END)::integer as Failed,
+          COUNT(a.id)::integer as TotalApplicants
+        FROM 
+          "Job" j
+        LEFT JOIN 
+          "Applicant" a ON j.id = a."jobId"
+        GROUP BY 
+          j.id, j.title
+      `;
+
+      return result;
+    }catch(err){
+        throw err;
+    }
+}
+
+export const getApplicantTopJob = async() => {
+    try{
+        const filteredApplicantCounts = await prisma.$queryRaw`
+        SELECT 
+          j.title as name,
+          COUNT(a.id)::integer as value
+          /* status counts */
+        FROM 
+          "Job" j
+        LEFT JOIN 
+          "Applicant" a ON j.id = a."jobId"
+        WHERE 
+          j.status = true
+        GROUP BY 
+         j.title
+      `;
+
+      return filteredApplicantCounts;
+    }catch(err){
+        throw err;
+    }
+}
 
 
 

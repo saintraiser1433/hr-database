@@ -183,6 +183,9 @@ export interface EmployeeRating {
     peerEvalId?: number;
     employeeId: number;
     name: string;
+    departmentId:number;
+    departmentName?:string;
+    photo_path?:string;
     rating: {
         categoryName: string;
         percentage: number;

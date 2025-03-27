@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { fetchApplicantsByFailed, fetchApplicantsByOngoing, fetchApplicantsByPassed, fetchApplicantsByPending, fetchApplicantsByRejected, fetchFailApproveByApplicant, fetchOngoingByApplicant, insertApplicants, modifyFinailizedAppStatus, proceedApplicant, rejectApplicants } from '../controller/applicants.ts';
+import { fetchApplicantCountByJob, fetchApplicantsByFailed, fetchApplicantsByOngoing, fetchApplicantsByPassed, fetchApplicantsByPending, fetchApplicantsByRejected, fetchApplicantTopJob, fetchFailApproveByApplicant, fetchOngoingByApplicant, insertApplicants, modifyFinailizedAppStatus, proceedApplicant, rejectApplicants } from '../controller/applicants.ts';
 import { unifiedUpload } from '../config/multer.ts';
 
 const route = Router();
 
+route.get('/countjob', fetchApplicantCountByJob);
+route.get('/topjob', fetchApplicantTopJob);
 route.get('/pending', fetchApplicantsByPending);
 route.get('/ongoing', fetchApplicantsByOngoing);
 route.get('/rejected', fetchApplicantsByRejected);

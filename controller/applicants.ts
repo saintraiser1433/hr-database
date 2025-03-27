@@ -1,7 +1,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { handleValidationError, applicantsValidation } from '../utils/validation.ts';
-import { createApplicants, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getFailApprvStatusByApplicant, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant.ts';
+import { createApplicants, getApplicantCountByJob, getApplicantsFailed, getApplicantsOngoing, getApplicantsPassed, getApplicantsPending, getApplicantsRejected, getApplicantTopJob, getFailApprvStatusByApplicant, getOngoingStatusByApplicant, ongoingApplicants, rejectApplicant, updateFinalizedApplicantStatus } from '../services/applicant.ts';
 import { parseId } from '../utils/parseId.ts';
 
 export const fetchApplicantsByPending = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -12,6 +12,26 @@ export const fetchApplicantsByPending = async (req: Request, res: Response, next
         next(err);
     }
 }
+
+export const fetchApplicantTopJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantTopJob();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const fetchApplicantCountByJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+        const response = await getApplicantCountByJob();
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
 
 export const fetchApplicantsByFailed = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -129,6 +149,7 @@ export const modifyFinailizedAppStatus = async (req: Request, res: Response, nex
         next(err)
     }
 }
+
 
 
 
