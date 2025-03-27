@@ -1,34 +1,62 @@
-import { ModeStatus, PrismaClient } from "@prisma/client";
+import { ApplicationStatus, ModeStatus, PrismaClient } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create 50 random examinees
-  // const numberOfUsers = 30
-
-  // for (let i = 0; i < numberOfUsers; i++) {
-  //   const firstName = faker.person.firstName()
-  //   const lastName = faker.person.lastName()
-  //   const middleName = faker.person.firstName() // Using firstName generator for middle name
-  //   const username = faker.internet.username({ firstName, lastName })
-
-  //   // Generate a simple password (in production, you'd want stronger passwords)
-  //   const plainPassword = 'Password123!'
-  //   // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
-
-  //   await prisma.requirements.upsert({
-  //     where: {
-  //       title: username,
-  //     },
-  //     update: {}, // Empty update means it won't update if the user exists
-  //     create: {
-  //       title: username,
-  //       description: lastName,
-  //     },
-  //   })
-  // }
+  const tables = [
+    "User",
+    "Requirements",
+    "Job",
+    "Screening",
+    "JobScreening",
+    "Departments",
+    "Employees",
+    "EmployeeRequirements",
+    "Applicant",
+    "ApplicantScreeningResult",
+    "ApplicantInformation",
+    "EducationBackground",
+    "WorkExperience",
+    "SkillsExpertise",
+    "References",
+    "AcademicYear",
+    "PeerEvaluation",
+    "PeerEvaluationResult",
+    "PeerCategory",
+    "EvaluationStatus",
+    "TeamLeadEvaluation",
+    "TeamLeadAssignTaskCriteria",
+    "TeamLeadEvaluationResult",
+    "TeamLeadCriteria",
+    "Question",
+    "TemplateHeader",
+    "TemplateDetail"
+  ];
+  
+  // Function to reset sequence for each table
+  async function resetSequences() {
+    for (const table of tables) {
+      try {
+        // Method 1: Direct sequence reset (works for most cases)
+        await prisma.$executeRawUnsafe(
+          `ALTER SEQUENCE "${table}_id_seq" RESTART WITH 1`
+        );
+        console.log(`Reset sequence for table: ${table}`);
+        
+        // OR Method 2: Using pg_get_serial_sequence (more robust)
+        // await prisma.$executeRawUnsafe(
+        //   `SELECT setval(pg_get_serial_sequence('${table}', 'id'), 1, false)`
+        // );
+        
+      } catch (error) {
+        console.error(`Failed to reset sequence for table ${table}:`, error);
+      }
+    }
+  }
+  // Call the function to reset the sequences
+  resetSequences();
 
   // const numberOfDEPARTMENT = 30
 
@@ -50,40 +78,23 @@ async function main() {
   //   })
   // }
 
-  const numberofApplicants = 30;
-  const d = ["1.pdf", "2.pdf"];
-  const avatarArr = ["profile.png", "profile2.jpg"];
-  for (let i = 0; i < numberofApplicants; i++) {
-    const fname = faker.person.firstName();
-    const lname = faker.person.lastName();
-    const mname = faker.person.middleName();
-    const email = faker.internet.email();
-    const contact_number = faker.phone.number();
-    const resume = faker.helpers.arrayElement(d);
-    const avatar = faker.helpers.arrayElement(avatarArr);
-    // const resume = faker.word.sample()
-    // Generate a simple password (in production, you'd want stronger passwords)
-    // const plainPassword = 'Password123!'
-    // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+const departments = [
+  { title: "College of Criminology" },
+  { title: "College of Law" },
+  { title: "College of Engineering" },
+  { title: "College of Business Administration" },
+  { title: "College of Medicine" },
+  { title: "College of Education" },
+  { title: "College of Arts and Sciences" },
+  { title: "College of Nursing" },
+  { title: "College of Information Technology" },
+  { title: "College of Architecture" }
+];
 
-    await prisma.applicant.create({
-      data: {
-        jobApply: { connect: { id: 1 } },
-        information: {
-          create: {
-            first_name: fname,
-            middle_name: mname,
-            last_name: lname,
-            email: email,
-            contact_number: contact_number,
-            resume_path: resume,
-            photo_path: avatar,
-          },
-        },
-      },
-    });
-  }
-}
+
+
+
+
 
 const peerCategories = [
   {
@@ -328,7 +339,7 @@ const question = [
     teamLeadCriteriaId: 4,
   },
 
-
+  
 
 
 
@@ -349,6 +360,7 @@ const question = [
 
 ]
 
+
 const assignTaskCriteria = [
   {
     employeesId: 4,
@@ -358,43 +370,256 @@ const assignTaskCriteria = [
 
 ]
 
+const templateHeader = [
+  {
+    template_name:'Peer to Peer Legend',
+    description:'Peer to Peer Legend',
+  },
+  {
+    template_name:'Team Lead Legend',
+    description:'Team Lead Legend',
+  }
+]
+
+const templateDetail = [
+  {
+    title:'Need improvement',
+    description:'Need improvement',
+    score:1,
+    templateId:1
+  },
+  {
+    title:'Fair',
+    description:'Fair',
+    score:2,
+    templateId:1
+  },
+  {
+    title:'Good',
+    description:'Good',
+    score:3,
+    templateId:1
+  },
+  {
+    title:'Very Good',
+    description:'Very Good',
+    score:4,
+    templateId:1
+  },
+  {
+    title:'Outstanding',
+    description:'Outstanding',
+    score:5,
+    templateId:1
+  },
+
+  {
+    title:'Fair',
+    description:'Fair',
+    score:1,
+    templateId:2
+  },
+  {
+    title:'Satisfactory',
+    description:'Satisfactory',
+    score:2,
+    templateId:2
+  },
+  {
+    title:'Very Satisfactory',
+    description:'Very Satisfactory',
+    score:3,
+    templateId:2
+  },
+  {
+    title:'Amazing',
+    description:'Amazing',
+    score:4,
+    templateId:2
+  },
+  {
+    title:'Outstanding',
+    description:'Outstanding',
+    score:5,
+    templateId:2
+  },
+]
+/////////////////////////////////
+//department
+await prisma.departments.createMany({
+  data:departments
+});
+
+
+//job
+for (let i = 0; i < 10; i++) {
+  try {
+    // Generate fake data
+    const jobTitle = faker.name.jobTitle();
+    const jobDescription = faker.lorem.paragraph(); // Changed to paragraph for more realistic description
+    const totalAvailable = faker.number.int({ min: 1, max: 20 });
+    
+    // First check if departments exist and get valid IDs
+    const existingDepartments = await prisma.departments.findMany({
+      select: { id: true }
+    });
+    
+    if (existingDepartments.length === 0) {
+      throw new Error('No departments found in database');
+    }
+    
+    // Get random department from existing ones
+    const randomDept = faker.helpers.arrayElement(existingDepartments);
+    
+    // Create job
+    const createdJob = await prisma.job.create({
+      data: {
+        title: jobTitle,
+        description: jobDescription,
+        totalAvailable: totalAvailable,
+        departmentsId: randomDept.id // Use actual existing department ID
+      }
+    });
+
+    console.log(`Job ${i + 1} created: ${createdJob.title} (ID: ${createdJob.id})`);
+    
+  } catch (error) {
+    // console.error(`Error creating job ${i + 1}:`, error.message);
+    // Optional: break or continue based on your needs
+    continue;
+  }
+}
+
+
+const numberofApplicants = 30;
+const d = ["1.pdf", "2.pdf"];
+const status = ["PENDING", "ONGOING","PASSED","REJECTED","FAILED"];
+const avatarArr = ["profile.png", "profile2.jpg"];
+for (let i = 0; i < numberofApplicants; i++) {
+  const fname = faker.person.firstName();
+  const lname = faker.person.lastName();
+  const mname = faker.person.middleName();
+  const email = faker.internet.email();
+  const contact_number = faker.phone.number();
+  const resume = faker.helpers.arrayElement(d);
+  const avatar = faker.helpers.arrayElement(avatarArr);
+  const stat = faker.helpers.arrayElement([
+    'PENDING', 
+    'ONGOING', 
+    'PASSED', 
+    'REJECTED', 
+    'FAILED'
+  ] as const) as ApplicationStatus;
+  const jobid = faker.number.int({ min: 1, max: 10 });
+  // const resume = faker.word.sample()
+  // Generate a simple password (in production, you'd want stronger passwords)
+  // const plainPassword = 'Password123!'
+  // const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+
+  await prisma.applicant.create({
+    data: {
+      jobApply: { connect: { id: jobid } },
+      status:stat,
+      information: {
+        create: {
+          first_name: fname,
+          middle_name: mname,
+          last_name: lname,
+          email: email,
+          contact_number: contact_number,
+          resume_path: resume,
+          photo_path: avatar,
+        },
+      },
+    },
+  });
+}
+
+
+const numberofEmployee = 30;
+const usedUsernames = new Set();
+for (let i = 0; i < numberofEmployee; i++) {
+  const fname = faker.person.firstName();
+  const lname = faker.person.lastName();
+  const mname = faker.person.middleName();
+  const email = faker.internet.email();
+  const contact_number = faker.phone.number();
+  const resume = faker.helpers.arrayElement(d);
+  const avatar = faker.helpers.arrayElement(avatarArr);
+  const jobid = faker.number.int({ min: 1, max: 10 });
+  let username;
+  do {
+    username = `${fname.toLowerCase().charAt(0)}${lname.toLowerCase()}${faker.number.int({ min: 1, max: 999 })}`;
+  } while (usedUsernames.has(username));
+  
+  usedUsernames.add(username);
+
+
+  await prisma.employees.create({
+    data: {
+      job: { connect: { id: jobid } },
+      department: { connect: { id: jobid } },
+      username: username,
+      password:'123',
+      information: {
+        create: {
+          first_name: fname,
+          middle_name: mname,
+          last_name: lname,
+          email: email,
+          contact_number: contact_number,
+          resume_path: resume,
+          photo_path: avatar,
+        },
+      },
+    },
+  });
+}
+
 
 
 //END
 
+await prisma.templateHeader.createMany({
+  data:templateHeader
+})
+
+await prisma.templateDetail.createMany({
+  data:templateDetail
+})
 
 //CREATE EVALUATION
-// await prisma.academicYear.createMany({
-//   data: evaluationList,
-// });
+await prisma.academicYear.createMany({
+  data: evaluationList,
+});
 
 // // //CREATE PEER
 
 
-// await prisma.teamLeadEvaluation.createMany({
-//   data: teamLeadEvaluationList,
-// });
+await prisma.teamLeadEvaluation.createMany({
+  data: teamLeadEvaluationList,
+});
 
 await prisma.teamLeadCriteria.createMany({
   data: teamLeadCriteria,
 });
 
-// await prisma.teamLeadAssignTaskCriteria.createMany({
-//   data: assignTaskCriteria
-// })
+await prisma.teamLeadAssignTaskCriteria.createMany({
+  data: assignTaskCriteria
+})
 
 await prisma.question.createMany({
   data: question
 })
 
-// await prisma.peerCategory.createMany({
-//   data: peerCategories,
-// });
-// await prisma.question.createMany({
-//   data: peerQuestion,
-// });
+await prisma.peerCategory.createMany({
+  data: peerCategories,
+});
+await prisma.question.createMany({
+  data: peerQuestion,
+});
 
-
+}
 main()
   .catch((e) => {
     console.error(e);
