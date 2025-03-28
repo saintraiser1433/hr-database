@@ -85,7 +85,10 @@ export const fetchTeamLeadResults = async (
   const { acadId, empId } = req.query;
 
   try {
-    const response = await getTeamLeadResults(Number(acadId), Number(empId));
+    const response = await getTeamLeadResults({
+      acadId: Number(acadId),
+      employeesId: Number(empId)
+    });
     return res.status(200).json(response);
   } catch (err) {
     next(err);

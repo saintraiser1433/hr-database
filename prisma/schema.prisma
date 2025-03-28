@@ -328,8 +328,6 @@ model PeerEvaluationResult {
   templateDetailId Int
   peerEvaluation   PeerEvaluation @relation(fields: [peerEvaluationId], references: [id])
   peerEvaluationId Int
-
-  // @@unique([academicYearId, questionId, peerCategoryId, templateDetailId])
 }
 
 model PeerCategory {

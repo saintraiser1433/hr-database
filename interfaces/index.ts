@@ -1,4 +1,4 @@
-import { ApplicantInformation, EducationBackground, EmployeeRequirements, References, RoleStatus, SkillsExpertise, WorkExperience } from "@prisma/client";
+import { ApplicantInformation, EducationBackground, EmployeeRequirements, References, RoleStatus, SkillsExpertise, TemplateDetail, WorkExperience } from "@prisma/client";
 import { ApplicationStatus, StatusesEvaluation } from "../types/index.ts";
 
 export interface Timestamped {
@@ -183,9 +183,10 @@ export interface EmployeeRating {
     peerEvalId?: number;
     employeeId: number;
     name: string;
-    departmentId:number;
-    departmentName?:string;
-    photo_path?:string;
+    departmentId: number;
+    departmentName?: string;
+    photo_path?: string;
+    template: TemplateDetail[],
     rating: {
         categoryName: string;
         percentage: number;
@@ -193,11 +194,19 @@ export interface EmployeeRating {
         totalScore: number;
         totalPossibleScore: number;
         averageRating?: number;
-    }[];
+    }[],
     categoryCounts: {
         Category: string; // Explicitly allow `Category` to be a string
         [key: string]: number | string; // Allow other keys to be numbers or strings
-    }[];
+    }[],
+    answersData: {
+        questionId: number;
+        peerCategory: string;
+        question: string;
+        templateDetailId: number;
+        templateDetailTitle: string;
+        templateDetailScore: number;
+    }[],
     comment: string;
     evaluatedBy: string;
     summaryRating?: {

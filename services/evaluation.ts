@@ -295,69 +295,84 @@ export const insertTeamLeadEvaluation = async (
 };
 
 
-export const getTeamLeadResults = async (  filters: {
+export const getTeamLeadResults = async (filters: {
   acadId?: number;
   employeesId?: number;
 } = {} // Make the whole parameter optional
 ) => {
-try {
-  // Build the where clause dynamically
-  const whereConditions = [];
-  
-  if (filters.acadId !== undefined) {
-    whereConditions.push({
-      teamLeadEvaluationStatus: {
-        academicYearId: filters.acadId
-      }
-    });
-  }
-  
-  if (filters.employeesId !== undefined) {
-    whereConditions.push({
-      teamLeadEvaluationStatus: {
-        evaluateeId: filters.employeesId
-      }
-    });
-  }
+  try {
+    // Build the where clause dynamically
+    const whereConditions = [];
 
-  const results = await prisma.teamLeadEvaluationResult.findMany({
-    where: {
-      AND: whereConditions.length > 0 ? whereConditions : undefined
-    },
-    include: {
-      teamLeadEvaluationStatus: {
-        select: {
-          description: true,
-          evaluateeId: true,
-          evaluator: {
-            include: {
-              information: true,
-            },
-          },
-          evaluatee: {
-            include: {
-              department:{
-                select:{
-                  title:true,
-                }
-              },
-              information: true,
-            },
-          },
-          evaluatorId: true,
+    const acadId = Number(filters.acadId);
+    const employeesId = Number(filters.employeesId);
+
+    if (!isNaN(acadId)) {
+      whereConditions.push({
+        teamLeadEvaluationStatus: {
+          academicYear: {
+            id: acadId
+          }
         }
+      });
+    }
+
+    if (!isNaN(employeesId)) {
+      whereConditions.push({
+        teamLeadEvaluationStatus: {
+          evaluateeId: employeesId
+        }
+      });
+    }
+
+    const results = await prisma.teamLeadEvaluationResult.findMany({
+      where: {
+        AND: whereConditions.length > 0 ? whereConditions : undefined
       },
-      question: {
-        include: {
-          teamLeadCriteria: {
-            include: {
-              teamLeadEvaluation: {
-                include: {
-                  academicYear: {
-                    include: {
-                      teamLeadTemplate: {
-                        include: {
-                          templateDetail: true,
+      include: {
+        teamLeadEvaluationStatus: {
+          select: {
+            description: true,
+            evaluateeId: true,
+            evaluator: {
+              include: {
+                information: true,
+              },
+            },
+            academicYear: {
+              select: {
+                teamLeadTemplate: {
+                  select: {
+                    templateDetail: true
+                  }
+                }
+              }
+            },
+            evaluatee: {
+              include: {
+                department: {
+                  select: {
+                    title: true,
+                  }
+                },
+                information: true,
+              },
+            },
+            evaluatorId: true,
+          }
+        },
+        question: {
+          include: {
+            teamLeadCriteria: {
+              include: {
+                teamLeadEvaluation: {
+                  include: {
+                    academicYear: {
+                      include: {
+                        teamLeadTemplate: {
+                          include: {
+                            templateDetail: true,
+                          },
                         },
                       },
                     },
@@ -365,16 +380,16 @@ try {
                 },
               },
             },
-          },
-          assignTaskCriteria: {
-            include: {
-              teamLead: {
-                include: {
-                  academicYear: {
-                    include: {
-                      teamLeadTemplate: {
-                        include: {
-                          templateDetail: true,
+            assignTaskCriteria: {
+              include: {
+                teamLead: {
+                  include: {
+                    academicYear: {
+                      include: {
+                        teamLeadTemplate: {
+                          include: {
+                            templateDetail: true,
+                          },
                         },
                       },
                     },
@@ -384,10 +399,9 @@ try {
             },
           },
         },
+        templateDetail: true,
       },
-      templateDetail: true,
-    },
-  });
+    });
 
     // Get all templateDetails for the evaluation
     const evaluation = results[0]?.question?.teamLeadCriteria?.teamLeadEvaluation?.academicYear ||
@@ -409,16 +423,20 @@ try {
 
       // Initialize employee entry if it doesn't exist
       if (!acc[employeeId]) {
+
+        const templateDetail = result.teamLeadEvaluationStatus.academicYear.teamLeadTemplate?.templateDetail || [];
         acc[employeeId] = {
           employeeId,
           name: employeeName,
-          departmentId:Number(result.teamLeadEvaluationStatus.evaluatee.departmentId),
+          answersData: [],
+          template: templateDetail || [],
+          departmentId: Number(result.teamLeadEvaluationStatus.evaluatee.departmentId),
           departmentName: result.teamLeadEvaluationStatus.evaluatee.department?.title,
-          photo_path:result.teamLeadEvaluationStatus.evaluatee.information?.photo_path,
+          photo_path: result.teamLeadEvaluationStatus.evaluatee.information?.photo_path,
           rating: [],
-          categoryCounts: [], // Initialize categoryCounts
-          comment: '', // Initialize comment
-          evaluatedBy: '', // Initialize evaluatedBy
+          categoryCounts: [],
+          comment: '',
+          evaluatedBy: '',
         };
       }
 
@@ -552,12 +570,9 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
     // Fetch peer evaluation data
     const whereCondition: any = {};
 
-
     if (peerEvaluationId) {
       whereCondition.peerEvaluation = { id: peerEvaluationId };
-    }
-
-    else if (evaluateeId || academicYearId) {
+    } else if (evaluateeId || academicYearId) {
       whereCondition.peerEvaluation = {
         ...(evaluateeId && { evaluateeId }),
         ...(academicYearId && { academicYearId }),
@@ -568,7 +583,6 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
       where: whereCondition,
       include: {
         peerEvaluation: {
-
           include: {
             evaluator: {
               include: {
@@ -576,11 +590,10 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
               },
             },
             evaluatee: {
-              
               include: {
-                department:{
-                  select:{
-                    title:true
+                department: {
+                  select: {
+                    title: true
                   }
                 },
                 information: true,
@@ -595,13 +608,16 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
                 },
               },
             }
-
           },
         },
-        peerCategory: true, // Include peer category details
-        question: true, // Include question details
-        templateDetail: true, // Include template detail (title and score)
-
+        peerCategory: true,
+        question: true,
+        templateDetail: true,
+      },
+      orderBy: {
+        question: {
+          id: 'asc',
+        },
       },
     });
 
@@ -617,12 +633,11 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
 
     // Process each group separately
     const formattedRatings = Object.values(groupedResults).map((group) => {
-      // Initialize employee ratings for this group
       const employeeRatings = group.reduce<{ [key: number]: EmployeeRating }>((acc, result) => {
         const employeeId = result.peerEvaluation.evaluateeId;
         const employeeName = `${result.peerEvaluation.evaluatee.information?.first_name} ${result.peerEvaluation.evaluatee.information?.last_name}`;
         const categoryName = result.peerCategory.name || 'Uncategorized';
-        
+
         // Initialize employee entry if it doesn't exist
         if (!acc[employeeId]) {
           acc[employeeId] = {
@@ -630,14 +645,26 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
             employeeId,
             name: employeeName,
             rating: [],
-            departmentId:Number(result.peerEvaluation.evaluatee.departmentId),
+            template: result.peerEvaluation.academicYear.peerTemplate?.templateDetail || [],
+            departmentId: Number(result.peerEvaluation.evaluatee.departmentId),
             departmentName: result.peerEvaluation.evaluatee.department?.title,
             photo_path: result.peerEvaluation.evaluatee.information?.photo_path,
-            categoryCounts: [], // Initialize categoryCounts
-            comment: result.peerEvaluation.description || '', // Set comment from PeerEvaluation
-            evaluatedBy: `${result.peerEvaluation.evaluator.information?.first_name} ${result.peerEvaluation.evaluator.information?.last_name}`, // Set evaluatedBy
+            categoryCounts: [],
+            comment: result.peerEvaluation.description || '',
+            evaluatedBy: `${result.peerEvaluation.evaluator.information?.first_name} ${result.peerEvaluation.evaluator.information?.last_name}`,
+            answersData: [],
           };
         }
+
+        // Add question data to answersData
+        acc[employeeId].answersData.push({
+          questionId: result.question.id,
+          peerCategory: result.peerCategory.name,
+          question: result.question.question,
+          templateDetailId: result.templateDetail.id,
+          templateDetailTitle: result.templateDetail.title,
+          templateDetailScore: result.templateDetail.score,
+        });
 
         // Find or create the category entry
         let category = acc[employeeId].rating.find((cat) => cat.categoryName === categoryName);
@@ -648,6 +675,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
             ratingPercentage: null,
             totalScore: 0,
             totalPossibleScore: 0,
+            averageRating: 0,
           };
           acc[employeeId].rating.push(category);
         }
@@ -694,6 +722,9 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
 
       // Calculate total possible score and rating percentage for each category for each employee
       const employeeResults = Object.values(employeeRatings).map((employee) => {
+        // Sort answersData by questionId
+        employee.answersData.sort((a, b) => a.questionId - b.questionId);
+
         employee.rating = employee.rating
           .map((category) => {
             // Calculate rating percentage
@@ -708,7 +739,9 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
                 result.peerEvaluation.evaluateeId === employee.employeeId && result.peerCategory.name === category.categoryName
             ).length;
 
-            const averageRating = category.totalScore / totalQuestionsInCategory;
+            const averageRating = totalQuestionsInCategory > 0
+              ? category.totalScore / totalQuestionsInCategory
+              : 0;
 
             return {
               ...category,
@@ -719,18 +752,16 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
           .filter((category) => category.categoryName !== 'Uncategorized');
 
         // Calculate summary rating
-        const summaryRating = employee.rating.reduce((sum, category) => sum + (category.averageRating || 0), 0);
-
-        // Divide the summary rating by the number of categories to get the average
-        const numberOfCategories = employee.rating.length;
-        const averageSummaryRating = summaryRating / numberOfCategories;
+        const summaryRating = employee.rating.length > 0
+          ? employee.rating.reduce((sum, category) => sum + (category.averageRating || 0), 0) / employee.rating.length
+          : 0;
 
         // Map the average summary rating to the adjectiveRating from templateDetail
         const allTemplateDetails = group[0]?.peerEvaluation.academicYear?.peerTemplate?.templateDetail || [];
-        const adjectiveRating = getAdjectiveRatingFromTemplateDetail(averageSummaryRating, allTemplateDetails);
+        const adjectiveRating = getAdjectiveRatingFromTemplateDetail(summaryRating, allTemplateDetails);
 
         employee.summaryRating = {
-          rating: parseFloat(averageSummaryRating.toFixed(2)), // Round to 2 decimal places
+          rating: parseFloat(summaryRating.toFixed(2)),
           adjectiveRating,
         };
 
