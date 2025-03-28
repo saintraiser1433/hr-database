@@ -83,10 +83,6 @@ const departments = [
   { title: "College of Law" },
   { title: "College of Engineering" },
   { title: "College of Business Administration" },
-  { title: "College of Medicine" },
-  { title: "College of Education" },
-  { title: "College of Arts and Sciences" },
-  { title: "College of Nursing" },
   { title: "College of Information Technology" },
   { title: "College of Architecture" }
 ];
@@ -452,7 +448,7 @@ await prisma.departments.createMany({
 
 
 //job
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 6; i++) {
   try {
     // Generate fake data
     const jobTitle = faker.name.jobTitle();
@@ -491,7 +487,7 @@ for (let i = 0; i < 10; i++) {
 }
 
 
-const numberofApplicants = 30;
+const numberofApplicants = 120;
 const d = ["1.pdf", "2.pdf"];
 const status = ["PENDING", "ONGOING","PASSED","REJECTED","FAILED"];
 const avatarArr = ["profile.png", "profile2.jpg"];
@@ -510,7 +506,7 @@ for (let i = 0; i < numberofApplicants; i++) {
     'REJECTED', 
     'FAILED'
   ] as const) as ApplicationStatus;
-  const jobid = faker.number.int({ min: 1, max: 10 });
+  const jobid = faker.number.int({ min: 1, max: 6 });
   // const resume = faker.word.sample()
   // Generate a simple password (in production, you'd want stronger passwords)
   // const plainPassword = 'Password123!'
@@ -536,7 +532,7 @@ for (let i = 0; i < numberofApplicants; i++) {
 }
 
 
-const numberofEmployee = 30;
+const numberofEmployee = 150;
 const usedUsernames = new Set();
 for (let i = 0; i < numberofEmployee; i++) {
   const fname = faker.person.firstName();
@@ -546,7 +542,7 @@ for (let i = 0; i < numberofEmployee; i++) {
   const contact_number = faker.phone.number();
   const resume = faker.helpers.arrayElement(d);
   const avatar = faker.helpers.arrayElement(avatarArr);
-  const jobid = faker.number.int({ min: 1, max: 10 });
+  const jobid = faker.number.int({ min: 1, max: 6 });
   let username;
   do {
     username = `${fname.toLowerCase().charAt(0)}${lname.toLowerCase()}${faker.number.int({ min: 1, max: 999 })}`;
