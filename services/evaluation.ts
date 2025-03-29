@@ -298,10 +298,10 @@ export const insertTeamLeadEvaluation = async (
 export const getTeamLeadResults = async (filters: {
   acadId?: number;
   employeesId?: number;
-} = {} // Make the whole parameter optional
+} = {} 
 ) => {
   try {
-    // Build the where clause dynamically
+
     const whereConditions = [];
 
     const acadId = Number(filters.acadId);
@@ -439,6 +439,16 @@ export const getTeamLeadResults = async (filters: {
           evaluatedBy: '',
         };
       }
+
+      acc[employeeId].answersData.push({
+        questionId: result.question.id,
+        category: result.question.teamLeadCriteria?.teamLeadEvaluation.name ?? result.question.assignTaskCriteria?.teamLead.name ?? '',
+        criteria:result.question.teamLeadCriteria?.name ?? result.question.assignTaskCriteria?.name ?? '',
+        question: result.question.question,
+        templateDetailId: result.templateDetail.id,
+        templateDetailTitle: result.templateDetail.title,
+        templateDetailScore: result.templateDetail.score,
+      });
 
       // Find or create the category entry
       let category = acc[employeeId].rating.find((cat) => cat.categoryName === categoryName);
@@ -659,7 +669,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
         // Add question data to answersData
         acc[employeeId].answersData.push({
           questionId: result.question.id,
-          peerCategory: result.peerCategory.name,
+          category: result.peerCategory.name,
           question: result.question.question,
           templateDetailId: result.templateDetail.id,
           templateDetailTitle: result.templateDetail.title,

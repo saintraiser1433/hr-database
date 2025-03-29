@@ -201,7 +201,8 @@ export interface EmployeeRating {
     }[],
     answersData: {
         questionId: number;
-        peerCategory: string;
+        category: string;
+        criteria?:string;
         question: string;
         templateDetailId: number;
         templateDetailTitle: string;
