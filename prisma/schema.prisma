@@ -431,3 +431,11 @@ model TemplateDetail {
   teamLeadEvaluationResult TeamLeadEvaluationResult[]
   PeerEvaluationResult     PeerEvaluationResult[]
 }
+
+model SMS {
+  serverAddress String @id
+  username      String @db.VarChar(100)
+  password      String @db.VarChar(100)
+
+  @@unique([serverAddress])
+}

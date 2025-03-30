@@ -14,3 +14,8 @@ export enum ApplicationStatus {
     APPROVED = "APPROVED",
     REJECTED = "REJECTED",
 }
+
+export enum WebHookEventType {
+    SmsReceived = "sms:received",
+    SystemPing = "system:ping"
+}

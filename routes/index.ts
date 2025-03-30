@@ -14,6 +14,7 @@ import teamleadRoute from './teamlead.ts'
 import authRoute from './auth.ts';
 import questionRoute from './question.ts';
 import summaryRoute from './summary.ts';
+import smsRoute from './sms.ts';
 const route = Router();
 
 route.use('/requirements', requirementsRoute)
@@ -30,5 +31,6 @@ route.use('/peer', peerRoute)
 route.use('/teamlead', teamleadRoute)
 route.use('/auth', authRoute)
 route.use('/question', questionRoute)
-route.use('/summary',summaryRoute)
+route.use('/summary', summaryRoute)
+route.use('/sms', smsRoute)
 export default route;
