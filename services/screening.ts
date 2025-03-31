@@ -51,6 +51,7 @@ export const deleteScreening = async (id: string) => {
 
 
 //asigning
+//use intended only for job assigning
 export const selectScreeningByJobId = async (jobId: string) => {
     try {
         const response = await prisma.screening.findMany({
@@ -78,6 +79,36 @@ export const selectScreeningByJobId = async (jobId: string) => {
         throw err;
     }
 }
+//use intended for all job when assigning in ongoing applicants
+export const selectScreeningByApplicantId = async (applicantId: number) => {
+    try {
+        const response = await prisma.screening.findMany({
+            select: {
+                id: true,
+                title: true
+            },
+            where: {
+                status: true,
+                NOT: {
+                    applicantScreeningResult: {
+                        some: {
+                            applicantId: Number(applicantId)
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                title: 'asc'
+            }
+        })
+
+        return response;
+    } catch (err) {
+        throw err;
+    }
+}
+
+//end
 
 export const getJobScreeningsByJobId = async (id: string) => {
     try {

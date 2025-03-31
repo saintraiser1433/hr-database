@@ -1,7 +1,8 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { assignScreeningValidation, handleValidationError, screeningValidation } from '../utils/validation.ts';
-import { assignJobToScreening, createScreening, deleteJobToScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening.ts';
+import { assignJobToScreening, createScreening, deleteJobToScreening, deleteScreening, getJobScreeningsByJobId, getScreenings, selectScreeningByApplicantId, selectScreeningByJobId, updateJobScreeningSequence, updateScreenings } from '../services/screening.ts';
+import { parseId } from '../utils/parseId.ts';
 
 
 
@@ -66,6 +67,19 @@ export const filterScreeningTypeByJobId = async (req: Request, res: Response, ne
     }
 }
 
+export const filterScreeningTypeByApplicantId = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const applicantId = parseId(req.params.applicantId);
+    if (!applicantId) {
+        return res.status(400).json({ error: "Invalid Applicant ID." });
+    }
+    try {
+        const response = await selectScreeningByApplicantId(applicantId);
+        return res.status(200).json(response);
+    } catch (err) {
+        next(err)
+    }
+}
+
 
 
 
@@ -100,6 +114,7 @@ export const addJobToScreening = async (req: Request, res: Response, next: NextF
 export const unassignJobFromScreening = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body = req.body;
     try {
+
         const response = await deleteJobToScreening(body);
         return res.status(200).json({ message: "Screening Assign successfully deleted", data: response });
     } catch (err) {
