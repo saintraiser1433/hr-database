@@ -8,7 +8,7 @@ import {
   PeerEvaluationResult,
   TeamLeadEvaluationResult,
 } from "@prisma/client";
-import { shuffleArray } from "../utils/shuffleArray.ts";
+
 
 export const getEvaluation = async () => {
   try {
@@ -1067,6 +1067,8 @@ export const viewPeerEvaluations = async (academicYearId: number, departmentId: 
     throw err;
   }
 };
+
+
 
 
 export const getPeerEvaluateeByEmpId = async (id: number) => {

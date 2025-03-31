@@ -563,6 +563,23 @@ async function processSkillsData(tx: any, applicantId: number, skillsData: any[]
 }
 
 
+export const getEmployeesCountByDeptID = async(deptId:number) => {
+    try{
+       const response = await prisma.employees.count({
+        where:{
+            departmentId: deptId
+        }
+       }) 
+
+       return response;
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
 
 
 
