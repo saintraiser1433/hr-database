@@ -1,3 +1,4 @@
+import { ApplicantScreeningResult } from '@prisma/client';
 import { JobScreeningModel, ScreeningModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
@@ -290,6 +291,76 @@ export const deleteJobToScreening = async (body: number[]) => {
     }
 }
 
+
+//assigning  applicant screening
+export const assignApplicantScreening = async (
+    body: ApplicantScreeningResult[]
+) => {
+    try {
+        if (body.length === 0) return [];
+
+
+        const applicantId = body[0].applicantId;
+        const lastEntry = await prisma.applicantScreeningResult.findFirst({
+            where: { applicantId: applicantId },
+            orderBy: { sequence_number: "desc" },
+            select: { sequence_number: true }
+        });
+
+        let lastSequenceNumber = lastEntry?.sequence_number ?? 0;
+
+
+        const responses = await Promise.all(
+            body.map(async (data) => {
+                lastSequenceNumber++;
+                return prisma.applicantScreeningResult.create({
+                    data: {
+                        applicantId: data.applicantId,
+                        screeningId: data.screeningId,
+                        sequence_number: lastSequenceNumber,
+                        status: 'PENDING'
+                    },
+                    select: {
+                        id: true,
+                        screeningId: true,
+                        screening: { select: { title: true } },
+                        sequence_number: true,
+                        status: true
+                    }
+                });
+            })
+        );
+
+        // 🔹 Format response
+        return responses;
+    } catch (err) {
+        throw err;
+    }
+};
+
+export const deleteApplicantScreening = async (id: number) => {
+    try {
+        const response = await prisma.applicantScreeningResult.delete({
+            where: { id },
+            select:{
+                screening:{
+                    select:{
+                        id:true,
+                        title:true
+                    }
+                }
+            }
+        });
+
+        const transformData = {
+            id:response.screening.id,
+            title:response.screening.title
+        }
+        return transformData;
+    } catch (err) {
+        throw err;
+    }
+}
 
 
 

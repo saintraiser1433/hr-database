@@ -235,6 +235,8 @@ export const getEmployeeInformationById = async (id: number) => {
     try {
         const response = await prisma.employees.findUnique({
             select: {
+                username:true,
+                password:true,
                 status: true,
                 createdAt: true,
                 department: {
@@ -316,6 +318,10 @@ export const getEmployeeInformationById = async (id: number) => {
                 parents_address: response.information?.parents_address ?? null,
                 person_to_be_contact: response.information?.person_to_be_contact ?? null,
             },
+            accountData: {
+                username:response.username,
+                password:response.password
+            },
             educData: response.information?.education ?? null,
             workData: response.information?.workExperience ?? null,
             skillsData: response.information?.skills ?? null,
@@ -323,7 +329,7 @@ export const getEmployeeInformationById = async (id: number) => {
         }
 
         return data;
-    } catch (err) {
+    } catch (err) { 
         throw err;
     }
 }

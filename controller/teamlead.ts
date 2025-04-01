@@ -135,10 +135,7 @@ export const deleteEvaluationTeamLeadCriteria = async (req: Request, res: Respon
 
 //fetch for data for teamlead module
 export const fetchFilterCategoryByLead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const academicYearId = parseId(req.params.id);
-    if (!academicYearId) {
-        return res.status(400).json({ error: "Invalid Academic Year ID." });
-    }
+    const academicYearId = parseInt(req.params.id);
     try {
         const response = await getFilterCategoryByLead(academicYearId);
         return res.status(200).json(response);

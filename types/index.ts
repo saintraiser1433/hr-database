@@ -1,9 +1,9 @@
 // export type statusesEvaluation = "NOT_SET" | "ONGOING" | "FINISHED";
 
 export enum StatusesEvaluation {
-    NOTSET = "NOT_SET",
+    PENDING = "PENDING",
     ONGOING = "ONGOING",
-    FINISHED = "FINISHED",
+    COMPLETED = "COMPLETED",
 }
 
 

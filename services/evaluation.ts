@@ -112,15 +112,22 @@ export const createEvaluation = async (body: AcademicYear) => {
 
 export const modifyEvaluation = async (id: number, data: AcademicYear) => {
   try {
-    const checkDuplicateStatus = await prisma.academicYear.findMany({
-      where: {
-        status: "ONGOING",
-      },
-    });
-    if (checkDuplicateStatus.length > 1) {
-      throw new Error(
-        "Please update the ongoing status to finished before update"
-      );
+    if (data.status === "ONGOING") {
+      // Find if there's already an ONGOING academic year that's NOT the current one being updated
+      const existingOngoing = await prisma.academicYear.findFirst({
+        where: {
+          status: "ONGOING",
+          NOT: {
+            id: id
+          }
+        }
+      });
+
+      if (existingOngoing) {
+        throw new Error(
+          "There's already an academic year with ONGOING status. Please update it to COMPLETED first."
+        );
+      }
     }
 
     return await prisma.academicYear.update({
@@ -587,6 +594,10 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
         ...(evaluateeId && { evaluateeId }),
         ...(academicYearId && { academicYearId }),
       };
+    }
+
+    if(academicYearId === 0){
+      return [];
     }
 
     const results = await prisma.peerEvaluationResult.findMany({

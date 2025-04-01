@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { Response } from 'express';
 import { ApplicantInformationModel, DepartmentModel, EvaluationModel, JobModel, JobScreeningModel, QuestionModel, RequirementModel, ScreeningModel } from '../interfaces/index.ts';
 import { appLogger } from './logger.ts';
-import { EmployeeRequirements, PeerCategory, Question, TeamLeadCriteria, TemplateDetail, TemplateHeader } from '@prisma/client';
+import { ApplicantScreeningResult, EmployeeRequirements, PeerCategory, Question, TeamLeadCriteria, TemplateDetail, TemplateHeader } from '@prisma/client';
 
 export const requirementValidation = {
     insert: (data: RequirementModel) => {
@@ -171,6 +171,27 @@ export const assignScreeningValidation = {
                     "number.base": "The Job field must be a number",
                 }),
                 screening_id: Joi.number().required().messages({
+                    "any.required": "The Screening field is required",
+                    "number.base": "The Screening field must be a number",
+                }),
+                sequence_number: Joi.number().optional()
+            })
+        );
+        return schema.validate(data, { abortEarly: false });
+    },
+};
+
+export const assignAppScreeningValidation = {
+    assign: (data: ApplicantScreeningResult) => {
+        const schema = Joi.array().items(
+            Joi.object({
+                id: Joi.number().optional(),
+                dateInterview: Joi.string().optional(),
+                applicantId: Joi.number().required().messages({
+                    "any.required": "The Applicant field is required",
+                    "number.base": "The Applicant field must be a number",
+                }),
+                screeningId: Joi.number().required().messages({
                     "any.required": "The Screening field is required",
                     "number.base": "The Screening field must be a number",
                 }),

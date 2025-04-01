@@ -1,7 +1,8 @@
 import { ApplicationStatus } from '@prisma/client';
 import { ApplicantModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
-
+import fs from 'fs';
+import path from 'path';
 export const getApplicantsPending = async () => {
     try {
         const response = await prisma.applicant.findMany({
@@ -449,8 +450,7 @@ export const getApplicantsRejected = async () => {
 
 
 
-import fs from 'fs';
-import path from 'path';
+
 
 export const createApplicants = async (
     data: Omit<ApplicantModel, 'id'>,
