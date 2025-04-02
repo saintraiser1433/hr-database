@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { Employees } from '@prisma/client';
 import prisma from '../prisma/index.ts';
 import { TokenDetail } from '../interfaces/index.ts';
 
@@ -16,6 +15,7 @@ export const signInService = async (username: string, password: string) => {
                         first_name: true,
                         last_name: true,
                         middle_name: true,
+                        photo_path:true,
                         
                     }
                 },
@@ -40,7 +40,8 @@ export const signInService = async (username: string, password: string) => {
                 last_name: user.information?.last_name || "",
                 middle_name: user.information?.middle_name || "",
                 role: user.role,
-                departmentId:user.departmentId || undefined
+                departmentId:user.departmentId || undefined,
+                photo_path:user.information?.photo_path || null
             };
             const accessToken = generateAccessToken(users);
             const refreshToken = generateRefreshToken(users);

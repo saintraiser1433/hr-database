@@ -1,6 +1,6 @@
 
 import { EmployeeRequirements, RequirementStatus, RoleStatus } from '@prisma/client';
-import { CombinedData, EmployeeModel } from '../interfaces/index.ts';
+import { CombinedData, EmployeeModel, PasswordModel } from '../interfaces/index.ts';
 import prisma from '../prisma/index.ts';
 
 export const getAllEmployees = async (id: number) => {
@@ -319,8 +319,7 @@ export const getEmployeeInformationById = async (id: number) => {
                 person_to_be_contact: response.information?.person_to_be_contact ?? null,
             },
             accountData: {
-                username:response.username,
-                password:response.password
+                username:response.username
             },
             educData: response.information?.education ?? null,
             workData: response.information?.workExperience ?? null,
@@ -386,6 +385,41 @@ export const unassignTeamlead = async (employeeId: number, data: EmployeeModel) 
 }
 
 
+export const modifyCredentials = async(employeeId:number,data:PasswordModel) => {
+    try{
+        const checkIfExist = await prisma.employees.findFirst({
+            where :{
+                AND: [
+                    {
+                        id: employeeId,
+                    },
+                    {
+                        password: data.oldPassword,
+                    },
+
+                ]
+
+            }
+        })
+
+        if(!checkIfExist){
+            throw new Error('Incorrect old password, please try again!');
+        }
+
+        const response = await prisma.employees.update({
+            data: {
+                password: data.newPassword
+            },
+            where: {
+                id:employeeId
+            }
+        })
+
+        return response;
+    }catch(err){
+        throw err;
+    }
+}
 
 
 export const modifyInformation = async (employeeId: number, data: CombinedData) => {
@@ -459,6 +493,8 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
         await prisma.$disconnect();
     }
 };
+
+
 
 
 async function processEducationData(tx: any, applicantId: number, educData: any[]) {

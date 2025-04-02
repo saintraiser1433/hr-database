@@ -87,6 +87,11 @@ export interface ApplicantModel extends ApplicantInformationModel {
     jobApply: JobModel;
 }
 
+export interface PasswordModel { 
+    newPassword:string;
+    oldPassword:string
+}
+
 
 
 export interface ApplicantInformationModel {

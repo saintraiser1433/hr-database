@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { assignStatusTeamlead, fetchAllEmployeesByDeptID, fetchEmployeeCountByDeptId, fetchEmployeeInformationById, fetchRequirementByEmpID, insertEmptoRequire, removeEmpToRequire, unassignStatusTeamlead, updateEmpInformation, updateEmpRequireStatus } from '../controller/employee.ts';
+import { assignStatusTeamlead, fetchAllEmployeesByDeptID, fetchEmployeeCountByDeptId, fetchEmployeeInformationById, fetchRequirementByEmpID, insertEmptoRequire, removeEmpToRequire, unassignStatusTeamlead, updateCredentials, updateEmpInformation, updateEmpRequireStatus } from '../controller/employee.ts';
 
 const route = Router();
 
@@ -8,6 +8,7 @@ route.get('/info/:empId', fetchEmployeeInformationById);
 route.get('/dept/:id', fetchAllEmployeesByDeptID);
 route.get('/deptCount', fetchEmployeeCountByDeptId);
 route.put('/status/:id', updateEmpRequireStatus);
+route.put('/credentials/:empId', updateCredentials);
 route.put('/info/:id', updateEmpInformation);
 route.put('/assign/:empId', assignStatusTeamlead);
 route.put('/unassign/:empId', unassignStatusTeamlead);

@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getEmployeesCountByDeptID, getRequirementsByEmployeeId, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getEmployeesCountByDeptID, getRequirementsByEmployeeId, modifyCredentials, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 import { parseId } from '../utils/parseId.ts';
@@ -79,6 +79,20 @@ export const removeEmpToRequire = async (req: Request, res: Response, next: Next
     try {
         const response = await unAssignEmployeeToRequirements(body);
         return res.status(200).json({ message: "Requirement successfully remove", data: response });
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const updateCredentials = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const body = req.body;
+    const employeeId = parseId(req.params.empId);
+    if (!employeeId) {
+        return res.status(400).json({ error: "Invalid Employee ID." });
+    }
+    try {
+        await modifyCredentials(employeeId, body);
+        return res.status(200).json({ message: "Successfully Updated"});
     } catch (err) {
         next(err)
     }
