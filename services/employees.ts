@@ -421,8 +421,30 @@ export const modifyCredentials = async(employeeId:number,data:PasswordModel) => 
     }
 }
 
+export const updateEmpImage = async (id: number, file: string | undefined) => {
 
-export const modifyInformation = async (employeeId: number, data: CombinedData) => {
+    const employee = await prisma.employees.findUnique({
+        where: { id: id },
+        select: { informationId: true }
+    });
+
+    if (!employee) throw new Error("Employee not found");
+
+    const response = await prisma.applicantInformation.update({
+        where: {
+            id: Number(employee.informationId),
+        },
+        data: {
+            photo_path: file
+        },
+    });
+
+    return response
+};
+
+
+
+export const modifyInformation = async (employeeId: number, data: CombinedData,file:string | undefined) => {
     const { educData, workData, skillsData, referencesData, applicantInfo, status } = data;
 
     try {
@@ -468,6 +490,7 @@ export const modifyInformation = async (employeeId: number, data: CombinedData) 
                     mothers_occupation: applicantInfo.mothers_occupation,
                     parents_address: applicantInfo.parents_address,
                     person_to_be_contact: applicantInfo.person_to_be_contact,
+                    photo_path:file || applicantInfo.photo_path,
                 },
             });
 

@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getEmployeesCountByDeptID, getRequirementsByEmployeeId, modifyCredentials, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead } from '../services/employees.ts';
+import { assignEmployeeToRequirements, assignTeamLead, getAllEmployees, getEmployeeInformationById, getEmployeesCountByDeptID, getRequirementsByEmployeeId, modifyCredentials, modifyInformation, modifyRequirementStatus, unAssignEmployeeToRequirements, unassignTeamlead, updateEmpImage } from '../services/employees.ts';
 import { assignEmpToRequirements, handleValidationError } from '../utils/validation.ts';
 import { CombinedData } from '../interfaces/index.ts';
 import { parseId } from '../utils/parseId.ts';
@@ -113,12 +113,27 @@ export const updateEmpRequireStatus = async (req: Request, res: Response, next: 
 
 export const updateEmpInformation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     const body: CombinedData = req.body;
+    const file = req.file?.filename;
     const id = Number(req.params.id);
     try {
-        const response = await modifyInformation(id, body);
+        const response = await modifyInformation(id, body,file);
         return res.status(200).json({ message: "Successfully update Information", data: response });
     } catch (err) {
         next(err)
+    }
+}
+
+export const modifyEmpImage = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    const empId = parseId(req.params.id);
+    const filename = req.file?.filename;
+    if (!empId) {
+        return res.status(400).json({ error: "Invalid Employee ID." });
+    }
+    try {
+        const response = await updateEmpImage(empId, filename);
+        return res.status(200).json({ message: "Image updated successfully", data: response });
+    } catch (err) {
+        next(err);
     }
 }
 
