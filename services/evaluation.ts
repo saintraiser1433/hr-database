@@ -305,7 +305,7 @@ export const insertTeamLeadEvaluation = async (
 export const getTeamLeadResults = async (filters: {
   acadId?: number;
   employeesId?: number;
-} = {} 
+} = {}
 ) => {
   try {
 
@@ -450,7 +450,7 @@ export const getTeamLeadResults = async (filters: {
       acc[employeeId].answersData.push({
         questionId: result.question.id,
         category: result.question.teamLeadCriteria?.teamLeadEvaluation.name ?? result.question.assignTaskCriteria?.teamLead.name ?? '',
-        criteria:result.question.teamLeadCriteria?.name ?? result.question.assignTaskCriteria?.name ?? '',
+        criteria: result.question.teamLeadCriteria?.name ?? result.question.assignTaskCriteria?.name ?? '',
         question: result.question.question,
         templateDetailId: result.templateDetail.id,
         templateDetailTitle: result.templateDetail.title,
@@ -596,7 +596,7 @@ export const getPeerResult = async (academicYearId: number, evaluateeId: number,
       };
     }
 
-    if(academicYearId === 0){
+    if (academicYearId === 0) {
       return [];
     }
 
@@ -962,6 +962,21 @@ export const assignPeerEvaluations = async (body: AssignPeerEvaluations) => {
       },
     });
 
+    const checkEmployee = await prisma.employees.findFirst({
+      where: {
+        AND: [
+          {
+            departmentId: body.departmentId,
+          },
+          {
+            role: 'TeamLead',
+          }
+        ]
+      }
+    })
+
+    if (!checkEmployee) throw new Error('Please assign team lead first before shuffling');
+
     if (!department) throw new Error('Department not found');
 
     const { employees } = department;
@@ -1229,7 +1244,7 @@ export const getPeerCategoryQuestion = async (academicYearId: number) => {
 };
 
 
-export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId: number) => {
+export const getEmployeeEvaluateeStatus = async (deptId: number, empId: number | null | undefined, academicYearId: number) => {
   try {
     const teamLeadEmployees = await prisma.employees.findMany({
       select: {
@@ -1267,7 +1282,9 @@ export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId:
       where: {
         AND: [
           { departmentId: deptId },
+
           { role: 'Employee' },
+          ...(empId ? [{ id: empId }] : []),
         ]
 
       },
@@ -1304,4 +1321,4 @@ export const getEmployeeEvaluateeStatus = async (deptId: number, academicYearId:
     throw err
   }
 
-}
+} 

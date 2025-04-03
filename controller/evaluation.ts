@@ -67,10 +67,10 @@ export const fetchPeerEvaluateeByEmpId = async (
 }
 
 export const fetchEmployeeEvaluateeStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-  const { acadId, deptId } = req.query;
+  const { acadId, deptId, empId } = req.query;
 
   try {
-    const response = await getEmployeeEvaluateeStatus(Number(deptId), Number(acadId));
+    const response = await getEmployeeEvaluateeStatus(Number(deptId), Number(empId), Number(acadId));
     return res.status(200).json(response);
   } catch (err) {
     next(err);
