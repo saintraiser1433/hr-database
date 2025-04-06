@@ -7,6 +7,9 @@ export const getJobService = async () => {
             include: {
                 department: true,
                 requirements: true
+            },
+            orderBy:{
+                createdAt:'desc'
             }
         })
 
